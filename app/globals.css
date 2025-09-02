@@ -1,0 +1,1069 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+
+  /* Added ACUP-specific CSS variables for styling */
+  --primary-brown: #8b4513;
+  --light-brown: #d2b48c;
+  --cream-white: #fff8dc;
+  --text-dark: #2f4f4f;
+  --primary-bg: #ffffff;
+  --border-color: #e0e0e0;
+  --primary-color: #8b4513;
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.145 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.145 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.985 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.396 0.141 25.723);
+  --destructive-foreground: oklch(0.637 0.237 25.331);
+  --border: oklch(0.269 0 0);
+  --input: oklch(0.269 0 0);
+  --ring: oklch(0.439 0 0);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(0.269 0 0);
+  --sidebar-ring: oklch(0.439 0 0);
+}
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Added ACUP-specific styling from original CSS files */
+
+/* Header Styles */
+.header {
+  background: linear-gradient(135deg, var(--primary-brown) 0%, var(--light-brown) 100%);
+  padding: 1rem 0;
+  box-shadow: 0 2px 10px rgba(139, 69, 19, 0.3);
+  position: relative; /* Added header positioning for mobile menu overlay */
+}
+
+.header-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 2rem;
+}
+
+.nav-container {
+  transition: all 0.3s ease;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--primary-brown);
+  transform: translateY(-100%);
+  opacity: 0;
+  visibility: hidden;
+  z-index: 1000;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.nav-container.mobile-open {
+  transform: translateY(0);
+  opacity: 1;
+  visibility: visible;
+}
+
+.nav {
+  display: flex;
+  list-style: none;
+  gap: 2rem;
+  margin: 0;
+  padding: 0;
+}
+
+.nav li {
+  width: 100%;
+}
+
+.nav a {
+  color: white;
+  text-decoration: none;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+.nav a:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.mobile-menu-btn {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  z-index: 1001; /* Added z-index to ensure hamburger button is clickable */
+}
+
+.hamburger {
+  width: 24px;
+  height: 18px;
+  position: relative;
+  transform: rotate(0deg);
+  transition: 0.3s ease-in-out;
+}
+
+.hamburger span {
+  display: block;
+  position: absolute;
+  height: 3px;
+  width: 100%;
+  background: white;
+  border-radius: 3px;
+  opacity: 1;
+  left: 0;
+  transform: rotate(0deg);
+  transition: 0.25s ease-in-out;
+}
+
+.hamburger span:nth-child(1) {
+  top: 0px;
+}
+
+.hamburger span:nth-child(2) {
+  top: 7px;
+}
+
+.hamburger span:nth-child(3) {
+  top: 14px;
+}
+
+.hamburger.active span:nth-child(1) {
+  top: 7px;
+  transform: rotate(135deg);
+}
+
+.hamburger.active span:nth-child(2) {
+  opacity: 0;
+  left: -60px;
+}
+
+.hamburger.active span:nth-child(3) {
+  top: 7px;
+  transform: rotate(-135deg);
+}
+
+/* Hero Section */
+.hero {
+  background: linear-gradient(135deg, var(--cream-white) 0%, #f5f5dc 100%);
+  min-height: 70vh;
+  display: flex;
+  align-items: center;
+  padding: 4rem 0;
+}
+
+.hero-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 4rem;
+}
+
+.hero-text {
+  flex: 1;
+}
+
+.welcome-title {
+  font-size: 4rem;
+  font-weight: bold;
+  color: var(--primary-brown);
+  margin-bottom: 2rem;
+  text-shadow: 2px 2px 4px rgba(139, 69, 19, 0.3);
+}
+
+.hero-subtitle {
+  font-size: 1.3rem;
+  color: var(--text-dark);
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+
+.hero-description {
+  font-size: 1.1rem;
+  color: var(--text-dark);
+  margin-bottom: 2rem;
+  opacity: 0.9;
+}
+
+.hero-logo {
+  flex: 0 0 auto;
+}
+
+.hero-logo-img {
+  max-width: 400px;
+  height: auto;
+  border-radius: 20px;
+  box-shadow: 0 15px 40px rgba(139, 69, 19, 0.3);
+}
+
+/* CTA Button */
+.cta-button {
+  background: linear-gradient(135deg, var(--primary-brown) 0%, #a0522d 100%);
+  color: white;
+  padding: 1rem 2.5rem;
+  border: none;
+  border-radius: 50px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-block;
+  box-shadow: 0 4px 15px rgba(139, 69, 19, 0.3);
+}
+
+.cta-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(139, 69, 19, 0.4);
+}
+
+.cta-button.primary {
+  background: linear-gradient(135deg, var(--primary-brown) 0%, #a0522d 100%);
+}
+
+.cta-button.secondary {
+  background: transparent;
+  color: var(--primary-brown);
+  border: 2px solid var(--primary-brown);
+}
+
+.cta-button.secondary:hover {
+  background: var(--primary-brown);
+  color: white;
+}
+
+/* Section Styles */
+.section {
+  padding: 4rem 0;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.section-title {
+  font-size: 2.5rem;
+  color: var(--primary-brown);
+  text-align: center;
+  margin-bottom: 3rem;
+  font-weight: bold;
+}
+
+.about-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: center;
+  padding: 0 2rem;
+}
+
+.about-text {
+  font-size: 1.1rem;
+  line-height: 1.8;
+  color: var(--text-dark);
+}
+
+.about-text p {
+  margin-bottom: 1.5rem;
+}
+
+/* Country Carousel */
+.country-flags {
+  background: var(--cream-white);
+  padding: 4rem 0;
+}
+
+.flags-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.flags-title {
+  font-size: 2.5rem;
+  color: var(--primary-brown);
+  text-align: center;
+  margin-bottom: 3rem;
+  font-weight: bold;
+}
+
+.flags-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+}
+
+.flag-item {
+  text-align: center;
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 5px 20px rgba(139, 69, 19, 0.1);
+  transition: transform 0.3s ease;
+}
+
+.flag-item:hover {
+  transform: translateY(-5px);
+}
+
+.flag-image {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.flag-name {
+  font-size: 1.2rem;
+  color: var(--primary-brown);
+  font-weight: 600;
+}
+
+/* Events Section */
+.events-section {
+  padding: 4rem 0;
+  background: #f9f9f9;
+}
+
+.events-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.events-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.events-subtitle {
+  font-size: 1.2rem;
+  color: var(--text-dark);
+  opacity: 0.8;
+}
+
+.events-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+}
+
+.column-title {
+  font-size: 1.8rem;
+  color: var(--primary-brown);
+  margin-bottom: 2rem;
+  font-weight: 600;
+}
+
+.event-card,
+.news-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 3px 15px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1.5rem;
+  transition: transform 0.3s ease;
+}
+
+.event-card:hover,
+.news-card:hover {
+  transform: translateY(-3px);
+}
+
+.event-type,
+.news-category {
+  background: var(--light-brown);
+  color: var(--primary-brown);
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: inline-block;
+  margin-bottom: 1rem;
+}
+
+.event-title,
+.news-title {
+  font-size: 1.3rem;
+  color: var(--primary-brown);
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.event-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.event-detail {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-dark);
+  font-size: 0.9rem;
+}
+
+.event-description,
+.news-excerpt {
+  color: var(--text-dark);
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+.event-btn,
+.news-btn {
+  background: var(--primary-brown);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.3s ease;
+}
+
+.event-btn:hover,
+.news-btn:hover {
+  background: #a0522d;
+}
+
+.news-date {
+  color: var(--text-dark);
+  font-size: 0.9rem;
+  opacity: 0.7;
+  margin-bottom: 0.5rem;
+}
+
+/* CTA Section */
+.cta-section {
+  background: linear-gradient(135deg, var(--primary-brown) 0%, #a0522d 100%);
+  color: white;
+  text-align: center;
+  padding: 4rem 0;
+}
+
+.cta-content {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.cta-content h2 {
+  font-size: 2.5rem;
+  margin-bottom: 1.5rem;
+  font-weight: bold;
+}
+
+.cta-content p {
+  font-size: 1.2rem;
+  margin-bottom: 2rem;
+  opacity: 0.9;
+  line-height: 1.6;
+}
+
+.cta-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* Footer */
+.footer {
+  background: var(--text-dark);
+  color: white;
+  padding: 3rem 0;
+  text-align: center;
+}
+
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.footer-content h3 {
+  font-size: 1.8rem;
+  margin-bottom: 1rem;
+  color: var(--light-brown);
+}
+
+/* Membership Page Styles */
+.membership-page {
+  min-height: 100vh;
+}
+
+.membership-hero {
+  background: linear-gradient(135deg, var(--cream-white) 0%, #f5f5dc 100%);
+  text-align: center;
+  padding: 4rem 0;
+}
+
+.membership-hero h1 {
+  font-size: 3rem;
+  color: var(--primary-brown);
+  margin-bottom: 1rem;
+  font-weight: bold;
+}
+
+.membership-hero p {
+  font-size: 1.3rem;
+  color: var(--text-dark);
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.membership-content {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 4rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 4rem 2rem;
+}
+
+.membership-info {
+  margin-right: 2rem;
+}
+
+.vision-section,
+.mission-section,
+.membership-benefits {
+  margin-bottom: 3rem;
+}
+
+.vision-section h2,
+.mission-section h2,
+.membership-benefits h2 {
+  font-size: 2rem;
+  color: var(--primary-brown);
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+}
+
+.vision-quote {
+  background: var(--cream-white);
+  padding: 2rem;
+  border-radius: 12px;
+  border-left: 4px solid var(--primary-brown);
+  font-style: italic;
+  font-size: 1.1rem;
+  margin-bottom: 2rem;
+}
+
+.vision-content,
+.mission-content {
+  color: var(--text-dark);
+  line-height: 1.7;
+}
+
+.vision-content p,
+.mission-content p {
+  margin-bottom: 1.5rem;
+}
+
+.benefit {
+  margin-bottom: 2rem;
+}
+
+.benefit h3 {
+  color: var(--primary-brown);
+  font-size: 1.3rem;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.benefit p {
+  color: var(--text-dark);
+  line-height: 1.6;
+}
+
+.registration-section {
+  padding: 2rem 0;
+  background: var(--primary-bg);
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.registration-section h2 {
+  font-size: 1.8rem;
+  color: var(--primary-brown);
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.registration-section p {
+  text-align: center;
+  color: var(--text-dark);
+  margin-bottom: 2rem;
+}
+
+.existing-member {
+  margin-top: 1.5rem;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.existing-member a {
+  color: var(--primary-color);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.existing-member a:hover {
+  text-decoration: underline;
+}
+
+/* Form Styles */
+.membership-form {
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.membership-form h2 {
+  font-size: 1.5rem;
+  color: var(--primary-brown);
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.compact-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: var(--primary-bg);
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.compact-form .form-group {
+  margin-bottom: 1rem;
+}
+
+.compact-form label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: var(--text-dark);
+}
+
+.compact-form input,
+.compact-form select,
+.compact-form textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 1rem;
+  transition: border-color 0.3s ease;
+}
+
+.compact-form input:focus,
+.compact-form select:focus,
+.compact-form textarea:focus {
+  outline: none;
+  border-color: var(--primary-brown);
+}
+
+.compact-form textarea {
+  resize: vertical;
+  min-height: 75px;
+}
+
+.volunteer-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.volunteer-checkbox span {
+  margin: 0;
+  color: var(--text-dark);
+}
+
+.cta-button {
+  margin-top: 1rem;
+  padding: 0.75rem 1.5rem;
+  width: fit-content;
+  align-self: flex-start;
+}
+
+/* Thank You Page */
+.thank-you-page {
+  min-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 4rem 2rem;
+}
+
+.thank-you-page h2 {
+  font-size: 2.5rem;
+  color: var(--primary-brown);
+  margin-bottom: 1.5rem;
+  font-weight: bold;
+}
+
+.thank-you-page p {
+  font-size: 1.2rem;
+  color: var(--text-dark);
+  margin-bottom: 2rem;
+  max-width: 600px;
+  line-height: 1.6;
+}
+
+/* Responsive Design */
+@media screen and (max-width: 768px) {
+  .header-content {
+    padding: 0 1rem;
+    flex-direction: row; /* Fixed header layout to keep logo and hamburger on same line */
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+  }
+
+  .nav-container {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--primary-brown);
+    transform: translateY(-100%);
+    opacity: 0;
+    visibility: hidden;
+    z-index: 1000;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  }
+
+  .nav-container.mobile-open {
+    transform: translateY(0);
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .nav {
+    flex-direction: column;
+    gap: 0;
+    padding: 1rem 0;
+  }
+
+  .nav li {
+    width: 100%;
+  }
+
+  .nav a {
+    display: block;
+    padding: 1rem 2rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    transition: background 0.3s ease;
+    color: white;
+    text-decoration: none;
+  }
+
+  .nav a:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: none;
+  }
+
+  .mobile-menu-btn {
+    display: block;
+    z-index: 1001; /* Added z-index to ensure hamburger button is clickable */
+  }
+
+  /* Hero Section Mobile */
+  .hero {
+    min-height: 60vh;
+    padding: 2rem 0;
+  }
+
+  .hero-content {
+    flex-direction: column;
+    text-align: center;
+    gap: 2rem;
+    padding: 0 1rem;
+  }
+
+  .welcome-title {
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .hero-subtitle {
+    font-size: 1.1rem;
+  }
+
+  .hero-description {
+    font-size: 1rem;
+  }
+
+  .hero-logo-img {
+    max-width: 280px;
+  }
+
+  /* Section Responsive */
+  .section {
+    padding: 3rem 0;
+  }
+
+  .section-title {
+    font-size: 2rem;
+    margin-bottom: 2rem;
+  }
+
+  .about-content {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    padding: 0 1rem;
+  }
+
+  /* Events Section Mobile */
+  .events-container {
+    padding: 0 1rem;
+  }
+
+  .events-content {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .column-title {
+    font-size: 1.5rem;
+  }
+
+  /* Country Flags Mobile */
+  .flags-container {
+    padding: 0 1rem;
+  }
+
+  .flags-title {
+    font-size: 2rem;
+  }
+
+  .flags-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+  }
+
+  /* CTA Section Mobile */
+  .cta-content {
+    padding: 0 1rem;
+  }
+
+  .cta-content h2 {
+    font-size: 2rem;
+  }
+
+  .cta-content p {
+    font-size: 1.1rem;
+  }
+
+  .cta-buttons {
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  /* Membership Page Mobile */
+  .membership-hero h1 {
+    font-size: 2.2rem;
+  }
+
+  .membership-hero p {
+    font-size: 1.1rem;
+    padding: 0 1rem;
+  }
+
+  .membership-content {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    padding: 2rem 1rem;
+  }
+
+  .membership-info {
+    margin-right: 0;
+  }
+
+  .vision-section h2,
+  .mission-section h2,
+  .membership-benefits h2 {
+    font-size: 1.7rem;
+  }
+
+  /* Form Mobile */
+  .membership-form {
+    padding: 0 1rem;
+  }
+
+  .compact-form {
+    padding: 1rem;
+  }
+
+  .cta-button {
+    width: 100%;
+    text-align: center;
+    align-self: stretch;
+  }
+
+  /* Thank You Page Mobile */
+  .thank-you-page {
+    padding: 2rem 1rem;
+  }
+
+  .thank-you-page h2 {
+    font-size: 2rem;
+  }
+
+  .thank-you-page p {
+    font-size: 1.1rem;
+  }
+}
+
+/* Small Mobile Devices */
+@media screen and (max-width: 480px) {
+  .welcome-title {
+    font-size: 2rem;
+  }
+
+  .hero-subtitle {
+    font-size: 1rem;
+  }
+
+  .hero-description {
+    font-size: 0.95rem;
+  }
+
+  .section-title {
+    font-size: 1.8rem;
+  }
+
+  .flags-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .cta-content h2 {
+    font-size: 1.8rem;
+  }
+
+  .membership-hero h1 {
+    font-size: 1.9rem;
+  }
+}
