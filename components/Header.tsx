@@ -36,6 +36,7 @@ const Header = () => {
           <Link href="/membership">Membership</Link>
           <Link href="/branches">Branches</Link>
           <Link href="/events">Events</Link>
+          <Link href="/blog">Blog<Link>
           {session && <Link href="/dashboard">Dashboard</Link>}
         </nav>
 
@@ -154,6 +155,15 @@ const Header = () => {
                 className="block py-2 hover:text-gray-200 transition-colors"
               >
                 Events
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/blog"
+                onClick={() => setIsMenuOpen(false)}
+                className="block py-2 hover:text-gray-200 transition-colors"
+              >
+                Blog
               </Link>
             </li>
 
