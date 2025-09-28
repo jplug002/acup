@@ -10,7 +10,7 @@ const Header = () => {
   const { data: session, status } = useSession()
 
   return (
-    <header className="header">
+  <header className="header bg-orange-500">
       <div className="header-content">
         <div className="logo">
           <Image
