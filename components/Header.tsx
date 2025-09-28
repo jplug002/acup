@@ -36,7 +36,7 @@ const Header = () => {
           <Link href="/membership">Membership</Link>
           <Link href="/branches">Branches</Link>
           <Link href="/events">Events</Link>
-          <Link href="/blog">Blog<Link>
+          <Link href="/blog">Blog</Link>
           {session && <Link href="/dashboard">Dashboard</Link>}
         </nav>
 
