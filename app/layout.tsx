@@ -1,18 +1,23 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { GeistSans } from "geist/font/sans"
-import { GeistMono } from "geist/font/mono"
-import { Analytics } from "@vercel/analytics/next"
+import { Inter } from "next/font/google"
 import "./globals.css"
 import Header from "@/components/Header"
 import Footer from "@/components/Footer"
 import AuthProvider from "@/components/AuthProvider"
 import { Suspense } from "react"
 
+const inter = Inter({ subsets: ["latin"] })
+
 export const metadata: Metadata = {
   title: "ACUP - African Cup Political Party",
   description: "Building Africa's Future Together",
   generator: "v0.app",
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/acup-logo.jpg",
+    apple: "/acup-logo.jpg",
+  },
 }
 
 export default function RootLayout({
@@ -22,7 +27,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
+      <body className={`font-sans ${inter.className}`}>
         <AuthProvider>
           <Suspense fallback={<div>Loading...</div>}>
             <Header />
@@ -30,7 +35,6 @@ export default function RootLayout({
             <Footer />
           </Suspense>
         </AuthProvider>
-        <Analytics />
       </body>
     </html>
   )

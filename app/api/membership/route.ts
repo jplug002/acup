@@ -1,9 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { getServerSession } from "next-auth/next"
-import { authOptions } from "@/lib/auth"
-import { membershipQueries, userQueries } from "@/lib/db"
+import { neon } from "@neondatabase/serverless"
 
-interface MembershipData {
+const sql = neon(process.env.DATABASE_URL!)
+
+interface MembershipApplicationData {
   fullName: string
   phoneNumber: string
   region: string
@@ -12,82 +12,111 @@ interface MembershipData {
   gender: string
   volunteerStatus: boolean
   motivation: string
-  userId?: string
+  dateOfBirth: string
+  address: string
+  city: string
+  postalCode: string
+  education: string
+  experience: string
+  skills: string
+  languages: string
+  emergencyContact: string
+  emergencyPhone: string
+  politicalExperience: string
+  leadershipRoles: string
+  communityInvolvement: string
+  expectations: string
   email?: string
+  userId?: string
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    const data: MembershipData = await request.json()
+    const data: MembershipApplicationData = await request.json()
+
+    console.log("[v0] Received membership application data:", data)
 
     // Validate required fields
     const requiredFields = ["fullName", "phoneNumber", "region", "country", "profession", "gender", "motivation"]
-    const missingFields = requiredFields.filter((field) => !data[field as keyof MembershipData])
+    const missingFields = requiredFields.filter((field) => !data[field as keyof MembershipApplicationData])
 
     if (missingFields.length > 0) {
+      console.log("[v0] Missing required fields:", missingFields)
       return NextResponse.json({ error: "Missing required fields", missingFields }, { status: 400 })
     }
 
-    let userId = session?.user?.id
-    let userEmail = session?.user?.email
+    const nameParts = data.fullName.trim().split(" ")
+    const firstName = nameParts[0] || ""
+    const lastName = nameParts.slice(1).join(" ") || ""
 
-    if (!userId && data.email) {
-      // Check if user exists by email
-      const existingUser = await userQueries.findByEmail(data.email)
-      if (existingUser) {
-        userId = existingUser.id
-        userEmail = existingUser.email
-      }
-    }
+    const result = await sql`
+      INSERT INTO membership_applications (
+        application_id,
+        first_name,
+        last_name,
+        phone,
+        email,
+        address,
+        occupation,
+        motivation,
+        status,
+        created_at,
+        updated_at
+      ) VALUES (
+        ${`APP-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`},
+        ${firstName},
+        ${lastName},
+        ${data.phoneNumber},
+        ${data.email || ""},
+        ${`${data.address}, ${data.city}, ${data.region}, ${data.country} ${data.postalCode}`.trim()},
+        ${data.profession},
+        ${data.motivation},
+        'pending',
+        NOW(),
+        NOW()
+      ) RETURNING id, application_id
+    `
 
-    if (!userId) {
-      return NextResponse.json(
-        {
-          error: "User account required. Please register or login first.",
-        },
-        { status: 400 },
-      )
-    }
-
-    const existingMembership = await membershipQueries.findByUserId(userId)
-    if (existingMembership) {
-      return NextResponse.json(
-        {
-          error: "You already have a membership application.",
-          membershipId: existingMembership.membership_number,
-          status: existingMembership.status,
-        },
-        { status: 400 },
-      )
-    }
-
-    await userQueries.update(userId, {
-      name: data.fullName,
-      phone: data.phoneNumber,
-      country: data.country,
-      occupation: data.profession,
-      interests: data.motivation,
-    })
-
-    const membership = await membershipQueries.create({
-      user_id: userId,
-      membership_type: "standard",
-      notes: `Application details: Region: ${data.region}, Gender: ${data.gender}, Volunteer: ${data.volunteerStatus ? "Yes" : "No"}, Motivation: ${data.motivation}`,
-    })
+    console.log("[v0] Successfully inserted membership application:", result[0])
 
     const response = {
       success: true,
-      message: "Membership application submitted successfully! Check your dashboard for updates.",
-      membershipId: membership.membership_number,
-      status: membership.status,
-      redirectTo: "/dashboard",
-      userLinked: true,
+      message:
+        "Membership application submitted successfully! We will review your application and get back to you soon.",
+      applicationId: result[0].application_id,
+      status: "pending",
     }
 
     return NextResponse.json(response, { status: 201 })
   } catch (error) {
-    console.error("Error processing membership application:", error)
+    console.error("[v0] Error processing membership application:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+  }
+}
+
+export async function GET() {
+  try {
+    const applications = await sql`
+      SELECT 
+        id,
+        application_id,
+        first_name,
+        last_name,
+        phone,
+        email,
+        address,
+        occupation,
+        motivation,
+        status,
+        created_at,
+        updated_at
+      FROM membership_applications 
+      ORDER BY created_at DESC
+    `
+
+    return NextResponse.json(applications)
+  } catch (error) {
+    console.error("[v0] Error fetching membership applications:", error)
+    return NextResponse.json({ error: "Failed to fetch applications" }, { status: 500 })
   }
 }

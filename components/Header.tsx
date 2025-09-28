@@ -1,4 +1,6 @@
 "use client"
+
+import React from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { useState } from "react"
@@ -7,62 +9,162 @@ import { Button } from "@/components/ui/button"
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const { data: session, status } = useSession()
+  const { data: session } = useSession()
 
   return (
-  <header className="header bg-orange-500">
-      <div className="header-content">
-        <div className="logo">
-          <Image
-            src="/ACUP LOGO.jpg"
-            alt="ACUP Logo"
-            width={40}
-            height={40}
-            style={{ height: "40px", width: "auto" }}
-          />
+    <header className="bg-red-500 text-white shadow-md relative">
+      <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+        {/* Logo */}
+        <div className="flex items-center space-x-2">
+          <Link href="/">
+            <Image
+              src="/acup-logo.jpg"
+              alt="ACUP Logo"
+              width={120}
+              height={40}
+              style={{ height: "40px", width: "auto" }}
+              className="object-contain cursor-pointer"
+            />
+          </Link>
         </div>
+
+        {/* Navigation links (desktop) */}
+        <nav className="hidden md:flex space-x-6 font-medium">
+          <Link href="/">Welcome</Link>
+          <Link href="/ideology">Ideology</Link>
+          <Link href="/leadership">Leadership</Link>
+          <Link href="/membership">Membership</Link>
+          <Link href="/branches">Branches</Link>
+          <Link href="/events">Events</Link>
+          {session && <Link href="/dashboard">Dashboard</Link>}
+        </nav>
+
+        {/* Desktop Auth Buttons */}
+        <div className="hidden md:flex space-x-3">
+          {session ? (
+            <Button
+              onClick={() => signOut({ callbackUrl: "/" })}
+              variant="secondary"
+              size="sm"
+              className="bg-white text-red-600 hover:bg-gray-100"
+            >
+              Sign Out
+            </Button>
+          ) : (
+            <>
+              <Link href="/auth/login">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="bg-white text-red-600 hover:bg-gray-100"
+                >
+                  Login
+                </Button>
+              </Link>
+              <Link href="/auth/register">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="bg-white text-red-600 hover:bg-gray-100"
+                >
+                  Register
+                </Button>
+              </Link>
+            </>
+          )}
+        </div>
+
+        {/* Mobile Menu Button */}
         <button
-          className="mobile-menu-btn md:hidden"
+          className="md:hidden flex flex-col justify-center items-center w-8 h-8 space-y-1.5"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
           aria-label="Toggle menu"
         >
-          <div className={`hamburger ${isMenuOpen ? "active" : ""}`}>
-            <span></span>
-            <span></span>
-            <span></span>
-          </div>
+          <span
+            className={`block w-6 h-0.5 bg-white transition-all duration-300 ${
+              isMenuOpen ? "rotate-45 translate-y-2" : ""
+            }`}
+          ></span>
+          <span
+            className={`block w-6 h-0.5 bg-white transition-all duration-300 ${
+              isMenuOpen ? "opacity-0" : ""
+            }`}
+          ></span>
+          <span
+            className={`block w-6 h-0.5 bg-white transition-all duration-300 ${
+              isMenuOpen ? "-rotate-45 -translate-y-2" : ""
+            }`}
+          ></span>
         </button>
-        <nav className={`nav-container ${isMenuOpen ? "mobile-open" : ""}`}>
-          <ul className="nav">
+      </div>
+
+      {/* Mobile Navigation */}
+      {isMenuOpen && (
+        <nav className="absolute top-full left-0 w-full bg-red-500 md:hidden z-50 shadow-lg">
+          <ul className="flex flex-col space-y-3 p-4 border-t border-red-400">
             <li>
-              <Link href="/" onClick={() => setIsMenuOpen(false)}>
+              <Link
+                href="/"
+                onClick={() => setIsMenuOpen(false)}
+                className="block py-2 hover:text-gray-200 transition-colors"
+              >
                 Welcome
               </Link>
             </li>
             <li>
-              <Link href="/ideology" onClick={() => setIsMenuOpen(false)}>
+              <Link
+                href="/ideology"
+                onClick={() => setIsMenuOpen(false)}
+                className="block py-2 hover:text-gray-200 transition-colors"
+              >
                 Ideology
               </Link>
             </li>
             <li>
-              <Link href="/membership" onClick={() => setIsMenuOpen(false)}>
+              <Link
+                href="/leadership"
+                onClick={() => setIsMenuOpen(false)}
+                className="block py-2 hover:text-gray-200 transition-colors"
+              >
+                Leadership
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/membership"
+                onClick={() => setIsMenuOpen(false)}
+                className="block py-2 hover:text-gray-200 transition-colors"
+              >
                 Membership
               </Link>
             </li>
             <li>
-              <Link href="/branches" onClick={() => setIsMenuOpen(false)}>
+              <Link
+                href="/branches"
+                onClick={() => setIsMenuOpen(false)}
+                className="block py-2 hover:text-gray-200 transition-colors"
+              >
                 Branches
               </Link>
             </li>
             <li>
-              <Link href="/events" onClick={() => setIsMenuOpen(false)}>
+              <Link
+                href="/events"
+                onClick={() => setIsMenuOpen(false)}
+                className="block py-2 hover:text-gray-200 transition-colors"
+              >
                 Events
               </Link>
             </li>
+
             {session ? (
               <>
                 <li>
-                  <Link href="/dashboard" onClick={() => setIsMenuOpen(false)}>
+                  <Link
+                    href="/dashboard"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="block py-2 hover:text-gray-200 transition-colors"
+                  >
                     Dashboard
                   </Link>
                 </li>
@@ -74,7 +176,7 @@ const Header = () => {
                     }}
                     variant="ghost"
                     size="sm"
-                    className="text-white hover:text-gray-200"
+                    className="text-white hover:text-gray-200 w-full justify-start p-2"
                   >
                     Sign Out
                   </Button>
@@ -83,12 +185,20 @@ const Header = () => {
             ) : (
               <>
                 <li>
-                  <Link href="/auth/login" onClick={() => setIsMenuOpen(false)}>
+                  <Link
+                    href="/auth/login"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="block py-2 hover:text-gray-200 transition-colors"
+                  >
                     Login
                   </Link>
                 </li>
                 <li>
-                  <Link href="/auth/register" onClick={() => setIsMenuOpen(false)}>
+                  <Link
+                    href="/auth/register"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="block py-2 hover:text-gray-200 transition-colors"
+                  >
                     Register
                   </Link>
                 </li>
@@ -96,7 +206,7 @@ const Header = () => {
             )}
           </ul>
         </nav>
-      </div>
+      )}
     </header>
   )
 }

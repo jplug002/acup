@@ -1,0 +1,122 @@
+import { type NextRequest, NextResponse } from "next/server"
+import { neon } from "@neondatabase/serverless"
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth"
+
+const sql = neon(process.env.DATABASE_URL!)
+
+export async function GET() {
+  try {
+    const session = await getServerSession(authOptions)
+
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    // Get user profile with membership info
+    const profile = await sql`
+      SELECT 
+        u.id, u.first_name, u.last_name, u.email, u.image, u.role, u.status, u.created_at,
+        up.*,
+        m.membership_type, m.status as membership_status, m.joined_date, m.notes as membership_notes
+      FROM users u
+      LEFT JOIN user_profiles up ON u.id = up.user_id
+      LEFT JOIN memberships m ON u.id = m.user_id
+      WHERE u.id = ${session.user.id}
+    `
+
+    if (profile.length === 0) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 })
+    }
+
+    return NextResponse.json({ profile: profile[0] })
+  } catch (error) {
+    console.error("Error fetching profile:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions)
+
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const data = await request.json()
+
+    // Check if profile exists
+    const existingProfile = await sql`
+      SELECT id FROM user_profiles WHERE user_id = ${session.user.id}
+    `
+
+    if (existingProfile.length > 0) {
+      // Update existing profile
+      const updatedProfile = await sql`
+        UPDATE user_profiles SET
+          bio = ${data.bio || null},
+          profile_picture = ${data.profile_picture || null},
+          date_of_birth = ${data.date_of_birth || null},
+          gender = ${data.gender || null},
+          phone = ${data.phone || null},
+          address = ${data.address || null},
+          city = ${data.city || null},
+          state = ${data.state || null},
+          country = ${data.country || null},
+          postal_code = ${data.postal_code || null},
+          occupation = ${data.occupation || null},
+          employer = ${data.employer || null},
+          education_level = ${data.education_level || null},
+          political_experience = ${data.political_experience || null},
+          languages_spoken = ${data.languages_spoken || "{}"},
+          interests = ${data.interests || "{}"},
+          skills = ${data.skills || "{}"},
+          emergency_contact_name = ${data.emergency_contact_name || null},
+          emergency_contact_phone = ${data.emergency_contact_phone || null},
+          emergency_contact_relationship = ${data.emergency_contact_relationship || null},
+          sponsor_name = ${data.sponsor_name || null},
+          branch_preference = ${data.branch_preference || null},
+          volunteer_interests = ${data.volunteer_interests || "{}"},
+          social_media_links = ${JSON.stringify(data.social_media_links || {})},
+          preferred_communication = ${data.preferred_communication || null},
+          newsletter_subscription = ${data.newsletter_subscription !== undefined ? data.newsletter_subscription : true},
+          privacy_settings = ${JSON.stringify(data.privacy_settings || {})},
+          updated_at = CURRENT_TIMESTAMP
+        WHERE user_id = ${session.user.id}
+        RETURNING *
+      `
+
+      return NextResponse.json({ profile: updatedProfile[0] })
+    } else {
+      // Create new profile
+      const newProfile = await sql`
+        INSERT INTO user_profiles (
+          user_id, bio, profile_picture, date_of_birth, gender, phone, address, city, state, country,
+          postal_code, occupation, employer, education_level, political_experience, languages_spoken,
+          interests, skills, emergency_contact_name, emergency_contact_phone, emergency_contact_relationship,
+          sponsor_name, branch_preference, volunteer_interests, social_media_links, preferred_communication,
+          newsletter_subscription, privacy_settings
+        ) VALUES (
+          ${session.user.id}, ${data.bio || null}, ${data.profile_picture || null}, ${data.date_of_birth || null},
+          ${data.gender || null}, ${data.phone || null}, ${data.address || null}, ${data.city || null},
+          ${data.state || null}, ${data.country || null}, ${data.postal_code || null}, ${data.occupation || null},
+          ${data.employer || null}, ${data.education_level || null}, ${data.political_experience || null},
+          ${data.languages_spoken || "{}"}, ${data.interests || "{}"}, ${data.skills || "{}"},
+          ${data.emergency_contact_name || null}, ${data.emergency_contact_phone || null},
+          ${data.emergency_contact_relationship || null}, ${data.sponsor_name || null},
+          ${data.branch_preference || null}, ${data.volunteer_interests || "{}"}, 
+          ${JSON.stringify(data.social_media_links || {})}, ${data.preferred_communication || null},
+          ${data.newsletter_subscription !== undefined ? data.newsletter_subscription : true},
+          ${JSON.stringify(data.privacy_settings || {})}
+        )
+        RETURNING *
+      `
+
+      return NextResponse.json({ profile: newProfile[0] })
+    }
+  } catch (error) {
+    console.error("Error saving profile:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+  }
+}

@@ -33,20 +33,20 @@ export default function MembershipCard({ showActions = true }: MembershipCardPro
   return (
     <div className="max-w-md mx-auto">
       {/* Digital Membership Card */}
-      <Card className="bg-gradient-to-br from-blue-600 to-blue-800 text-white border-0 shadow-xl">
+      <Card className="bg-gradient-to-br from-red-600 to-red-800 text-white border-0 shadow-xl">
         <CardContent className="p-6">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center space-x-3">
               <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center">
-                <Image src="/ACUP LOGO.jpg" alt="ACUP Logo" width={32} height={32} className="rounded-full" />
+                <Image src="/acup-logo.jpg" alt="ACUP Logo" width={32} height={32} className="rounded-full" />
               </div>
               <div>
                 <h3 className="font-bold text-lg">ACUP</h3>
-                <p className="text-blue-100 text-sm">African Cup Political Party</p>
+                <p className="text-red-100 text-sm">African Cup Political Party</p>
               </div>
             </div>
-            <Badge className="bg-white text-blue-800 hover:bg-gray-100">
+            <Badge className="bg-white text-red-800 hover:bg-gray-100">
               {session.user.membershipStatus || "Active"}
             </Badge>
           </div>
@@ -54,30 +54,30 @@ export default function MembershipCard({ showActions = true }: MembershipCardPro
           {/* Member Info */}
           <div className="space-y-4">
             <div>
-              <p className="text-blue-100 text-sm uppercase tracking-wide">Member Name</p>
+              <p className="text-red-100 text-sm uppercase tracking-wide">Member Name</p>
               <p className="font-semibold text-xl">{session.user.name}</p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-blue-100 text-sm uppercase tracking-wide">Member ID</p>
+                <p className="text-red-100 text-sm uppercase tracking-wide">Member ID</p>
                 <p className="font-mono text-sm">{membershipId}</p>
               </div>
               <div>
-                <p className="text-blue-100 text-sm uppercase tracking-wide">Valid Until</p>
+                <p className="text-red-100 text-sm uppercase tracking-wide">Valid Until</p>
                 <p className="font-mono text-sm">12/2025</p>
               </div>
             </div>
 
             <div>
-              <p className="text-blue-100 text-sm uppercase tracking-wide">Email</p>
+              <p className="text-red-100 text-sm uppercase tracking-wide">Email</p>
               <p className="text-sm">{session.user.email}</p>
             </div>
           </div>
 
           {/* Footer */}
-          <div className="mt-6 pt-4 border-t border-blue-500">
-            <p className="text-blue-100 text-xs text-center">Building Africa's Future Together</p>
+          <div className="mt-6 pt-4 border-t border-red-500">
+            <p className="text-red-100 text-xs text-center">Building Africa's Future Together</p>
           </div>
         </CardContent>
       </Card>

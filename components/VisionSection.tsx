@@ -1,20 +1,20 @@
 const VisionSection = () => {
   return (
     <section className="section mission-section">
-      <h2 className="section-title">Our Vision</h2>
+      <h2 className="section-title text-blue-300">Our Vision</h2>
       <div className="about-text">
         <div
           style={{
-            background: "var(--cream-white)",
+            background: "var(--light-blue)",
             padding: "2rem",
             borderRadius: "12px",
             marginBottom: "2rem",
-            border: "2px solid var(--light-brown)",
+            border: "2px solid var(--light-blue)",
           }}
         >
           <h3
             style={{
-              color: "var(--primary-brown)",
+              color: "var(--primary-blue)",
               marginBottom: "1rem",
               fontSize: "1.3rem",
               fontWeight: "bold",

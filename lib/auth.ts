@@ -1,9 +1,12 @@
 import type { NextAuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import bcrypt from "bcryptjs"
-import { userQueries, membershipQueries } from "./db"
+import { neon } from "@neondatabase/serverless"
+
+const sql = neon(process.env.DATABASE_URL!)
 
 export const authOptions: NextAuthOptions = {
+  secret: process.env.NEXTAUTH_SECRET || "fallback-secret-for-development",
   providers: [
     CredentialsProvider({
       name: "credentials",
@@ -13,36 +16,50 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
+          console.log("[v0] Missing credentials")
           return null
         }
 
-        const user = await userQueries.findByEmail(credentials.email)
+        try {
+          console.log("[v0] Attempting to find user:", credentials.email)
 
-        if (!user) {
+          const users = await sql`
+            SELECT * FROM users WHERE email = ${credentials.email}
+          `
+
+          if (users.length === 0) {
+            console.log("[v0] User not found")
+            return null
+          }
+
+          const user = users[0]
+          console.log("[v0] User found, checking password")
+
+          const isPasswordValid = await bcrypt.compare(credentials.password, user.password_hash)
+
+          if (!isPasswordValid) {
+            console.log("[v0] Invalid password")
+            return null
+          }
+
+          console.log("[v0] Password valid, returning user data")
+
+          return {
+            id: user.id.toString(),
+            email: user.email,
+            name: user.first_name + " " + user.last_name,
+            role: user.role || "USER",
+          }
+        } catch (error) {
+          console.error("[v0] Auth error:", error)
           return null
-        }
-
-        const isPasswordValid = await bcrypt.compare(credentials.password, user.password_hash)
-
-        if (!isPasswordValid) {
-          return null
-        }
-
-        const membership = await membershipQueries.findByUserId(user.id)
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          role: user.role,
-          membershipStatus: membership?.status || "none",
-          membershipNumber: membership?.membership_number || null,
         }
       },
     }),
   ],
   session: {
     strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   pages: {
     signIn: "/auth/login",
@@ -52,8 +69,6 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.role = user.role
-        token.membershipStatus = user.membershipStatus
-        token.membershipNumber = user.membershipNumber
       }
       return token
     },
@@ -61,12 +76,11 @@ export const authOptions: NextAuthOptions = {
       if (token) {
         session.user.id = token.sub
         session.user.role = token.role
-        session.user.membershipStatus = token.membershipStatus
-        session.user.membershipNumber = token.membershipNumber
       }
       return session
     },
   },
+  debug: process.env.NODE_ENV === "development",
 }
 
 export async function createUser(userData: {
@@ -81,28 +95,53 @@ export async function createUser(userData: {
   education?: string
   interests?: string
 }) {
-  const hashedPassword = await bcrypt.hash(userData.password, 12)
+  try {
+    console.log("[v0] Creating user with data:", { ...userData, password: "[REDACTED]" })
+    const hashedPassword = await bcrypt.hash(userData.password, 12)
 
-  const newUser = await userQueries.create({
-    name: userData.name,
-    email: userData.email,
-    password_hash: hashedPassword,
-    phone: userData.phone,
-    country: userData.country,
-    city: userData.city,
-    date_of_birth: userData.date_of_birth,
-    occupation: userData.occupation,
-    education: userData.education,
-    interests: userData.interests,
-  })
+    const nameParts = userData.name.trim().split(" ")
+    const firstName = nameParts[0] || ""
+    const lastName = nameParts.slice(1).join(" ") || ""
 
-  return newUser
+    const result = await sql`
+      INSERT INTO users (
+        first_name, last_name, email, password_hash, role, status, created_at, updated_at
+      )
+      VALUES (
+        ${firstName}, ${lastName}, ${userData.email}, ${hashedPassword}, 
+        'USER', 'active', NOW(), NOW()
+      )
+      RETURNING *
+    `
+
+    console.log("[v0] User created successfully:", result[0].id)
+    return result[0]
+  } catch (error) {
+    console.error("[v0] Error creating user:", error)
+    throw error
+  }
 }
 
 export async function getUserByEmail(email: string) {
-  return await userQueries.findByEmail(email)
+  try {
+    const users = await sql`
+      SELECT * FROM users WHERE email = ${email}
+    `
+    return users.length > 0 ? users[0] : null
+  } catch (error) {
+    console.error("[v0] Error getting user by email:", error)
+    throw error
+  }
 }
 
 export async function getUserById(id: string) {
-  return await userQueries.findById(id)
+  try {
+    const users = await sql`
+      SELECT * FROM users WHERE id = ${id}
+    `
+    return users.length > 0 ? users[0] : null
+  } catch (error) {
+    console.error("[v0] Error getting user by ID:", error)
+    throw error
+  }
 }

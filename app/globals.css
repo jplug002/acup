@@ -4,41 +4,37 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  /* Updated design tokens for modern admin dashboard */
+  --background: #ffffff;
+  --foreground: #1f2937;
+  --card: #f1f5f9;
+  --card-foreground: #1f2937;
+  --popover: #ffffff;
+  --popover-foreground: #1f2937;
+  --primary: #c8102e;
+  --primary-foreground: #ffffff;
+  --secondary: #003da5;
+  --secondary-foreground: #ffffff;
+  --muted: #6b7280;
+  --muted-foreground: #ffffff;
+  --accent: #003da5;
+  --accent-foreground: #ffffff;
+  --destructive: #c8102e;
+  --destructive-foreground: #ffffff;
+  --border: #e5e7eb;
+  --input: #f1f5f9;
+  --ring: rgba(200, 16, 46, 0.5);
+  --radius: 0.5rem;
+  --sidebar: #f1f5f9;
+  --sidebar-foreground: #1f2937;
+  --sidebar-primary: #c8102e;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #003da5;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #e5e7eb;
+  --sidebar-ring: rgba(0, 61, 165, 0.5);
 
-  /* Added ACUP-specific CSS variables for styling */
+  /* Legacy ACUP-specific variables for backward compatibility */
   --primary-brown: #8b4513;
   --light-brown: #d2b48c;
   --cream-white: #fff8dc;
@@ -84,8 +80,8 @@
 }
 
 @theme inline {
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-inter);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -132,8 +128,6 @@
     @apply bg-background text-foreground;
   }
 }
-
-/* Added ACUP-specific styling from original CSS files */
 
 /* Header Styles */
 .header {
@@ -313,7 +307,7 @@
 
 /* CTA Button */
 .cta-button {
-  background: linear-gradient(135deg, var(--primary-brown) 0%, #a0522d 100%);
+  background: linear-gradient(135deg, var(--primary) 0%, #a0522d 100%);
   color: white;
   padding: 1rem 2.5rem;
   border: none;
@@ -333,17 +327,17 @@
 }
 
 .cta-button.primary {
-  background: linear-gradient(135deg, var(--primary-brown) 0%, #a0522d 100%);
+  background: linear-gradient(135deg, var(--primary) 0%, #a0522d 100%);
 }
 
 .cta-button.secondary {
   background: transparent;
-  color: var(--primary-brown);
-  border: 2px solid var(--primary-brown);
+  color: var(--secondary);
+  border: 2px solid var(--secondary);
 }
 
 .cta-button.secondary:hover {
-  background: var(--primary-brown);
+  background: var(--secondary);
   color: white;
 }
 
@@ -356,7 +350,7 @@
 
 .section-title {
   font-size: 2.5rem;
-  color: var(--primary-brown);
+  color: var(--primary);
   text-align: center;
   margin-bottom: 3rem;
   font-weight: bold;
@@ -394,7 +388,7 @@
 
 .flags-title {
   font-size: 2.5rem;
-  color: var(--primary-brown);
+  color: var(--primary);
   text-align: center;
   margin-bottom: 3rem;
   font-weight: bold;
@@ -429,7 +423,7 @@
 
 .flag-name {
   font-size: 1.2rem;
-  color: var(--primary-brown);
+  color: var(--primary);
   font-weight: 600;
 }
 
@@ -464,7 +458,7 @@
 
 .column-title {
   font-size: 1.8rem;
-  color: var(--primary-brown);
+  color: var(--primary);
   margin-bottom: 2rem;
   font-weight: 600;
 }
@@ -487,7 +481,7 @@
 .event-type,
 .news-category {
   background: var(--light-brown);
-  color: var(--primary-brown);
+  color: var(--primary);
   padding: 0.3rem 0.8rem;
   border-radius: 20px;
   font-size: 0.8rem;
@@ -499,7 +493,7 @@
 .event-title,
 .news-title {
   font-size: 1.3rem;
-  color: var(--primary-brown);
+  color: var(--primary);
   margin-bottom: 1rem;
   font-weight: 600;
 }
@@ -528,7 +522,7 @@
 
 .event-btn,
 .news-btn {
-  background: var(--primary-brown);
+  background: var(--primary);
   color: white;
   border: none;
   padding: 0.5rem 1rem;
@@ -552,7 +546,7 @@
 
 /* CTA Section */
 .cta-section {
-  background: linear-gradient(135deg, var(--primary-brown) 0%, #a0522d 100%);
+  background: linear-gradient(135deg, var(--primary) 0%, #a0522d 100%);
   color: white;
   text-align: center;
   padding: 4rem 0;
@@ -610,21 +604,24 @@
 }
 
 .membership-hero {
-  background: linear-gradient(135deg, var(--cream-white) 0%, #f5f5dc 100%);
+  /* Changed from cream gradient to blue background */
+  background: #1e3a8a; /* bg-blue-900 equivalent */
   text-align: center;
   padding: 4rem 0;
 }
 
 .membership-hero h1 {
   font-size: 3rem;
-  color: var(--primary-brown);
+  /* Changed text color to white for contrast */
+  color: white;
   margin-bottom: 1rem;
   font-weight: bold;
 }
 
 .membership-hero p {
   font-size: 1.3rem;
-  color: var(--text-dark);
+  /* Changed text color to light blue for contrast */
+  color: #dbeafe; /* text-blue-100 equivalent */
   max-width: 800px;
   margin: 0 auto;
 }
@@ -652,7 +649,7 @@
 .mission-section h2,
 .membership-benefits h2 {
   font-size: 2rem;
-  color: var(--primary-brown);
+  color: var(--primary);
   margin-bottom: 1.5rem;
   font-weight: 600;
 }
@@ -661,7 +658,7 @@
   background: var(--cream-white);
   padding: 2rem;
   border-radius: 12px;
-  border-left: 4px solid var(--primary-brown);
+  border-left: 4px solid var(--primary);
   font-style: italic;
   font-size: 1.1rem;
   margin-bottom: 2rem;
@@ -683,7 +680,7 @@
 }
 
 .benefit h3 {
-  color: var(--primary-brown);
+  color: var(--primary);
   font-size: 1.3rem;
   margin-bottom: 0.5rem;
   font-weight: 600;
@@ -703,7 +700,7 @@
 
 .registration-section h2 {
   font-size: 1.8rem;
-  color: var(--primary-brown);
+  color: var(--primary);
   margin-bottom: 1rem;
   text-align: center;
 }
@@ -738,7 +735,7 @@
 
 .membership-form h2 {
   font-size: 1.5rem;
-  color: var(--primary-brown);
+  color: var(--primary);
   margin-bottom: 1.5rem;
   text-align: center;
 }
@@ -779,7 +776,7 @@
 .compact-form select:focus,
 .compact-form textarea:focus {
   outline: none;
-  border-color: var(--primary-brown);
+  border-color: var(--primary);
 }
 
 .compact-form textarea {
@@ -818,7 +815,7 @@
 
 .thank-you-page h2 {
   font-size: 2.5rem;
-  color: var(--primary-brown);
+  color: var(--primary);
   margin-bottom: 1.5rem;
   font-weight: bold;
 }

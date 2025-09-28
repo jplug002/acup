@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import ACUPLogo from "@/components/ACUPLogo"
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
@@ -35,7 +36,7 @@ export default function LoginPage() {
       })
 
       if (result?.error) {
-        setError("Invalid email or password")
+        setError("You don't have an account with us. Register now.")
       } else {
         router.push("/dashboard")
       }
@@ -57,6 +58,7 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
+          <ACUPLogo />
           <CardTitle className="text-2xl font-bold text-gray-900">Welcome Back</CardTitle>
           <CardDescription>Sign in to your ACUP account</CardDescription>
         </CardHeader>
@@ -69,7 +71,16 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">{error}</div>
+              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">
+                {error}
+                {error.includes("don't have an account") && (
+                  <div className="mt-2">
+                    <Link href="/auth/register" className="text-blue-600 hover:text-blue-500 font-medium underline">
+                      Click here to register
+                    </Link>
+                  </div>
+                )}
+              </div>
             )}
 
             <div>

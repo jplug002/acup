@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import ACUPLogo from "@/components/ACUPLogo"
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -74,6 +75,7 @@ export default function RegisterPage() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
+          <ACUPLogo />
           <CardTitle className="text-2xl font-bold text-gray-900">Create Your Account</CardTitle>
           <CardDescription>Join ACUP and become part of Africa's future</CardDescription>
         </CardHeader>

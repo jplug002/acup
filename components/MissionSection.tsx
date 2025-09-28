@@ -1,7 +1,7 @@
 const MissionSection = () => {
   return (
     <section className="section mission-section">
-      <h2 className="section-title">Mission</h2>
+      <h2 className="section-title text-blue-400">Mission</h2>
       <div className="about-text">
         <p>
           Based on our vision of setting a global power-base which is also our supreme guide. We have as a primary

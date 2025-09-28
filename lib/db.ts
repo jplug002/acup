@@ -1,10 +1,6 @@
 import { neon } from "@neondatabase/serverless"
 
-if (!process.env.DATABASE_URL) {
-  throw new Error("DATABASE_URL is not set")
-}
-
-export const sql = neon(process.env.DATABASE_URL)
+const sql = neon(process.env.DATABASE_URL!)
 
 // Database utility functions
 export class DatabaseError extends Error {
@@ -17,7 +13,6 @@ export class DatabaseError extends Error {
   }
 }
 
-// User operations
 export const userQueries = {
   async create(userData: {
     email: string
@@ -32,15 +27,28 @@ export const userQueries = {
     interests?: string
   }) {
     try {
+      const nameParts = userData.name.trim().split(" ")
+      const firstName = nameParts[0] || ""
+      const lastName = nameParts.slice(1).join(" ") || ""
+
       const result = await sql`
-        INSERT INTO users (email, password_hash, name, phone, country, city, date_of_birth, occupation, education, interests)
-        VALUES (${userData.email}, ${userData.password_hash}, ${userData.name}, ${userData.phone || null}, 
-                ${userData.country || null}, ${userData.city || null}, ${userData.date_of_birth || null}, 
-                ${userData.occupation || null}, ${userData.education || null}, ${userData.interests || null})
-        RETURNING id, email, name, phone, country, city, date_of_birth, occupation, education, interests, role, created_at
+        INSERT INTO users (
+          first_name, last_name, email, password_hash, phone, country, city, 
+          date_of_birth, occupation, education, interests, role, created_at, updated_at
+        )
+        VALUES (
+          ${firstName}, ${lastName}, ${userData.email}, ${userData.password_hash}, 
+          ${userData.phone || null}, ${userData.country || null}, ${userData.city || null},
+          ${userData.date_of_birth ? new Date(userData.date_of_birth) : null},
+          ${userData.occupation || null}, ${userData.education || null}, 
+          ${userData.interests || null}, 'USER', NOW(), NOW()
+        )
+        RETURNING *
       `
+
       return result[0]
     } catch (error) {
+      console.error("[v0] Database error creating user:", error)
       throw new DatabaseError("Failed to create user", error)
     }
   },
@@ -48,12 +56,11 @@ export const userQueries = {
   async findByEmail(email: string) {
     try {
       const result = await sql`
-        SELECT id, email, password_hash, name, phone, country, city, date_of_birth, occupation, education, interests, role, email_verified, created_at
-        FROM users 
-        WHERE email = ${email}
+        SELECT * FROM users WHERE email = ${email}
       `
-      return result[0] || null
+      return result.length > 0 ? result[0] : null
     } catch (error) {
+      console.error("[v0] Database error finding user by email:", error)
       throw new DatabaseError("Failed to find user by email", error)
     }
   },
@@ -61,12 +68,11 @@ export const userQueries = {
   async findById(id: string) {
     try {
       const result = await sql`
-        SELECT id, email, name, phone, country, city, date_of_birth, occupation, education, interests, role, email_verified, created_at
-        FROM users 
-        WHERE id = ${id}
+        SELECT * FROM users WHERE id = ${id}
       `
-      return result[0] || null
+      return result.length > 0 ? result[0] : null
     } catch (error) {
+      console.error("[v0] Database error finding user by ID:", error)
       throw new DatabaseError("Failed to find user by ID", error)
     }
   },
@@ -85,34 +91,71 @@ export const userQueries = {
     }>,
   ) {
     try {
-      const setClause = Object.entries(updates)
-        .filter(([_, value]) => value !== undefined)
-        .map(([key, _]) => `${key} = $${key}`)
-        .join(", ")
+      const setParts = []
+      const values = []
 
-      if (!setClause) return null
+      if (updates.name !== undefined) {
+        const nameParts = updates.name.trim().split(" ")
+        setParts.push("first_name = $" + (values.length + 1))
+        values.push(nameParts[0] || "")
+        setParts.push("last_name = $" + (values.length + 1))
+        values.push(nameParts.slice(1).join(" ") || "")
+      }
+      if (updates.phone !== undefined) {
+        setParts.push("phone = $" + (values.length + 1))
+        values.push(updates.phone)
+      }
+      if (updates.country !== undefined) {
+        setParts.push("country = $" + (values.length + 1))
+        values.push(updates.country)
+      }
+      if (updates.city !== undefined) {
+        setParts.push("city = $" + (values.length + 1))
+        values.push(updates.city)
+      }
+      if (updates.date_of_birth !== undefined) {
+        setParts.push("date_of_birth = $" + (values.length + 1))
+        values.push(new Date(updates.date_of_birth))
+      }
+      if (updates.occupation !== undefined) {
+        setParts.push("occupation = $" + (values.length + 1))
+        values.push(updates.occupation)
+      }
+      if (updates.education !== undefined) {
+        setParts.push("education = $" + (values.length + 1))
+        values.push(updates.education)
+      }
+      if (updates.interests !== undefined) {
+        setParts.push("interests = $" + (values.length + 1))
+        values.push(updates.interests)
+      }
+
+      if (setParts.length === 0) return null
+
+      setParts.push("updated_at = NOW()")
+      values.push(id)
 
       const result = await sql`
         UPDATE users 
-        SET ${sql.unsafe(setClause)}, updated_at = NOW()
-        WHERE id = ${id}
-        RETURNING id, email, name, phone, country, city, date_of_birth, occupation, education, interests, role, created_at, updated_at
+        SET ${sql.unsafe(setParts.join(", "))}
+        WHERE id = $${values.length}
+        RETURNING *
       `
-      return result[0] || null
+
+      return result.length > 0 ? result[0] : null
     } catch (error) {
       throw new DatabaseError("Failed to update user", error)
     }
   },
 }
 
-// Branch operations
 export const branchQueries = {
   async getAll() {
     try {
-      return await sql`
-        SELECT * FROM branches 
-        ORDER BY created_at DESC
+      const result = await sql`
+        SELECT * FROM branches ORDER BY created_at DESC
       `
+      return result
     } catch (error) {
       throw new DatabaseError("Failed to fetch branches", error)
     }
@@ -130,10 +173,17 @@ export const branchQueries = {
   }) {
     try {
       const result = await sql`
-        INSERT INTO branches (name, country, city, address, contact_email, contact_phone, description, established_date)
-        VALUES (${branchData.name}, ${branchData.country}, ${branchData.city}, ${branchData.address || null},
-                ${branchData.contact_email || null}, ${branchData.contact_phone || null}, 
-                ${branchData.description || null}, ${branchData.established_date || null})
+        INSERT INTO branches (
+          name, country, city, address, contact_email, contact_phone, 
+          description, established_date, status, created_at, updated_at
+        )
+        VALUES (
+          ${branchData.name}, ${branchData.country}, ${branchData.city},
+          ${branchData.address || null}, ${branchData.contact_email || null}, 
+          ${branchData.contact_phone || null}, ${branchData.description || null},
+          ${branchData.established_date ? new Date(branchData.established_date) : null},
+          'ACTIVE', NOW(), NOW()
+        )
         RETURNING *
       `
       return result[0]
@@ -157,17 +207,28 @@ export const branchQueries = {
     }>,
   ) {
     try {
+      const setParts = []
+      const values = []
+
+      Object.entries(updates).forEach(([key, value]) => {
+        if (value !== undefined) {
+          setParts.push(`${key} = $${values.length + 1}`)
+          values.push(key === "established_date" ? new Date(value) : value)
+        }
+      })
+
+      if (setParts.length === 0) return null
+
+      setParts.push("updated_at = NOW()")
+      values.push(id)
+
       const result = await sql`
         UPDATE branches 
-        SET ${sql.unsafe(
-          Object.entries(updates)
-            .map(([key, value]) => `${key} = '${value}'`)
-            .join(", "),
-        )}, updated_at = NOW()
-        WHERE id = ${id}
+        SET ${sql.unsafe(setParts.join(", "))}
+        WHERE id = $${values.length}
         RETURNING *
       `
-      return result[0] || null
+      return result.length > 0 ? result[0] : null
     } catch (error) {
       throw new DatabaseError("Failed to update branch", error)
     }
@@ -183,14 +244,13 @@ export const branchQueries = {
   },
 }
 
-// Ideology operations
 export const ideologyQueries = {
   async getAll() {
     try {
-      return await sql`
-        SELECT * FROM ideologies 
-        ORDER BY priority ASC, created_at DESC
+      const result = await sql`
+        SELECT * FROM ideologies ORDER BY priority ASC, created_at DESC
       `
+      return result
     } catch (error) {
       throw new DatabaseError("Failed to fetch ideologies", error)
     }
@@ -204,9 +264,12 @@ export const ideologyQueries = {
   }) {
     try {
       const result = await sql`
-        INSERT INTO ideologies (title, description, category, priority)
-        VALUES (${ideologyData.title}, ${ideologyData.description}, 
-                ${ideologyData.category || null}, ${ideologyData.priority || 0})
+        INSERT INTO ideologies (title, description, category, priority, status, created_at, updated_at)
+        VALUES (
+          ${ideologyData.title}, ${ideologyData.description}, 
+          ${ideologyData.category || null}, ${ideologyData.priority || 0},
+          'ACTIVE', NOW(), NOW()
+        )
         RETURNING *
       `
       return result[0]
@@ -226,17 +289,28 @@ export const ideologyQueries = {
     }>,
   ) {
     try {
+      const setParts = []
+      const values = []
+
+      Object.entries(updates).forEach(([key, value]) => {
+        if (value !== undefined) {
+          setParts.push(`${key} = $${values.length + 1}`)
+          values.push(value)
+        }
+      })
+
+      if (setParts.length === 0) return null
+
+      setParts.push("updated_at = NOW()")
+      values.push(id)
+
       const result = await sql`
         UPDATE ideologies 
-        SET ${sql.unsafe(
-          Object.entries(updates)
-            .map(([key, value]) => `${key} = '${value}'`)
-            .join(", "),
-        )}, updated_at = NOW()
-        WHERE id = ${id}
+        SET ${sql.unsafe(setParts.join(", "))}
+        WHERE id = $${values.length}
         RETURNING *
       `
-      return result[0] || null
+      return result.length > 0 ? result[0] : null
     } catch (error) {
       throw new DatabaseError("Failed to update ideology", error)
     }
@@ -252,14 +326,13 @@ export const ideologyQueries = {
   },
 }
 
-// Event operations
 export const eventQueries = {
   async getAll() {
     try {
-      return await sql`
-        SELECT * FROM events 
-        ORDER BY event_date DESC
+      const result = await sql`
+        SELECT * FROM events ORDER BY event_date DESC
       `
+      return result
     } catch (error) {
       throw new DatabaseError("Failed to fetch events", error)
     }
@@ -277,11 +350,16 @@ export const eventQueries = {
   }) {
     try {
       const result = await sql`
-        INSERT INTO events (title, description, event_date, end_date, location, event_type, max_attendees, registration_required)
-        VALUES (${eventData.title}, ${eventData.description}, ${eventData.event_date}, 
-                ${eventData.end_date || null}, ${eventData.location || null}, 
-                ${eventData.event_type || "general"}, ${eventData.max_attendees || null}, 
-                ${eventData.registration_required || false})
+        INSERT INTO events (
+          title, description, event_date, end_date, location, event_type,
+          max_attendees, registration_required, status, created_at, updated_at
+        )
+        VALUES (
+          ${eventData.title}, ${eventData.description}, ${new Date(eventData.event_date)},
+          ${eventData.end_date ? new Date(eventData.end_date) : null}, ${eventData.location || null},
+          ${eventData.event_type || "GENERAL"}, ${eventData.max_attendees || null},
+          ${eventData.registration_required || false}, 'UPCOMING', NOW(), NOW()
+        )
         RETURNING *
       `
       return result[0]
@@ -305,17 +383,32 @@ export const eventQueries = {
     }>,
   ) {
     try {
+      const setParts = []
+      const values = []
+
+      Object.entries(updates).forEach(([key, value]) => {
+        if (value !== undefined) {
+          setParts.push(`${key} = $${values.length + 1}`)
+          if (key === "event_date" || key === "end_date") {
+            values.push(new Date(value))
+          } else {
+            values.push(value)
+          }
+        }
+      })
+
+      if (setParts.length === 0) return null
+
+      setParts.push("updated_at = NOW()")
+      values.push(id)
+
       const result = await sql`
         UPDATE events 
-        SET ${sql.unsafe(
-          Object.entries(updates)
-            .map(([key, value]) => `${key} = '${value}'`)
-            .join(", "),
-        )}, updated_at = NOW()
-        WHERE id = ${id}
+        SET ${sql.unsafe(setParts.join(", "))}
+        WHERE id = $${values.length}
         RETURNING *
       `
-      return result[0] || null
+      return result.length > 0 ? result[0] : null
     } catch (error) {
       throw new DatabaseError("Failed to update event", error)
     }
@@ -331,16 +424,16 @@ export const eventQueries = {
   },
 }
 
-// Article operations
 export const articleQueries = {
   async getAll() {
     try {
-      return await sql`
-        SELECT a.*, u.name as author_name 
+      const result = await sql`
+        SELECT a.*, u.first_name || ' ' || u.last_name as author_name
         FROM articles a
         LEFT JOIN users u ON a.author_id = u.id
         ORDER BY a.created_at DESC
       `
+      return result
     } catch (error) {
       throw new DatabaseError("Failed to fetch articles", error)
     }
@@ -357,13 +450,19 @@ export const articleQueries = {
     status?: string
   }) {
     try {
+      const publishedAt = articleData.status === "published" ? new Date() : null
+
       const result = await sql`
-        INSERT INTO articles (title, content, excerpt, author_id, category, tags, featured_image, status, published_at)
-        VALUES (${articleData.title}, ${articleData.content}, ${articleData.excerpt || null}, 
-                ${articleData.author_id}, ${articleData.category || null}, 
-                ${articleData.tags || []}, ${articleData.featured_image || null}, 
-                ${articleData.status || "draft"}, 
-                ${articleData.status === "published" ? "NOW()" : null})
+        INSERT INTO articles (
+          title, content, excerpt, author_id, category, tags, featured_image,
+          status, published_at, created_at, updated_at
+        )
+        VALUES (
+          ${articleData.title}, ${articleData.content}, ${articleData.excerpt || null},
+          ${articleData.author_id}, ${articleData.category || null}, 
+          ${JSON.stringify(articleData.tags || [])}, ${articleData.featured_image || null},
+          ${articleData.status || "DRAFT"}, ${publishedAt}, NOW(), NOW()
+        )
         RETURNING *
       `
       return result[0]
@@ -385,19 +484,36 @@ export const articleQueries = {
     }>,
   ) {
     try {
-      const publishedAt = updates.status === "published" ? ", published_at = NOW()" : ""
+      const setParts = []
+      const values = []
+
+      Object.entries(updates).forEach(([key, value]) => {
+        if (value !== undefined) {
+          setParts.push(`${key} = $${values.length + 1}`)
+          if (key === "tags") {
+            values.push(JSON.stringify(value))
+          } else {
+            values.push(value)
+          }
+        }
+      })
+
+      if (updates.status === "published") {
+        setParts.push("published_at = NOW()")
+      }
+
+      if (setParts.length === 0) return null
+
+      setParts.push("updated_at = NOW()")
+      values.push(id)
+
       const result = await sql`
         UPDATE articles 
-        SET ${sql.unsafe(
-          Object.entries(updates)
-            .map(([key, value]) => `${key} = '${value}'`)
-            .join(", "),
-        )}, 
-            updated_at = NOW() ${sql.unsafe(publishedAt)}
-        WHERE id = ${id}
+        SET ${sql.unsafe(setParts.join(", "))}
+        WHERE id = $${values.length}
         RETURNING *
       `
-      return result[0] || null
+      return result.length > 0 ? result[0] : null
     } catch (error) {
       throw new DatabaseError("Failed to update article", error)
     }
@@ -413,7 +529,6 @@ export const articleQueries = {
   },
 }
 
-// Membership operations
 export const membershipQueries = {
   async create(membershipData: {
     user_id: string
@@ -421,17 +536,18 @@ export const membershipQueries = {
     notes?: string
   }) {
     try {
-      // Generate membership number
-      const membershipNumber = `ACUP-${Date.now()}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`
-
       const result = await sql`
-        INSERT INTO memberships (user_id, membership_type, membership_number, notes)
-        VALUES (${membershipData.user_id}, ${membershipData.membership_type || "standard"}, 
-                ${membershipNumber}, ${membershipData.notes || null})
+        INSERT INTO memberships (user_id, membership_type, status, notes, created_at, updated_at)
+        VALUES (
+          ${membershipData.user_id}, ${membershipData.membership_type || "STANDARD"},
+          'PENDING', ${membershipData.notes || null}, NOW(), NOW()
+        )
         RETURNING *
       `
+
       return result[0]
     } catch (error) {
+      console.error("[v0] Database error creating membership:", error)
       throw new DatabaseError("Failed to create membership", error)
     }
   },
@@ -439,29 +555,27 @@ export const membershipQueries = {
   async findByUserId(userId: string) {
     try {
       const result = await sql`
-        SELECT m.*, u.name as user_name, u.email as user_email
-        FROM memberships m
-        JOIN users u ON m.user_id = u.id
-        WHERE m.user_id = ${userId}
-        ORDER BY m.created_at DESC
-        LIMIT 1
+        SELECT * FROM memberships WHERE user_id = ${userId} ORDER BY created_at DESC LIMIT 1
       `
-      return result[0] || null
+
+      return result.length > 0 ? result[0] : null
     } catch (error) {
+      console.error("[v0] Database error finding membership:", error)
       throw new DatabaseError("Failed to find membership by user ID", error)
     }
   },
 
   async updateStatus(id: string, status: string, notes?: string) {
     try {
-      const approvalDate = status === "approved" ? ", approval_date = NOW()" : ""
+      const approvalDate = status === "approved" ? new Date() : null
+
       const result = await sql`
         UPDATE memberships 
-        SET status = ${status}, notes = ${notes || null}, updated_at = NOW() ${sql.unsafe(approvalDate)}
+        SET status = ${status}, notes = ${notes || null}, approval_date = ${approvalDate}, updated_at = NOW()
         WHERE id = ${id}
         RETURNING *
       `
-      return result[0] || null
+      return result.length > 0 ? result[0] : null
     } catch (error) {
       throw new DatabaseError("Failed to update membership status", error)
     }

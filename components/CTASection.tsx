@@ -13,12 +13,15 @@ const CTASection = () => {
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
           <Link
             href="/membership"
-            className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold transition-colors duration-200 text-center min-w-[200px]"
+            className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-lg font-semibold transition-colors duration-200 text-center min-w-[200px]"
           >
             Join ACUP Today
           </Link>
-          <button className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold transition-colors duration-200 min-w-[200px]">
+          <button className="bg-red-500 hover:bg-red-600 text-white px-8 py-3 rounded-lg font-semibold transition-colors duration-200 min-w-[200px]">
+           <Link
+            href="/leadership">
             Learn About Leadership
+           </Link>
           </button>
         </div>
       </div>
