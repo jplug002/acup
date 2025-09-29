@@ -1,30 +1,76 @@
-# ACUPmaster
+# 🚀 ACUP
 
-*Automatically synced with your [v0.app](https://v0.app) deployments*
+A modern web application built with [Next.js](https://nextjs.org/).  
+This project includes server-side rendering, API routes, and a fully responsive UI.
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/jplug06s-projects/v0-acup-master)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.app-black?style=for-the-badge)](https://v0.app/chat/projects/ybtxoqB74PE)
+---
 
-## Overview
+## 📂 Project Structure
 
-This repository will stay in sync with your deployed chats on [v0.app](https://v0.app).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.app](https://v0.app).
+my-nextjs-project/
+│── public/ # Static files (images, icons, etc.)
+│── src/
+│ ├── pages/ # Next.js pages & API routes
+│ ├── components/ # Reusable UI components
+│ ├── styles/ # Global & module CSS/SCSS
+│ └── lib/ # Helper functions & utilities
+│── package.json # Dependencies & scripts
+│── next.config.js # Next.js configuration
+│── README.md # Project documentation
 
-## Deployment
+yaml
+Copy code
 
-Your project is live at:
+---
 
-**[https://vercel.com/jplug06s-projects/v0-acup-master](https://vercel.com/jplug06s-projects/v0-acup-master)**
+## ⚡ Features
 
-## Build your app
+- ✅ Server-side rendering (SSR)
+- ✅ API routes with Next.js
+- ✅ SEO optimized with Next.js Head
+- ✅ Styled with Tailwind CSS (or your choice)
+- ✅ Responsive design
 
-Continue building your app on:
+---
 
-**[https://v0.app/chat/projects/ybtxoqB74PE](https://v0.app/chat/projects/ybtxoqB74PE)**
+## 🔧 Installation
 
-## How It Works
+Clone the repository and install dependencies:
 
-1. Create and modify your project using [v0.app](https://v0.app)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
+```bash
+git clone https://github.com/your-username/my-nextjs-project.git
+cd my-nextjs-project
+npm install
+🚀 Running the Project
+Start development server:
+
+bash
+Copy code
+npm run dev
+Build for production:
+
+bash
+Copy code
+npm run build
+npm run start
+Linting & formatting:
+
+bash
+Copy code
+npm run lint
+🌍 Deployment
+You can deploy easily with Vercel:
+
+bash
+Copy code
+vercel
+Or deploy to other platforms like Netlify, AWS, or Docker.
+
+🛠️ Tech Stack
+Next.js – React framework
+
+React – UI library
+
+Tailwind CSS – Styling (if used)
+
+TypeScript – Static typing (optional)
