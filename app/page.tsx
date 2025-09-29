@@ -4,7 +4,7 @@ import { useSession } from "next-auth/react"
 import { useSearchParams } from "next/navigation"
 import { useEffect, useState } from "react"
 import Hero from "@/components/Hero"
-import CountryCarousel from "@/components/CountryCarousel"
+
 import AboutSection from "@/components/AboutSection"
 import VisionSection from "@/components/VisionSection"
 import MissionSection from "@/components/MissionSection"
@@ -39,7 +39,7 @@ export default function HomePage() {
       )}
 
       <Hero />
-      <CountryCarousel />
+
       <AboutSection />
       <VisionSection />
       <MissionSection />

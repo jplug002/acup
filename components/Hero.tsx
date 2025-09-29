@@ -10,7 +10,7 @@ const Hero = () => {
           <h1 className="text-4xl md:text-6xl font-extrabold">WELCOME</h1>
           <div className="space-y-4">
             <p className="text-lg text-white">
-              The first Pan-African political party transcending boundaries. This is time for Africans to unite and
+              ACUP (African Continental Union Party) the first Pan-African political party transcending boundaries. This is time for Africans to unite and
               build, or disunite and perish.
             </p>
             <p className="text-base text-white/90">

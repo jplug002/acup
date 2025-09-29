@@ -87,7 +87,7 @@ export default function BlogPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-blue-900 to-red-600 text-white py-16">
+      <section className="bg-blue-900 text-white py-16">
         <div className="max-w-6xl mx-auto px-6 text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">ACUP Blog</h1>
           <p className="text-xl text-blue-100 max-w-2xl mx-auto">
@@ -154,8 +154,24 @@ export default function BlogPage() {
           </div>
         ) : articles.length === 0 ? (
           <div className="text-center py-12">
-            <h3 className="text-xl font-semibold text-gray-600 mb-2">No articles found</h3>
-            <p className="text-gray-500">Try adjusting your search or filter criteria</p>
+            {searchQuery || selectedCategory ? (
+              <>
+                <h3 className="text-xl font-semibold text-gray-600 mb-2">No articles found</h3>
+                <p className="text-gray-500">Try adjusting your search or filter criteria</p>
+              </>
+            ) : (
+              <>
+                <h3 className="text-2xl font-semibold text-gray-600 mb-4">No blog posts yet</h3>
+                <p className="text-gray-500 mb-6">Check back soon for news and updates from ACUP</p>
+                <Image 
+                  src="/placeholder.svg" 
+                  alt="No blogs yet" 
+                  width={200} 
+                  height={200} 
+                  className="mx-auto opacity-50"
+                />
+              </>
+            )}
           </div>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
