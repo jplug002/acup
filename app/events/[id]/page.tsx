@@ -9,25 +9,27 @@ interface Event {
   id: number
   title: string
   description: string
-  date: string
+  event_date: string   // ✅ use event_date (matches DB + API)
   location: string
-  registration_required: boolean
+  registration_required?: boolean
   created_at: string
+  updated_at: string
 }
 
-async function getEvent(id: string): Promise<Event | null> { try { const response = await fetch(${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/events, { cache: "no-store", })
+async function getEvent(id: string): Promise<Event | null> {
+  try {
+    const response = await fetch(`/api/events`, { cache: "no-store" })
 
-    if (!response.ok) {
-      return null
-    }
+    if (!response.ok) return null
 
-    const events = await response.json()
-    return events.find((event: Event) => event.id.toString() === id) || null
+    const events: Event[] = await response.json()
+    return events.find((event) => event.id.toString() === id) || null
   } catch (error) {
     console.error("Error fetching event:", error)
     return null
   }
 }
+
 
 export default async function EventDetailPage({ params }: { params: { id: string } }) {
   const event = await getEvent(params.id)
