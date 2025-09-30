@@ -11,13 +11,7 @@ interface Event {
   created_at: string
 }
 
-async function getEvents(): Promise<Event[]> {
-  try {
-    const response = await fetch(`/api/events`, {
-  cache: "no-store",
-})
-
-    })
+    async function getEvent(id: string): Promise<Event | null> { try { const response = await fetch(${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/events, { cache: "no-store", })
 
     if (!response.ok) {
       console.log("[v0] Events fetch failed with status:", response.status)
