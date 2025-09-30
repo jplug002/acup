@@ -13,8 +13,10 @@ interface Event {
 
 async function getEvents(): Promise<Event[]> {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/events`, {
-      cache: "no-store",
+    const response = await fetch(`/api/events`, {
+  cache: "no-store",
+})
+
     })
 
     if (!response.ok) {

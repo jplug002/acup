@@ -1,5 +1,4 @@
 import Link from "next/link"
-import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -116,47 +115,7 @@ export default async function BranchesPage() {
               </div>
             )}
 
-            {/* ACUP Across Africa section */}
-            <Card className="border border-gray-200 mb-20">
-              <CardHeader className="pb-6">
-                <CardTitle className="text-3xl font-bold text-gray-900 flex items-center gap-4">
-                  <span className="text-4xl">🌍</span>
-                  ACUP Across Africa
-                </CardTitle>
-                <CardDescription className="text-base text-gray-600">
-                  Democratic foundations connecting communities across the African continent
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {[
-                    { name: "Ghana", image: "/ghana.jpg" },
-                    { name: "South Africa", image: "/south africa.jpg" },
-                    { name: "Guinea", image: "/guinea.jpg" },
-                    { name: "Côte d'Ivoire", image: "/cotedevoir.jpg" },
-                  ].map((country, index) => (
-                    <div
-                      key={index}
-                      className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"
-                    >
-                      <div className="relative aspect-[3/2]">
-                        <Image
-                          src={country.image || "/placeholder.svg"}
-                          alt={`ACUP in ${country.name}`}
-                          fill
-                          className="object-cover"
-                        />
-                      </div>
-                      <div className="p-4">
-                        <h3 className="text-lg font-semibold text-center text-gray-800">{country.name}</h3>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-            
-            {/* Our Branches Across Africa section */}
+            {/* Unified "Our Branches Across Africa" section */}
             <Card className="border border-gray-200">
               <CardHeader className="pb-6">
                 <CardTitle className="text-3xl font-bold text-gray-900 flex items-center gap-4">
