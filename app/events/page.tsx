@@ -1,5 +1,8 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { neon } from "@neondatabase/serverless"
+
+const sql = neon(process.env.DATABASE_URL!)
 
 interface Event {
   id: number
@@ -13,21 +16,19 @@ interface Event {
 
 async function getEvents(): Promise<Event[]> {
   try {
-    const response = await fetch("/api/events", {
-      cache: "no-store",
-    })
+    const events = await sql`
+      SELECT id, title, description, location, event_date, status, created_at, updated_at
+      FROM events 
+      WHERE status IN ('ACTIVE', 'UPCOMING')
+      ORDER BY event_date ASC
+    `
 
-    if (!response.ok) {
-      console.log("[v0] Events fetch failed with status:", response.status)
-      return []
-    }
-
-    const events = await response.json()
-    console.log("[v0] Events page - Fetched events:", events.length)
+    console.log("[v0] Events page - Found events:", events.length)
     console.log("[v0] Events page - Events data:", events)
-    return events
+
+    return events as Event[]
   } catch (error) {
-    console.error("Error fetching events:", error)
+    console.error("[v0] Error fetching events:", error)
     return []
   }
 }
