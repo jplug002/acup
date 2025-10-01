@@ -9,6 +9,7 @@ interface DashboardStats {
   ideologies: number
   events: number
   articles: number
+  leadership: number
 }
 
 interface Branch {
@@ -39,6 +40,17 @@ interface Event {
   created_at: string
 }
 
+interface LeadershipProfile {
+  id: number
+  name: string
+  role: string
+  title: string
+  bio: string
+  photo_url: string
+  display_order: number
+  status: string
+}
+
 export default function AdminDashboard() {
   const [error, setError] = useState<string | null>(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -50,12 +62,14 @@ export default function AdminDashboard() {
     branches: 0,
     ideologies: 0,
     events: 0,
-    articles: 47,
+    articles: 0,
+    leadership: 0,
   })
 
   const [branches, setBranches] = useState<Branch[]>([])
   const [ideologies, setIdeologies] = useState<Ideology[]>([])
   const [events, setEvents] = useState<Event[]>([])
+  const [leadership, setLeadership] = useState<LeadershipProfile[]>([])
   const [loading, setLoading] = useState(true)
 
   const [newEvent, setNewEvent] = useState({
@@ -80,6 +94,14 @@ export default function AdminDashboard() {
     category: "political",
   })
 
+  const [newLeader, setNewLeader] = useState({
+    name: "",
+    role: "",
+    title: "",
+    bio: "",
+    photo_url: "",
+  })
+
   const handlePasswordSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (password === "acup@123") {
@@ -96,31 +118,36 @@ export default function AdminDashboard() {
       setLoading(true)
       console.log("[v0] Fetching admin data...")
 
-      const [branchesRes, ideologiesRes, eventsRes] = await Promise.all([
+      const [branchesRes, ideologiesRes, eventsRes, leadershipRes] = await Promise.all([
         fetch("/api/admin/branches"),
         fetch("/api/admin/ideologies"),
         fetch("/api/admin/events"),
+        fetch("/api/admin/leadership"),
       ])
 
       console.log("[v0] API responses:", {
         branches: branchesRes.status,
         ideologies: ideologiesRes.status,
         events: eventsRes.status,
+        leadership: leadershipRes.status,
       })
 
       const branchesData = branchesRes.ok ? await branchesRes.json() : []
       const ideologiesData = ideologiesRes.ok ? await ideologiesRes.json() : []
       const eventsData = eventsRes.ok ? await eventsRes.json() : []
+      const leadershipData = leadershipRes.ok ? await leadershipRes.json() : []
 
       setBranches(branchesData)
       setIdeologies(ideologiesData)
       setEvents(eventsData)
+      setLeadership(leadershipData)
 
       setStats({
         branches: branchesData.length,
         ideologies: ideologiesData.length,
         events: eventsData.length,
-        articles: 47,
+        articles: 0,
+        leadership: leadershipData.length,
       })
     } catch (error) {
       console.error("[v0] Error fetching data:", error)
@@ -262,6 +289,49 @@ export default function AdminDashboard() {
     }
   }
 
+  const handleCreateLeader = async () => {
+    try {
+      console.log("[v0] Creating leader with data:", newLeader)
+
+      if (!newLeader.name.trim() || !newLeader.role.trim()) {
+        alert("Please fill in name and role fields")
+        return
+      }
+
+      const response = await fetch("/api/admin/leadership", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newLeader),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error("[v0] API Error:", errorData)
+        alert(`Failed to create leader: ${errorData.error || "Unknown error"}`)
+        return
+      }
+
+      const result = await response.json()
+      console.log("[v0] Leader created successfully:", result)
+
+      alert("Leader profile created successfully!")
+
+      setNewLeader({
+        name: "",
+        role: "",
+        title: "",
+        bio: "",
+        photo_url: "",
+      })
+      fetchData()
+    } catch (error) {
+      console.error("[v0] Error creating leader:", error)
+      alert("Failed to create leader. Please check the console for details.")
+    }
+  }
+
   const handleDeleteEvent = async (id: string) => {
     try {
       const response = await fetch(`/api/admin/events/${id}`, {
@@ -298,6 +368,19 @@ export default function AdminDashboard() {
       }
     } catch (error) {
       console.error("Error deleting ideology:", error)
+    }
+  }
+
+  const handleDeleteLeader = async (id: number) => {
+    try {
+      const response = await fetch(`/api/admin/leadership/${id}`, {
+        method: "DELETE",
+      })
+      if (response.ok) {
+        fetchData()
+      }
+    } catch (error) {
+      console.error("Error deleting leader:", error)
     }
   }
 
@@ -412,7 +495,8 @@ export default function AdminDashboard() {
       {/* Main Content */}
       <main className="p-6">
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        {/* Updated grid to accommodate new leadership stat */}
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
           <div className="bg-white border border-gray-200 rounded-lg p-6">
             <h3 className="text-sm font-medium text-gray-600">Total Branches</h3>
             <div className="text-2xl font-bold text-gray-900 mt-2">{stats.branches}</div>
@@ -425,9 +509,16 @@ export default function AdminDashboard() {
             <h3 className="text-sm font-medium text-gray-600">Events</h3>
             <div className="text-2xl font-bold text-gray-900 mt-2">{stats.events}</div>
           </div>
-          <div className="bg-white border border-gray-200 rounded-lg p-6">
+          <Link
+            href="/admin/blog"
+            className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow"
+          >
             <h3 className="text-sm font-medium text-gray-600">Articles</h3>
-            <div className="text-2xl font-bold text-gray-900 mt-2">{stats.articles}</div>
+            <div className="text-2xl font-bold text-gray-900 mt-2">Manage →</div>
+          </Link>
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <h3 className="text-sm font-medium text-gray-600">Leadership</h3>
+            <div className="text-2xl font-bold text-gray-900 mt-2">{stats.leadership}</div>
           </div>
         </div>
 
@@ -457,6 +548,14 @@ export default function AdminDashboard() {
               }`}
             >
               Ideologies
+            </button>
+            <button
+              onClick={() => setActiveTab("leadership")}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                activeTab === "leadership" ? "bg-white text-gray-900 shadow-sm" : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              Leadership
             </button>
           </div>
 
@@ -732,6 +831,118 @@ export default function AdminDashboard() {
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => handleDeleteIdeology(ideology.id)}
+                            className="px-3 py-1 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {activeTab === "leadership" && (
+            <div className="space-y-6">
+              <div className="bg-white border border-gray-200 rounded-lg p-6">
+                <h2 className="text-lg font-semibold text-gray-900 mb-2">Add Leadership Profile</h2>
+                <p className="text-gray-600 mb-6">Add a new leader to the leadership team</p>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-700">Name *</label>
+                      <input
+                        type="text"
+                        value={newLeader.name}
+                        onChange={(e) => setNewLeader({ ...newLeader, name: e.target.value })}
+                        placeholder="Enter leader name"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-700">Role *</label>
+                      <input
+                        type="text"
+                        value={newLeader.role}
+                        onChange={(e) => setNewLeader({ ...newLeader, role: e.target.value })}
+                        placeholder="e.g., Chief Executive Officer"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">Title</label>
+                    <input
+                      type="text"
+                      value={newLeader.title}
+                      onChange={(e) => setNewLeader({ ...newLeader, title: e.target.value })}
+                      placeholder="e.g., President, Vice President"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">Photo URL</label>
+                    <input
+                      type="text"
+                      value={newLeader.photo_url}
+                      onChange={(e) => setNewLeader({ ...newLeader, photo_url: e.target.value })}
+                      placeholder="https://example.com/photo.jpg"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                    />
+                    <p className="text-sm text-gray-500">Enter the URL of the leader's photo</p>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">Bio</label>
+                    <textarea
+                      value={newLeader.bio}
+                      onChange={(e) => setNewLeader({ ...newLeader, bio: e.target.value })}
+                      placeholder="Enter leader biography"
+                      rows={4}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                    />
+                  </div>
+                  <button
+                    onClick={handleCreateLeader}
+                    className="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-md transition-colors"
+                  >
+                    Add Leader
+                  </button>
+                </div>
+              </div>
+
+              {/* Leadership List */}
+              <div className="bg-white border border-gray-200 rounded-lg p-6">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Current Leadership Team</h2>
+                {loading ? (
+                  <p>Loading leadership...</p>
+                ) : leadership.length === 0 ? (
+                  <p className="text-gray-500">No leadership profiles found.</p>
+                ) : (
+                  <div className="space-y-4">
+                    {leadership.map((leader) => (
+                      <div key={leader.id} className="flex items-start gap-4 p-4 border border-gray-200 rounded-lg">
+                        {leader.photo_url ? (
+                          <img
+                            src={leader.photo_url || "/placeholder.svg"}
+                            alt={leader.name}
+                            className="w-20 h-20 rounded-lg object-cover"
+                          />
+                        ) : (
+                          <div className="w-20 h-20 bg-gray-200 rounded-lg flex items-center justify-center">
+                            <span className="text-3xl">👤</span>
+                          </div>
+                        )}
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-gray-900">{leader.name}</h3>
+                          <p className="text-sm text-red-600 font-medium">{leader.role}</p>
+                          {leader.title && <p className="text-sm text-gray-600">{leader.title}</p>}
+                          {leader.bio && <p className="text-sm text-gray-500 mt-2 line-clamp-2">{leader.bio}</p>}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleDeleteLeader(leader.id)}
                             className="px-3 py-1 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
                           >
                             Delete
