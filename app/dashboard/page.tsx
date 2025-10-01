@@ -304,7 +304,7 @@ export default function DashboardPage() {
               <CardTitle className="text-sm font-medium text-gray-600">Membership Type</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold text-gray-900 capitalize">{membershipInfo?.membership_type || "None"}</p>
+              <p className="text-2xl font-bold text-gray-900 capitalize">{membershipInfo?.membership_type || "Member"}</p>
             </CardContent>
           </Card>
 
