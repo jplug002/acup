@@ -17,7 +17,7 @@ interface Branch {
 
 async function getBranches(): Promise<Branch[]> {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/branches`, {
+    const response = await fetch("/api/branches", {
       cache: "no-store",
     })
 
@@ -155,7 +155,7 @@ export default async function BranchesPage() {
                 </div>
               </CardContent>
             </Card>
-            
+
             {/* Our Branches Across Africa section */}
             <Card className="border border-gray-200">
               <CardHeader className="pb-6">

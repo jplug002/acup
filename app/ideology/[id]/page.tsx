@@ -15,7 +15,7 @@ interface Ideology {
 
 async function getIdeology(id: string): Promise<Ideology | null> {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/ideologies`, {
+    const response = await fetch("/api/ideologies", {
       cache: "no-store",
     })
 

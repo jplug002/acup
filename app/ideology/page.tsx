@@ -26,7 +26,7 @@ interface DownloadItem {
 
 async function getIdeologies(): Promise<Ideology[]> {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/ideologies`, {
+    const response = await fetch("/api/ideologies", {
       cache: "no-store",
     })
 
@@ -43,7 +43,7 @@ async function getIdeologies(): Promise<Ideology[]> {
 
 async function getDownloads(): Promise<DownloadItem[]> {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/downloads`, {
+    const response = await fetch("/api/downloads", {
       cache: "no-store",
     })
 
