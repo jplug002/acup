@@ -4,6 +4,9 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { CountryFlag } from "@/components/CountryFlag"
+import { neon } from "@neondatabase/serverless"
+
+const sql = neon(process.env.DATABASE_URL!)
 
 interface Branch {
   id: number
@@ -17,15 +20,13 @@ interface Branch {
 
 async function getBranches(): Promise<Branch[]> {
   try {
-    const response = await fetch("/api/branches", {
-      cache: "no-store",
-    })
-
-    if (!response.ok) {
-      return []
-    }
-
-    return await response.json()
+    const branches = await sql`
+      SELECT id, name, location, country, contact_info, status, created_at
+      FROM branches 
+      WHERE status = 'ACTIVE'
+      ORDER BY name ASC
+    `
+    return branches as Branch[]
   } catch (error) {
     console.error("Error fetching branches:", error)
     return []

@@ -2,6 +2,9 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { neon } from "@neondatabase/serverless"
+
+const sql = neon(process.env.DATABASE_URL!)
 
 interface Ideology {
   id: number
@@ -26,15 +29,13 @@ interface DownloadItem {
 
 async function getIdeologies(): Promise<Ideology[]> {
   try {
-    const response = await fetch("/api/ideologies", {
-      cache: "no-store",
-    })
-
-    if (!response.ok) {
-      return []
-    }
-
-    return await response.json()
+    const ideologies = await sql`
+      SELECT id, title, content, status, created_at
+      FROM ideologies 
+      WHERE status = 'ACTIVE'
+      ORDER BY created_at DESC
+    `
+    return ideologies as Ideology[]
   } catch (error) {
     console.error("Error fetching ideologies:", error)
     return []
@@ -43,15 +44,12 @@ async function getIdeologies(): Promise<Ideology[]> {
 
 async function getDownloads(): Promise<DownloadItem[]> {
   try {
-    const response = await fetch("/api/downloads", {
-      cache: "no-store",
-    })
-
-    if (!response.ok) {
-      return []
-    }
-
-    return await response.json()
+    const downloads = await sql`
+      SELECT * FROM downloads 
+      WHERE status = 'published' 
+      ORDER BY created_at DESC
+    `
+    return downloads as DownloadItem[]
   } catch (error) {
     console.error("Error fetching downloads:", error)
     return []
