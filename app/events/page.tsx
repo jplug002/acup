@@ -71,9 +71,9 @@ export default async function EventsPage() {
             {/* Upcoming Events */}
             <div className="mb-16">
               <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">Upcoming Events</h2>
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {adminEvents.length > 0 ? (
-                  adminEvents.map((event, index) => {
+              {adminEvents.length > 0 ? (
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {adminEvents.map((event, index) => {
                     const colors = ["bg-blue-600", "bg-red-500", "bg-blue-500"]
                     const colorClass = colors[index % colors.length]
 
@@ -106,81 +106,15 @@ export default async function EventsPage() {
                         </div>
                       </Link>
                     )
-                  })
-                ) : (
-                  <>
-                    {/* Sample events shown only when no admin events exist */}
-                    <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-                      <div className="bg-blue-600 text-white p-4">
-                        <div className="text-center">
-                          <div className="text-2xl font-bold">15</div>
-                          <div className="text-sm">March 2024</div>
-                        </div>
-                      </div>
-                      <div className="p-6">
-                        <h3 className="text-xl font-semibold mb-2 text-gray-900">Pan-African Unity Summit</h3>
-                        <p className="text-gray-700 mb-4">
-                          Annual summit bringing together leaders from across Africa to discuss unity and cooperation.
-                        </p>
-                        <div className="flex items-center text-sm text-gray-600 mb-2">
-                          <span className="mr-2 text-blue-600">📍</span>
-                          <span>Accra, Ghana</span>
-                        </div>
-                        <div className="flex items-center text-sm text-gray-600">
-                          <span className="mr-2 text-blue-600">🕐</span>
-                          <span>9:00 AM - 5:00 PM</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-                      <div className="bg-red-500 text-white p-4">
-                        <div className="text-center">
-                          <div className="text-2xl font-bold">22</div>
-                          <div className="text-sm">March 2024</div>
-                        </div>
-                      </div>
-                      <div className="p-6">
-                        <h3 className="text-xl font-semibold mb-2 text-gray-900">Youth Leadership Workshop</h3>
-                        <p className="text-gray-700 mb-4">
-                          Empowering young Africans with leadership skills and democratic values.
-                        </p>
-                        <div className="flex items-center text-sm text-gray-600 mb-2">
-                          <span className="mr-2 text-blue-600">📍</span>
-                          <span>Lagos, Nigeria</span>
-                        </div>
-                        <div className="flex items-center text-sm text-gray-600">
-                          <span className="mr-2 text-blue-600">🕐</span>
-                          <span>10:00 AM - 4:00 PM</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-                      <div className="bg-blue-500 text-white p-4">
-                        <div className="text-center">
-                          <div className="text-2xl font-bold">05</div>
-                          <div className="text-sm">April 2024</div>
-                        </div>
-                      </div>
-                      <div className="p-6">
-                        <h3 className="text-xl font-semibold mb-2 text-gray-900">Economic Development Forum</h3>
-                        <p className="text-gray-700 mb-4">
-                          Discussing sustainable economic policies for African development.
-                        </p>
-                        <div className="flex items-center text-sm text-gray-600 mb-2">
-                          <span className="mr-2 text-blue-600">📍</span>
-                          <span>Nairobi, Kenya</span>
-                        </div>
-                        <div className="flex items-center text-sm text-gray-600">
-                          <span className="mr-2 text-blue-600">🕐</span>
-                          <span>8:00 AM - 6:00 PM</span>
-                        </div>
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <div className="text-6xl mb-4">📅</div>
+                  <h3 className="text-2xl font-semibold text-gray-900 mb-2">No Events Available</h3>
+                  <p className="text-gray-600">Check back soon for upcoming events and activities.</p>
+                </div>
+              )}
             </div>
 
             {/* Event Categories */}

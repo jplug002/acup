@@ -103,7 +103,7 @@ export default async function IdeologyPage() {
       <section className="py-16">
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
-            {adminIdeologies.length > 0 && (
+            {adminIdeologies.length > 0 ? (
               <div className="mb-20">
                 <div className="text-center mb-12">
                   <h2 className="text-4xl font-black text-gray-900 mb-4">Our Principles & Beliefs</h2>
@@ -142,9 +142,15 @@ export default async function IdeologyPage() {
                   ))}
                 </div>
               </div>
+            ) : (
+              <div className="text-center py-12 mb-20">
+                <div className="text-6xl mb-4">📖</div>
+                <h3 className="text-2xl font-semibold text-gray-900 mb-2">No Ideologies Available</h3>
+                <p className="text-gray-600">Our ideological framework is being developed. Check back soon.</p>
+              </div>
             )}
 
-            {downloads.length > 0 && (
+            {downloads.length > 0 ? (
               <div className="mb-20">
                 <div className="text-center mb-12">
                   <h2 className="text-4xl font-black text-gray-900 mb-4">Download Resources</h2>
@@ -197,162 +203,11 @@ export default async function IdeologyPage() {
                   ))}
                 </div>
               </div>
-            )}
-
-            {downloads.length === 0 && (
-              <div className="mb-20">
-                <div className="text-center mb-12">
-                  <h2 className="text-4xl font-black text-gray-900 mb-4">Download Brochures</h2>
-                  <p className="text-gray-700 text-lg max-w-3xl mx-auto leading-relaxed">
-                    Access our comprehensive policy documents, manifestos, and ideological frameworks
-                  </p>
-                </div>
-                <div className="grid md:grid-cols-2 gap-6">
-                  <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-gray-200">
-                    <CardHeader className="pb-4">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          <span className="text-blue-600 text-xl">📄</span>
-                          <Badge variant="outline" className="text-xs border-gray-300 text-gray-700">
-                            PDF
-                          </Badge>
-                        </div>
-                        <div className="flex items-center text-gray-600 text-xs">
-                          <span>👁️</span>
-                          <span className="ml-1">2,847 downloads</span>
-                        </div>
-                      </div>
-                      <CardTitle className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
-                        ACUP Manifesto 2024
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <CardDescription className="text-sm text-gray-700 mb-4 leading-relaxed">
-                        Our comprehensive political manifesto outlining our vision for democratic transformation across
-                        Africa
-                      </CardDescription>
-                      <div className="flex items-center justify-between">
-                        <div className="text-xs text-gray-600">
-                          <span>2.4 MB</span>
-                          <span className="mx-2">•</span>
-                          <span>January 15, 2024</span>
-                        </div>
-                        <Button size="sm" className="font-semibold bg-blue-600 hover:bg-blue-700">
-                          <span className="mr-2">⬇️</span>
-                          Download
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-gray-200">
-                    <CardHeader className="pb-4">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          <span className="text-blue-600 text-xl">📄</span>
-                          <Badge variant="outline" className="text-xs border-gray-300 text-gray-700">
-                            PDF
-                          </Badge>
-                        </div>
-                        <div className="flex items-center text-gray-600 text-xs">
-                          <span>👁️</span>
-                          <span className="ml-1">1,923 downloads</span>
-                        </div>
-                      </div>
-                      <CardTitle className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
-                        Democratic Governance Framework
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <CardDescription className="text-sm text-gray-700 mb-4 leading-relaxed">
-                        Detailed framework for implementing transparent and accountable governance structures
-                      </CardDescription>
-                      <div className="flex items-center justify-between">
-                        <div className="text-xs text-gray-600">
-                          <span>1.8 MB</span>
-                          <span className="mx-2">•</span>
-                          <span>February 3, 2024</span>
-                        </div>
-                        <Button size="sm" className="font-semibold bg-blue-600 hover:bg-blue-700">
-                          <span className="mr-2">⬇️</span>
-                          Download
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-gray-200">
-                    <CardHeader className="pb-4">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          <span className="text-blue-600 text-xl">📄</span>
-                          <Badge variant="outline" className="text-xs border-gray-300 text-gray-700">
-                            PDF
-                          </Badge>
-                        </div>
-                        <div className="flex items-center text-gray-600 text-xs">
-                          <span>👁️</span>
-                          <span className="ml-1">1,456 downloads</span>
-                        </div>
-                      </div>
-                      <CardTitle className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
-                        Economic Empowerment Policy
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <CardDescription className="text-sm text-gray-700 mb-4 leading-relaxed">
-                        Strategic policies for sustainable economic development and inclusive growth across Africa
-                      </CardDescription>
-                      <div className="flex items-center justify-between">
-                        <div className="text-xs text-gray-600">
-                          <span>3.1 MB</span>
-                          <span className="mx-2">•</span>
-                          <span>March 12, 2024</span>
-                        </div>
-                        <Button size="sm" className="font-semibold bg-blue-600 hover:bg-blue-700">
-                          <span className="mr-2">⬇️</span>
-                          Download
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-gray-200">
-                    <CardHeader className="pb-4">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          <span className="text-blue-600 text-xl">📄</span>
-                          <Badge variant="outline" className="text-xs border-gray-300 text-gray-700">
-                            PDF
-                          </Badge>
-                        </div>
-                        <div className="flex items-center text-gray-600 text-xs">
-                          <span>👁️</span>
-                          <span className="ml-1">2,134 downloads</span>
-                        </div>
-                      </div>
-                      <CardTitle className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
-                        Pan-African Unity Charter
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <CardDescription className="text-sm text-gray-700 mb-4 leading-relaxed">
-                        Our vision for continental cooperation, cultural exchange, and unified African development
-                      </CardDescription>
-                      <div className="flex items-center justify-between">
-                        <div className="text-xs text-gray-600">
-                          <span>2.7 MB</span>
-                          <span className="mx-2">•</span>
-                          <span>April 8, 2024</span>
-                        </div>
-                        <Button size="sm" className="font-semibold bg-blue-600 hover:bg-blue-700">
-                          <span className="mr-2">⬇️</span>
-                          Download
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
+            ) : (
+              <div className="text-center py-12 mb-20">
+                <div className="text-6xl mb-4">📄</div>
+                <h3 className="text-2xl font-semibold text-gray-900 mb-2">No Downloads Available</h3>
+                <p className="text-gray-600">Policy documents and resources will be available soon.</p>
               </div>
             )}
 

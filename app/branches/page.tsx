@@ -75,7 +75,7 @@ export default async function BranchesPage() {
               </p>
             </div>
 
-            {adminBranches.length > 0 && (
+            {adminBranches.length > 0 ? (
               <div className="mb-20">
                 <div className="text-center mb-12">
                   <h3 className="text-3xl font-bold text-gray-900 mb-4">Active Branches</h3>
@@ -113,6 +113,12 @@ export default async function BranchesPage() {
                     </Link>
                   ))}
                 </div>
+              </div>
+            ) : (
+              <div className="text-center py-12 mb-20">
+                <div className="text-6xl mb-4">🌍</div>
+                <h3 className="text-2xl font-semibold text-gray-900 mb-2">No Branches Available</h3>
+                <p className="text-gray-600">We are expanding across Africa. Check back soon for branch locations.</p>
               </div>
             )}
 
@@ -152,68 +158,6 @@ export default async function BranchesPage() {
                       </div>
                     </div>
                   ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Our Branches Across Africa section */}
-            <Card className="border border-gray-200">
-              <CardHeader className="pb-6">
-                <CardTitle className="text-3xl font-bold text-gray-900 flex items-center gap-4">
-                  <span className="text-4xl">🌍</span>
-                  Our Branches Across Africa
-                </CardTitle>
-                <CardDescription className="text-base text-gray-600">
-                  Democratic foundations connecting communities across the African continent
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  <Card className="text-center hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border border-gray-100">
-                    <CardContent className="pt-6">
-                      <div className="flex justify-center mb-3">
-                        <CountryFlag country="Ghana" size={48} />
-                      </div>
-                      <CardTitle className="text-lg font-bold text-gray-900">Ghana</CardTitle>
-                      <CardDescription className="text-sm text-gray-600">Accra Branch</CardDescription>
-                    </CardContent>
-                  </Card>
-                  <Card className="text-center hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border border-gray-100">
-                    <CardContent className="pt-6">
-                      <div className="flex justify-center mb-3">
-                        <CountryFlag country="Nigeria" size={48} />
-                      </div>
-                      <CardTitle className="text-lg font-bold text-gray-900">Nigeria</CardTitle>
-                      <CardDescription className="text-sm text-gray-600">Lagos Branch</CardDescription>
-                    </CardContent>
-                  </Card>
-                  <Card className="text-center hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border border-gray-100">
-                    <CardContent className="pt-6">
-                      <div className="flex justify-center mb-3">
-                        <CountryFlag country="South Africa" size={48} />
-                      </div>
-                      <CardTitle className="text-lg font-bold text-gray-900">South Africa</CardTitle>
-                      <CardDescription className="text-sm text-gray-600">Cape Town Branch</CardDescription>
-                    </CardContent>
-                  </Card>
-                  <Card className="text-center hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border border-gray-100">
-                    <CardContent className="pt-6">
-                      <div className="flex justify-center mb-3">
-                        <CountryFlag country="Kenya" size={48} />
-                      </div>
-                      <CardTitle className="text-lg font-bold text-gray-900">Kenya</CardTitle>
-                      <CardDescription className="text-sm text-gray-600">Nairobi Branch</CardDescription>
-                    </CardContent>
-                  </Card>
-                  <Card className="text-center hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border border-gray-100">
-                    <CardContent className="pt-6">
-                      <div className="flex justify-center mb-3">
-                        <CountryFlag country="Côte d'Ivoire" size={48} />
-                      </div>
-                      <CardTitle className="text-lg font-bold text-gray-900">Côte d'Ivoire</CardTitle>
-                      <CardDescription className="text-sm text-gray-600">Abidjan Branch</CardDescription>
-                    </CardContent>
-                  </Card>
                 </div>
               </CardContent>
             </Card>
