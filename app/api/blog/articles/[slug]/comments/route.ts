@@ -14,9 +14,9 @@ export async function GET(request: NextRequest, { params }: { params: { slug: st
         bc.created_at,
         u.first_name || ' ' || u.last_name as user_name
       FROM blog_comments bc
-      JOIN blog_articles ba ON bc.article_id = ba.id
+      JOIN articles a ON bc.article_id = a.id::integer
       JOIN users u ON bc.user_id = u.id
-      WHERE ba.slug = $1 AND bc.status = 'approved'
+      WHERE a.slug = $1 AND bc.status = 'approved'
       ORDER BY bc.created_at DESC
     `
 
@@ -38,8 +38,7 @@ export async function POST(request: NextRequest, { params }: { params: { slug: s
       return NextResponse.json({ error: "Comment content is required" }, { status: 400 })
     }
 
-    // Get article ID
-    const articleResult = await sql("SELECT id FROM blog_articles WHERE slug = $1", [slug])
+    const articleResult = await sql("SELECT id FROM articles WHERE slug = $1", [slug])
 
     if (articleResult.length === 0) {
       return NextResponse.json({ error: "Article not found" }, { status: 404 })

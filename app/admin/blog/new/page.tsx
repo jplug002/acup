@@ -48,22 +48,43 @@ export default function NewArticlePage() {
     setLoading(true)
 
     try {
+      console.log("[v0] Submitting article with data:", {
+        title: formData.title,
+        slug: formData.slug,
+        contentLength: formData.content.length,
+        status,
+      })
+
       const response = await fetch("/api/admin/blog/articles", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...formData, status }),
       })
 
-      if (response.ok) {
-        const data = await response.json()
-        router.push("/admin/blog")
-      } else {
+      if (!response.ok) {
         const error = await response.json()
-        alert(error.message || "Error creating article")
+        console.error("[v0] API Error Response:", error)
+
+        let errorMessage = error.error || "Error creating article"
+        if (error.hint) {
+          errorMessage += `\n\n${error.hint}`
+        }
+        if (error.details) {
+          console.error("[v0] Error details:", error.details)
+        }
+
+        alert(errorMessage)
+        return
       }
+
+      const data = await response.json()
+      console.log("[v0] Article created successfully:", data)
+
+      alert(data.message || "Article created successfully!")
+      router.push("/admin/blog")
     } catch (error) {
-      console.error("Error creating article:", error)
-      alert("Error creating article")
+      console.error("[v0] Error creating article:", error)
+      alert(`Network error: ${error instanceof Error ? error.message : "Unknown error"}`)
     } finally {
       setLoading(false)
     }

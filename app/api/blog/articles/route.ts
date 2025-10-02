@@ -13,51 +13,38 @@ export async function GET(request: NextRequest) {
 
     let query = `
       SELECT 
-        ba.id,
-        ba.title,
-        ba.slug,
-        ba.excerpt,
-        ba.featured_image,
-        ba.published_at,
-        ba.views_count,
-        ba.likes_count,
+        a.id,
+        a.title,
+        a.slug,
+        a.excerpt,
+        a.featured_image,
+        a.published_at,
+        a.views_count,
+        a.likes_count,
         u.first_name || ' ' || u.last_name as author_name,
-        COALESCE(
-          JSON_AGG(
-            JSON_BUILD_OBJECT(
-              'id', bc.id,
-              'name', bc.name,
-              'slug', bc.slug,
-              'color', bc.color
-            )
-          ) FILTER (WHERE bc.id IS NOT NULL), 
-          '[]'
-        ) as categories
-      FROM blog_articles ba
-      LEFT JOIN users u ON ba.author_id = u.id
-      LEFT JOIN article_categories ac ON ba.id = ac.article_id
-      LEFT JOIN blog_categories bc ON ac.category_id = bc.id
-      WHERE ba.status = 'published'
+        a.category
+      FROM articles a
+      LEFT JOIN users u ON a.author_id::text = u.id::text
+      WHERE a.status = 'published'
     `
 
     const params: any[] = []
     let paramIndex = 1
 
     if (category) {
-      query += ` AND bc.slug = $${paramIndex}`
+      query += ` AND a.category = $${paramIndex}`
       params.push(category)
       paramIndex++
     }
 
     if (search) {
-      query += ` AND (ba.title ILIKE $${paramIndex} OR ba.content ILIKE $${paramIndex})`
+      query += ` AND (a.title ILIKE $${paramIndex} OR a.content ILIKE $${paramIndex})`
       params.push(`%${search}%`)
       paramIndex++
     }
 
     query += `
-      GROUP BY ba.id, u.first_name, u.last_name
-      ORDER BY ba.published_at DESC
+      ORDER BY a.published_at DESC
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
     `
     params.push(limit, offset)

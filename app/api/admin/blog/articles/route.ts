@@ -13,17 +13,17 @@ export async function GET(request: NextRequest) {
 
     let query = `
       SELECT 
-        ba.id,
-        ba.title,
-        ba.slug,
-        ba.status,
-        ba.published_at,
-        ba.created_at,
-        ba.views_count,
-        ba.likes_count,
+        a.id,
+        a.title,
+        a.slug,
+        a.status,
+        a.published_at,
+        a.created_at,
+        a.views_count,
+        a.likes_count,
         COALESCE(u.first_name || ' ' || u.last_name, 'Unknown Author') as author_name
-      FROM blog_articles ba
-      LEFT JOIN users u ON ba.author_id = u.id
+      FROM articles a
+      LEFT JOIN users u ON a.author_id::text = u.id::text
       WHERE 1=1
     `
 
@@ -31,18 +31,18 @@ export async function GET(request: NextRequest) {
     let paramIndex = 1
 
     if (search) {
-      query += ` AND ba.title ILIKE $${paramIndex}`
+      query += ` AND a.title ILIKE $${paramIndex}`
       params.push(`%${search}%`)
       paramIndex++
     }
 
     if (status) {
-      query += ` AND ba.status = $${paramIndex}`
+      query += ` AND a.status = $${paramIndex}`
       params.push(status)
       paramIndex++
     }
 
-    query += ` ORDER BY ba.created_at DESC`
+    query += ` ORDER BY a.created_at DESC`
 
     const articles = await sql(query, params)
 
@@ -50,7 +50,6 @@ export async function GET(request: NextRequest) {
   } catch (error: any) {
     console.error("[v0] Error fetching admin articles:", error)
     console.error("[v0] Error message:", error.message)
-    console.error("[v0] Error stack:", error.stack)
     return NextResponse.json(
       {
         error: "Failed to fetch articles",
@@ -63,26 +62,45 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    console.log("[v0] Starting article creation...")
 
-    console.log("[v0] Session data:", session)
+    const body = await request.json()
+    console.log("[v0] Request body:", JSON.stringify(body, null, 2))
 
-    if (!session || !session.user) {
-      console.log("[v0] No session found - user not authenticated")
-      return NextResponse.json({ error: "Unauthorized - Please log in" }, { status: 401 })
-    }
-
-    const { title, slug, content, excerpt, featured_image, status } = await request.json()
-
-    console.log("[v0] Creating article with data:", { title, slug, status, authorId: session.user.id })
+    const { title, slug, content, excerpt, featured_image, status, category, tags } = body
 
     if (!title || !content) {
-      console.log("[v0] Missing required fields")
-      return NextResponse.json({ error: "Title and content are required" }, { status: 400 })
+      console.log("[v0] Missing required fields - title or content")
+      return NextResponse.json(
+        {
+          error: "Title and content are required",
+          received: { title: !!title, content: !!content },
+        },
+        { status: 400 },
+      )
+    }
+
+    const session = await getServerSession(authOptions)
+    console.log("[v0] Session check:", {
+      hasSession: !!session,
+      hasUser: !!session?.user,
+      userId: session?.user?.id,
+      userEmail: session?.user?.email,
+    })
+
+    if (!session || !session.user) {
+      console.log("[v0] Authentication failed - no valid session")
+      return NextResponse.json(
+        {
+          error: "Unauthorized - Please log in to create articles",
+          hint: "Make sure you're logged in with a valid account",
+        },
+        { status: 401 },
+      )
     }
 
     const finalSlug =
-      slug ||
+      slug?.trim() ||
       title
         .toLowerCase()
         .replace(/[^a-z0-9 -]/g, "")
@@ -90,45 +108,115 @@ export async function POST(request: NextRequest) {
         .replace(/-+/g, "-")
         .trim()
 
-    const authorId = Number.parseInt(session.user.id)
+    console.log("[v0] Generated slug:", finalSlug)
+
+    const existingSlug = await sql`SELECT id FROM articles WHERE slug = ${finalSlug}`
+    if (existingSlug.length > 0) {
+      console.log("[v0] Slug already exists:", finalSlug)
+      return NextResponse.json(
+        {
+          error: "An article with this URL slug already exists",
+          slug: finalSlug,
+          hint: "Please use a different title or manually set a unique slug",
+        },
+        { status: 409 },
+      )
+    }
+
+    const authorId = session.user.id
 
     console.log("[v0] Using author ID:", authorId)
 
-    const userCheck = await sql`SELECT id FROM users WHERE id = ${authorId}`
+    const userCheck = await sql`SELECT id, first_name, last_name, email FROM users WHERE id::text = ${authorId}`
 
     if (userCheck.length === 0) {
       console.log("[v0] User not found in database:", authorId)
-      return NextResponse.json({ error: "User not found" }, { status: 404 })
+      return NextResponse.json(
+        {
+          error: "User account not found in database",
+          userId: authorId,
+          hint: "Your account may need to be set up. Please contact an administrator.",
+        },
+        { status: 404 },
+      )
     }
+
+    console.log("[v0] User verified:", {
+      id: userCheck[0].id,
+      name: `${userCheck[0].first_name} ${userCheck[0].last_name}`,
+      email: userCheck[0].email,
+    })
 
     const publishedAt = status === "published" ? new Date().toISOString() : null
 
-    console.log("[v0] Inserting article into database...")
+    console.log("[v0] Inserting article into database with params:", {
+      title,
+      slug: finalSlug,
+      contentLength: content.length,
+      excerpt: excerpt?.substring(0, 50) + "...",
+      featured_image: featured_image || "none",
+      category: category || "none",
+      tags: tags || [],
+      authorId,
+      status,
+      publishedAt,
+    })
 
     const result = await sql(
-      `INSERT INTO blog_articles 
-       (title, slug, content, excerpt, featured_image, author_id, status, published_at) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
-       RETURNING id`,
-      [title, finalSlug, content, excerpt || null, featured_image || null, authorId, status, publishedAt],
+      `INSERT INTO articles 
+       (title, slug, content, excerpt, featured_image, author_id, status, published_at, category, tags) 
+       VALUES ($1, $2, $3, $4, $5, $6::uuid, $7, $8, $9, $10) 
+       RETURNING id, slug, title, status`,
+      [
+        title,
+        finalSlug,
+        content,
+        excerpt || null,
+        featured_image || null,
+        authorId,
+        status || "draft",
+        publishedAt,
+        category || null,
+        tags || [],
+      ],
     )
 
-    console.log("[v0] Article created successfully:", result[0].id)
+    console.log("[v0] Article created successfully:", result[0])
 
     return NextResponse.json({
       success: true,
-      article: { id: result[0].id, slug: finalSlug },
+      article: result[0],
+      message: `Article "${result[0].title}" ${status === "published" ? "published" : "saved as draft"} successfully`,
     })
   } catch (error: any) {
     console.error("[v0] Error creating article:", error)
-    console.error("[v0] Error details:", error.message)
+    console.error("[v0] Error name:", error.name)
+    console.error("[v0] Error message:", error.message)
     console.error("[v0] Error stack:", error.stack)
+
+    let errorMessage = "Failed to create article"
+    let errorHint = "Check the console logs for more details"
+
+    if (error.message?.includes("duplicate key")) {
+      errorMessage = "An article with this slug already exists"
+      errorHint = "Try using a different title or slug"
+    } else if (error.message?.includes("foreign key")) {
+      errorMessage = "Database relationship error"
+      errorHint = "Your user account may not be properly set up"
+    } else if (error.message?.includes("null value")) {
+      errorMessage = "Missing required database field"
+      errorHint = "Some required information is missing"
+    } else if (error.message?.includes("column") && error.message?.includes("does not exist")) {
+      errorMessage = "Database schema mismatch"
+      errorHint = "Run the migration script to add missing columns"
+    }
 
     return NextResponse.json(
       {
-        error: "Failed to create article",
+        error: errorMessage,
         details: error.message,
-        hint: "Check console logs for more details",
+        hint: errorHint,
+        type: error.name,
       },
       { status: 500 },
     )

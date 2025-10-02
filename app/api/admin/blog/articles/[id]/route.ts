@@ -14,11 +14,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
 
     const publishedAt = status === "published" ? new Date().toISOString() : null
 
-    await sql("UPDATE blog_articles SET status = $1, published_at = $2 WHERE id = $3", [
-      status,
-      publishedAt,
-      Number.parseInt(id),
-    ])
+    await sql("UPDATE articles SET status = $1, published_at = $2 WHERE id = $3", [status, publishedAt, id])
 
     return NextResponse.json({ success: true })
   } catch (error) {
@@ -31,7 +27,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
   try {
     const { id } = params
 
-    await sql("DELETE FROM blog_articles WHERE id = $1", [Number.parseInt(id)])
+    await sql("DELETE FROM articles WHERE id = $1", [id])
 
     return NextResponse.json({ success: true })
   } catch (error) {

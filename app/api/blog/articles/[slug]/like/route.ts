@@ -7,8 +7,7 @@ export async function POST(request: NextRequest, { params }: { params: { slug: s
   try {
     const { slug } = params
 
-    // Get article ID
-    const articleResult = await sql("SELECT id FROM blog_articles WHERE slug = $1", [slug])
+    const articleResult = await sql("SELECT id FROM articles WHERE slug = $1", [slug])
 
     if (articleResult.length === 0) {
       return NextResponse.json({ error: "Article not found" }, { status: 404 })
@@ -27,12 +26,12 @@ export async function POST(request: NextRequest, { params }: { params: { slug: s
     if (existingLike.length > 0) {
       // Unlike
       await sql("DELETE FROM article_likes WHERE article_id = $1 AND user_id = $2", [articleId, userId])
-      await sql("UPDATE blog_articles SET likes_count = likes_count - 1 WHERE id = $1", [articleId])
+      await sql("UPDATE articles SET likes_count = likes_count - 1 WHERE id = $1", [articleId])
       return NextResponse.json({ liked: false })
     } else {
       // Like
       await sql("INSERT INTO article_likes (article_id, user_id) VALUES ($1, $2)", [articleId, userId])
-      await sql("UPDATE blog_articles SET likes_count = likes_count + 1 WHERE id = $1", [articleId])
+      await sql("UPDATE articles SET likes_count = likes_count + 1 WHERE id = $1", [articleId])
       return NextResponse.json({ liked: true })
     }
   } catch (error) {
