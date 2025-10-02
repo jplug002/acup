@@ -1,7 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { neon } from "@neondatabase/serverless"
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/lib/auth"
 
 const sql = neon(process.env.DATABASE_URL!)
 
@@ -66,7 +64,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     console.log("[v0] Request body:", JSON.stringify(body, null, 2))
 
-    const { title, content, excerpt, featured_image, status, category, tags } = body
+    const { title, content, excerpt, featured_image, status, category, tags, author_id } = body
 
     if (!title || !content) {
       console.log("[v0] Missing required fields - title or content")
@@ -79,48 +77,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const session = await getServerSession(authOptions)
-    console.log("[v0] Session check:", {
-      hasSession: !!session,
-      hasUser: !!session?.user,
-      userId: session?.user?.id,
-      userEmail: session?.user?.email,
-    })
-
-    if (!session || !session.user) {
-      console.log("[v0] Authentication failed - no valid session")
-      return NextResponse.json(
-        {
-          error: "Unauthorized - Please log in to create articles",
-          hint: "Make sure you're logged in with a valid account",
-        },
-        { status: 401 },
-      )
-    }
-
-    const authorId = session.user.id
+    // Use provided author_id or default to a system user
+    const authorId = author_id || "00000000-0000-0000-0000-000000000000"
 
     console.log("[v0] Using author ID:", authorId)
-
-    const userCheck = await sql`SELECT id, first_name, last_name, email FROM users WHERE id::text = ${authorId}`
-
-    if (userCheck.length === 0) {
-      console.log("[v0] User not found in database:", authorId)
-      return NextResponse.json(
-        {
-          error: "User account not found in database",
-          userId: authorId,
-          hint: "Your account may need to be set up. Please contact an administrator.",
-        },
-        { status: 404 },
-      )
-    }
-
-    console.log("[v0] User verified:", {
-      id: userCheck[0].id,
-      name: `${userCheck[0].first_name} ${userCheck[0].last_name}`,
-      email: userCheck[0].email,
-    })
 
     const publishedAt = status === "published" ? new Date().toISOString() : null
 
@@ -175,13 +135,13 @@ export async function POST(request: NextRequest) {
       errorHint = "Try using a different title or slug"
     } else if (error.message?.includes("foreign key")) {
       errorMessage = "Database relationship error"
-      errorHint = "Your user account may not be properly set up"
+      errorHint = "The author_id may not exist in the users table"
     } else if (error.message?.includes("null value")) {
       errorMessage = "Missing required database field"
       errorHint = "Some required information is missing"
     } else if (error.message?.includes("column") && error.message?.includes("does not exist")) {
       errorMessage = "Database schema mismatch"
-      errorHint = "The database schema needs to be updated. Contact your administrator."
+      errorHint = "The database schema needs to be updated. Run the migration scripts."
     }
 
     return NextResponse.json(
