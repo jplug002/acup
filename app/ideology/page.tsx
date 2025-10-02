@@ -14,19 +14,6 @@ interface Ideology {
   created_at: string
 }
 
-interface DownloadItem {
-  id: number
-  title: string
-  description: string
-  file_url: string
-  file_name: string
-  file_size: string
-  file_type: string
-  category: string
-  download_count: number
-  created_at: string
-}
-
 async function getIdeologies(): Promise<Ideology[]> {
   try {
     const ideologies = await sql`
@@ -42,23 +29,8 @@ async function getIdeologies(): Promise<Ideology[]> {
   }
 }
 
-async function getDownloads(): Promise<DownloadItem[]> {
-  try {
-    const downloads = await sql`
-      SELECT * FROM downloads 
-      WHERE status = 'published' 
-      ORDER BY created_at DESC
-    `
-    return downloads as DownloadItem[]
-  } catch (error) {
-    console.error("Error fetching downloads:", error)
-    return []
-  }
-}
-
 export default async function IdeologyPage() {
   const adminIdeologies = await getIdeologies()
-  const downloads = await getDownloads()
 
   const getStatusColor = (status: string) => {
     switch (status?.toLowerCase()) {
@@ -79,11 +51,6 @@ export default async function IdeologyPage() {
       month: "long",
       day: "numeric",
     })
-  }
-
-  const formatFileSize = (size: string) => {
-    if (!size) return "Unknown size"
-    return size.includes("MB") || size.includes("KB") ? size : `${size} KB`
   }
 
   return (
@@ -112,7 +79,7 @@ export default async function IdeologyPage() {
                 </div>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                   {adminIdeologies.map((ideology) => (
-                    <Link key={ideology.id} href={`/ideology/${ideology.id}`}>
+  
                       <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-gray-200 h-full">
                         <CardHeader className="pb-4">
                           <div className="flex items-center justify-between mb-3">
@@ -136,7 +103,7 @@ export default async function IdeologyPage() {
                           </div>
                         </CardContent>
                       </Card>
-                    </Link>
+                    
                   ))}
                 </div>
               </div>
@@ -145,67 +112,6 @@ export default async function IdeologyPage() {
                 <div className="text-6xl mb-4">📖</div>
                 <h3 className="text-2xl font-semibold text-gray-900 mb-2">No Ideologies Available</h3>
                 <p className="text-gray-600">Our ideological framework is being developed. Check back soon.</p>
-              </div>
-            )}
-
-            {downloads.length > 0 ? (
-              <div className="mb-20">
-                <div className="text-center mb-12">
-                  <h2 className="text-4xl font-black text-gray-900 mb-4">Download Resources</h2>
-                  <p className="text-gray-700 text-lg max-w-3xl mx-auto leading-relaxed">
-                    Access our comprehensive policy documents, manifestos, and ideological frameworks
-                  </p>
-                </div>
-                <div className="grid md:grid-cols-2 gap-6">
-                  {downloads.map((download) => (
-                    <Card
-                      key={download.id}
-                      className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-gray-200"
-                    >
-                      <CardHeader className="pb-4">
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex items-center gap-2">
-                            <span className="text-blue-600 text-xl">📄</span>
-                            <Badge variant="outline" className="text-xs border-gray-300 text-gray-700">
-                              {download.file_type?.toUpperCase() || "PDF"}
-                            </Badge>
-                          </div>
-                          <div className="flex items-center text-gray-600 text-xs">
-                            <span>👁️</span>
-                            <span className="ml-1">{download.download_count} downloads</span>
-                          </div>
-                        </div>
-                        <CardTitle className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
-                          {download.title}
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <CardDescription className="text-sm text-gray-700 mb-4 leading-relaxed">
-                          {download.description}
-                        </CardDescription>
-                        <div className="flex items-center justify-between">
-                          <div className="text-xs text-gray-600">
-                            <span>{formatFileSize(download.file_size)}</span>
-                            <span className="mx-2">•</span>
-                            <span>{formatDate(download.created_at)}</span>
-                          </div>
-                          <Button size="sm" className="font-semibold bg-blue-600 hover:bg-blue-700" asChild>
-                            <a href={download.file_url} download={download.file_name}>
-                              <span className="mr-2">⬇️</span>
-                              Download
-                            </a>
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <div className="text-center py-12 mb-20">
-                <div className="text-6xl mb-4">📄</div>
-                <h3 className="text-2xl font-semibold text-gray-900 mb-2">No Downloads Available</h3>
-                <p className="text-gray-600">Policy documents and resources will be available soon.</p>
               </div>
             )}
 
