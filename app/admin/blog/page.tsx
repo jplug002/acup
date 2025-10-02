@@ -2,16 +2,10 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Plus, Search, MoreHorizontal, Edit, Trash2, Eye } from "lucide-react"
+import { Eye } from "lucide-react"
 
 interface BlogArticle {
-  id: number
+  id: string
   title: string
   slug: string
   status: string
@@ -24,21 +18,25 @@ interface BlogArticle {
 
 export default function AdminBlogPage() {
   const [articles, setArticles] = useState<BlogArticle[]>([])
-  const [searchQuery, setSearchQuery] = useState("")
-  const [statusFilter, setStatusFilter] = useState("")
   const [loading, setLoading] = useState(true)
+  const [newArticle, setNewArticle] = useState({
+    title: "",
+    content: "",
+    excerpt: "",
+    category: "",
+    tags: "",
+    featured_image: "",
+    status: "draft",
+  })
 
   useEffect(() => {
     fetchArticles()
-  }, [searchQuery, statusFilter])
+  }, [])
 
   const fetchArticles = async () => {
     try {
-      const params = new URLSearchParams()
-      if (searchQuery) params.append("search", searchQuery)
-      if (statusFilter) params.append("status", statusFilter)
-
-      const response = await fetch(`/api/admin/blog/articles?${params}`)
+      setLoading(true)
+      const response = await fetch("/api/admin/blog/articles")
       if (response.ok) {
         const data = await response.json()
         setArticles(data.articles || [])
@@ -50,7 +48,55 @@ export default function AdminBlogPage() {
     }
   }
 
-  const handleDelete = async (id: number) => {
+  const handleCreateArticle = async () => {
+    try {
+      if (!newArticle.title.trim() || !newArticle.content.trim()) {
+        alert("Please fill in title and content fields")
+        return
+      }
+
+      const response = await fetch("/api/admin/blog/articles", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: newArticle.title,
+          content: newArticle.content,
+          excerpt: newArticle.excerpt,
+          category: newArticle.category,
+          tags: newArticle.tags
+            .split(",")
+            .map((tag) => tag.trim())
+            .filter(Boolean),
+          featured_image: newArticle.featured_image,
+          status: newArticle.status,
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error("API Error:", errorData)
+        alert(`Failed to create article: ${errorData.error || "Unknown error"}`)
+        return
+      }
+
+      alert("Article created successfully!")
+      setNewArticle({
+        title: "",
+        content: "",
+        excerpt: "",
+        category: "",
+        tags: "",
+        featured_image: "",
+        status: "draft",
+      })
+      fetchArticles()
+    } catch (error) {
+      console.error("Error creating article:", error)
+      alert("Failed to create article. Please check the console for details.")
+    }
+  }
+
+  const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this article?")) return
 
     try {
@@ -66,22 +112,6 @@ export default function AdminBlogPage() {
     }
   }
 
-  const handleStatusChange = async (id: number, newStatus: string) => {
-    try {
-      const response = await fetch(`/api/admin/blog/articles/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: newStatus }),
-      })
-
-      if (response.ok) {
-        fetchArticles()
-      }
-    } catch (error) {
-      console.error("Error updating article status:", error)
-    }
-  }
-
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
@@ -90,174 +120,194 @@ export default function AdminBlogPage() {
     })
   }
 
-  const getStatusBadge = (status: string) => {
-    const variants = {
-      draft: "secondary",
-      published: "default",
-      archived: "outline",
-    }
-    return (
-      <Badge variant={variants[status as keyof typeof variants] || "secondary"}>
-        {status.charAt(0).toUpperCase() + status.slice(1)}
-      </Badge>
-    )
-  }
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Blog Management</h1>
-            <p className="text-gray-600 mt-2">Manage your blog articles and content</p>
+    <div className="min-h-screen bg-white">
+      <header className="border-b bg-white">
+        <div className="flex h-16 items-center justify-between px-6">
+          <div className="flex items-center space-x-4">
+            <Link href="/admin" className="text-red-600 hover:text-red-700 font-medium transition-colors">
+              ← Back to Admin
+            </Link>
+            <div className="h-6 w-px bg-gray-300"></div>
+            <h1 className="text-xl font-semibold text-gray-900">Blog Management</h1>
           </div>
-          <Link href="/admin/blog/new">
-            <Button className="bg-red-600 hover:bg-red-700">
-              <Plus className="h-4 w-4 mr-2" />
-              New Article
-            </Button>
-          </Link>
+        </div>
+      </header>
+
+      <main className="p-6">
+        {/* Stats Overview */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <h3 className="text-sm font-medium text-gray-600">Total Articles</h3>
+            <div className="text-2xl font-bold text-gray-900 mt-2">{articles.length}</div>
+          </div>
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <h3 className="text-sm font-medium text-gray-600">Published</h3>
+            <div className="text-2xl font-bold text-gray-900 mt-2">
+              {articles.filter((a) => a.status === "published").length}
+            </div>
+          </div>
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <h3 className="text-sm font-medium text-gray-600">Drafts</h3>
+            <div className="text-2xl font-bold text-gray-900 mt-2">
+              {articles.filter((a) => a.status === "draft").length}
+            </div>
+          </div>
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <h3 className="text-sm font-medium text-gray-600">Total Views</h3>
+            <div className="text-2xl font-bold text-gray-900 mt-2">
+              {articles.reduce((sum, a) => sum + (a.views_count || 0), 0)}
+            </div>
+          </div>
         </div>
 
-        {/* Filters */}
-        <Card className="mb-6">
-          <CardContent className="p-6">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <Input
-                  placeholder="Search articles..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
+        <div className="space-y-6">
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">Create New Article</h2>
+            <p className="text-gray-600 mb-6">Add a new blog article</p>
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700">Title *</label>
+                  <input
+                    type="text"
+                    value={newArticle.title}
+                    onChange={(e) => setNewArticle({ ...newArticle, title: e.target.value })}
+                    placeholder="Enter article title"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700">Category</label>
+                  <input
+                    type="text"
+                    value={newArticle.category}
+                    onChange={(e) => setNewArticle({ ...newArticle, category: e.target.value })}
+                    placeholder="e.g., Politics, News"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">Excerpt</label>
+                <textarea
+                  value={newArticle.excerpt}
+                  onChange={(e) => setNewArticle({ ...newArticle, excerpt: e.target.value })}
+                  placeholder="Brief summary of the article"
+                  rows={2}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
                 />
               </div>
-              <div className="flex gap-2">
-                <Button variant={statusFilter === "" ? "default" : "outline"} onClick={() => setStatusFilter("")}>
-                  All
-                </Button>
-                <Button
-                  variant={statusFilter === "draft" ? "default" : "outline"}
-                  onClick={() => setStatusFilter("draft")}
-                >
-                  Drafts
-                </Button>
-                <Button
-                  variant={statusFilter === "published" ? "default" : "outline"}
-                  onClick={() => setStatusFilter("published")}
-                >
-                  Published
-                </Button>
-                <Button
-                  variant={statusFilter === "archived" ? "default" : "outline"}
-                  onClick={() => setStatusFilter("archived")}
-                >
-                  Archived
-                </Button>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">Content *</label>
+                <textarea
+                  value={newArticle.content}
+                  onChange={(e) => setNewArticle({ ...newArticle, content: e.target.value })}
+                  placeholder="Enter article content"
+                  rows={6}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                />
               </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700">Tags</label>
+                  <input
+                    type="text"
+                    value={newArticle.tags}
+                    onChange={(e) => setNewArticle({ ...newArticle, tags: e.target.value })}
+                    placeholder="Comma-separated tags"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700">Featured Image URL</label>
+                  <input
+                    type="text"
+                    value={newArticle.featured_image}
+                    onChange={(e) => setNewArticle({ ...newArticle, featured_image: e.target.value })}
+                    placeholder="https://example.com/image.jpg"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">Status</label>
+                <select
+                  value={newArticle.status}
+                  onChange={(e) => setNewArticle({ ...newArticle, status: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                >
+                  <option value="draft">Draft</option>
+                  <option value="published">Published</option>
+                  <option value="archived">Archived</option>
+                </select>
+              </div>
+              <button
+                onClick={handleCreateArticle}
+                className="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-md transition-colors"
+              >
+                Create Article
+              </button>
             </div>
-          </CardContent>
-        </Card>
+          </div>
 
-        {/* Articles Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Articles ({articles.length})</CardTitle>
-          </CardHeader>
-          <CardContent>
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Existing Articles</h2>
             {loading ? (
+              <p>Loading articles...</p>
+            ) : articles.length === 0 ? (
+              <p className="text-gray-500">No articles found.</p>
+            ) : (
               <div className="space-y-4">
-                {[...Array(5)].map((_, i) => (
-                  <div key={i} className="animate-pulse flex space-x-4">
-                    <div className="h-4 bg-gray-200 rounded flex-1"></div>
-                    <div className="h-4 bg-gray-200 rounded w-20"></div>
-                    <div className="h-4 bg-gray-200 rounded w-24"></div>
+                {articles.map((article) => (
+                  <div
+                    key={article.id}
+                    className="flex items-start justify-between p-4 border border-gray-200 rounded-lg"
+                  >
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-gray-900">{article.title}</h3>
+                      <p className="text-sm text-gray-500">/{article.slug}</p>
+                      <div className="flex items-center gap-3 mt-2">
+                        <span
+                          className={`inline-block px-2 py-1 text-xs rounded-full ${
+                            article.status === "published"
+                              ? "bg-green-100 text-green-800"
+                              : article.status === "draft"
+                                ? "bg-gray-100 text-gray-800"
+                                : "bg-yellow-100 text-yellow-800"
+                          }`}
+                        >
+                          {article.status.charAt(0).toUpperCase() + article.status.slice(1)}
+                        </span>
+                        <span className="text-sm text-gray-500">
+                          {article.published_at ? formatDate(article.published_at) : "Not published"}
+                        </span>
+                        <span className="text-sm text-gray-500">👁 {article.views_count || 0}</span>
+                        <span className="text-sm text-gray-500">❤️ {article.likes_count || 0}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Link
+                        href={`/blog/${article.slug}`}
+                        className="px-3 py-1 text-sm border border-gray-300 rounded-md text-gray-600 hover:text-gray-900 transition-colors"
+                      >
+                        <Eye className="h-4 w-4 inline mr-1" />
+                        View
+                      </Link>
+                      <button
+                        onClick={() => handleDelete(article.id)}
+                        className="px-3 py-1 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Title</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Author</TableHead>
-                    <TableHead>Published</TableHead>
-                    <TableHead>Views</TableHead>
-                    <TableHead>Likes</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {articles.map((article) => (
-                    <TableRow key={article.id}>
-                      <TableCell className="font-medium">
-                        <div>
-                          <div className="font-semibold">{article.title}</div>
-                          <div className="text-sm text-gray-500">/{article.slug}</div>
-                        </div>
-                      </TableCell>
-                      <TableCell>{getStatusBadge(article.status)}</TableCell>
-                      <TableCell>{article.author_name}</TableCell>
-                      <TableCell>{article.published_at ? formatDate(article.published_at) : "-"}</TableCell>
-                      <TableCell>{article.views_count}</TableCell>
-                      <TableCell>{article.likes_count}</TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem asChild>
-                              <Link href={`/blog/${article.slug}`}>
-                                <Eye className="h-4 w-4 mr-2" />
-                                View
-                              </Link>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem asChild>
-                              <Link href={`/admin/blog/edit/${article.id}`}>
-                                <Edit className="h-4 w-4 mr-2" />
-                                Edit
-                              </Link>
-                            </DropdownMenuItem>
-                            {article.status === "draft" && (
-                              <DropdownMenuItem onClick={() => handleStatusChange(article.id, "published")}>
-                                Publish
-                              </DropdownMenuItem>
-                            )}
-                            {article.status === "published" && (
-                              <DropdownMenuItem onClick={() => handleStatusChange(article.id, "archived")}>
-                                Archive
-                              </DropdownMenuItem>
-                            )}
-                            <DropdownMenuItem onClick={() => handleDelete(article.id)} className="text-red-600">
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
             )}
-
-            {!loading && articles.length === 0 && (
-              <div className="text-center py-12">
-                <h3 className="text-lg font-semibold text-gray-600 mb-2">No articles found</h3>
-                <p className="text-gray-500 mb-4">Get started by creating your first article</p>
-                <Link href="/admin/blog/new">
-                  <Button>Create Article</Button>
-                </Link>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </div>
+      </main>
     </div>
   )
 }
