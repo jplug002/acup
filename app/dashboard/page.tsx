@@ -276,7 +276,7 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <Badge className={getMembershipStatusColor(membershipInfo?.status || "none")}>
-                {membershipInfo?.status || "No Application"}
+                {membershipInfo?.status || "Active"}
               </Badge>
               {membershipInfo?.membership_number && (
                 <p className="text-xs text-gray-500 mt-1">ID: {membershipInfo.membership_number}</p>
