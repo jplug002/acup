@@ -387,7 +387,57 @@ export default function AdminDashboard() {
     }
   }
 
-  const handleLeaderImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const compressImage = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const img = new Image()
+        img.onload = () => {
+          // Create canvas for resizing
+          const canvas = document.createElement("canvas")
+          const ctx = canvas.getContext("2d")
+
+          if (!ctx) {
+            reject(new Error("Failed to get canvas context"))
+            return
+          }
+
+          // Calculate new dimensions (max 800px on longest side)
+          const maxSize = 800
+          let width = img.width
+          let height = img.height
+
+          if (width > height) {
+            if (width > maxSize) {
+              height = (height * maxSize) / width
+              width = maxSize
+            }
+          } else {
+            if (height > maxSize) {
+              width = (width * maxSize) / height
+              height = maxSize
+            }
+          }
+
+          canvas.width = width
+          canvas.height = height
+
+          // Draw and compress image
+          ctx.drawImage(img, 0, 0, width, height)
+
+          // Convert to base64 with compression (0.8 quality)
+          const compressedBase64 = canvas.toDataURL("image/jpeg", 0.8)
+          resolve(compressedBase64)
+        }
+        img.onerror = () => reject(new Error("Failed to load image"))
+        img.src = e.target?.result as string
+      }
+      reader.onerror = () => reject(new Error("Failed to read file"))
+      reader.readAsDataURL(file)
+    })
+  }
+
+  const handleLeaderImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
       // Validate file type
@@ -402,14 +452,15 @@ export default function AdminDashboard() {
         return
       }
 
-      // Convert to base64
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        const base64String = reader.result as string
-        setNewLeader({ ...newLeader, photo_url: base64String })
-        setLeaderImagePreview(base64String)
+      try {
+        const compressedBase64 = await compressImage(file)
+        console.log("[v0] Image compressed, size:", compressedBase64.length, "characters")
+        setNewLeader({ ...newLeader, photo_url: compressedBase64 })
+        setLeaderImagePreview(compressedBase64)
+      } catch (error) {
+        console.error("[v0] Error compressing image:", error)
+        alert("Failed to process image. Please try another image.")
       }
-      reader.readAsDataURL(file)
     }
   }
 

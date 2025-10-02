@@ -22,6 +22,14 @@ export async function POST(request: NextRequest) {
   try {
     const { name, role, title, bio, photo_url } = await request.json()
 
+    console.log("[v0] Creating leadership profile:", {
+      name,
+      role,
+      title,
+      bio,
+      photoUrlLength: photo_url?.length,
+    })
+
     if (!name || !role) {
       return NextResponse.json({ error: "Name and role are required" }, { status: 400 })
     }
@@ -40,12 +48,18 @@ export async function POST(request: NextRequest) {
       RETURNING id
     `
 
+    console.log("[v0] Leadership profile created successfully:", result[0].id)
+
     return NextResponse.json({
       success: true,
       leader: { id: result[0].id },
     })
   } catch (error) {
-    console.error("Error creating leadership profile:", error)
+    console.error("[v0] Error creating leadership profile:", error)
+    console.error("[v0] Error details:", {
+      message: error instanceof Error ? error.message : "Unknown error",
+      stack: error instanceof Error ? error.stack : undefined,
+    })
     return NextResponse.json({ error: "Failed to create leadership profile" }, { status: 500 })
   }
 }
