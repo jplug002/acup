@@ -102,6 +102,8 @@ export default function AdminDashboard() {
     photo_url: "",
   })
 
+  const [leaderImagePreview, setLeaderImagePreview] = useState<string>("")
+
   const handlePasswordSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (password === "acup@123") {
@@ -325,6 +327,7 @@ export default function AdminDashboard() {
         bio: "",
         photo_url: "",
       })
+      setLeaderImagePreview("")
       fetchData()
     } catch (error) {
       console.error("[v0] Error creating leader:", error)
@@ -381,6 +384,32 @@ export default function AdminDashboard() {
       }
     } catch (error) {
       console.error("Error deleting leader:", error)
+    }
+  }
+
+  const handleLeaderImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith("image/")) {
+        alert("Please select an image file")
+        return
+      }
+
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert("Image size should be less than 5MB")
+        return
+      }
+
+      // Convert to base64
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        const base64String = reader.result as string
+        setNewLeader({ ...newLeader, photo_url: base64String })
+        setLeaderImagePreview(base64String)
+      }
+      reader.readAsDataURL(file)
     }
   }
 
@@ -883,15 +912,24 @@ export default function AdminDashboard() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700">Photo URL</label>
+                    <label className="text-sm font-medium text-gray-700">Photo</label>
                     <input
-                      type="text"
-                      value={newLeader.photo_url}
-                      onChange={(e) => setNewLeader({ ...newLeader, photo_url: e.target.value })}
-                      placeholder="https://example.com/photo.jpg"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleLeaderImageChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-red-50 file:text-red-600 hover:file:bg-red-100"
                     />
-                    <p className="text-sm text-gray-500">Enter the URL of the leader's photo</p>
+                    <p className="text-sm text-gray-500">Upload an image from your device (max 5MB)</p>
+                    {leaderImagePreview && (
+                      <div className="mt-2">
+                        <p className="text-sm text-gray-600 mb-2">Preview:</p>
+                        <img
+                          src={leaderImagePreview || "/placeholder.svg"}
+                          alt="Preview"
+                          className="w-32 h-32 rounded-lg object-cover border border-gray-200"
+                        />
+                      </div>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-gray-700">Bio</label>
