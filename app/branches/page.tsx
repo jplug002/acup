@@ -6,6 +6,9 @@ import { Badge } from "@/components/ui/badge"
 import { CountryFlag } from "@/components/CountryFlag"
 import { neon } from "@neondatabase/serverless"
 
+export const dynamic = "force-dynamic"
+export const revalidate = 0
+
 const sql = neon(process.env.DATABASE_URL!)
 
 interface Branch {
@@ -86,32 +89,33 @@ export default async function BranchesPage() {
                 </div>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                   {adminBranches.map((branch) => (
-                    
-                      <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-gray-200">
-                        <CardHeader className="pb-4">
-                          <div className="flex items-center justify-between mb-3">
-                            <Badge className={getStatusColor(branch.status)}>{branch.status || "Active"}</Badge>
-                            {getCountryFlag(branch.country)}
+                    <Card
+                      key={branch.id}
+                      className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-gray-200"
+                    >
+                      <CardHeader className="pb-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <Badge className={getStatusColor(branch.status)}>{branch.status || "Active"}</Badge>
+                          {getCountryFlag(branch.country)}
+                        </div>
+                        <CardTitle className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
+                          {branch.name}
+                        </CardTitle>
+                        <CardDescription className="text-sm text-gray-600">{branch.country}</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-3">
+                          <div className="flex items-center text-sm text-gray-600">
+                            <span className="mr-2 text-blue-600">📍</span>
+                            <span>{branch.location}</span>
                           </div>
-                          <CardTitle className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
-                            {branch.name}
-                          </CardTitle>
-                          <CardDescription className="text-sm text-gray-600">{branch.country}</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="space-y-3">
-                            <div className="flex items-center text-sm text-gray-600">
-                              <span className="mr-2 text-blue-600">📍</span>
-                              <span>{branch.location}</span>
-                            </div>
-                            <div className="flex items-start text-sm text-gray-600">
-                              <span className="mr-2 text-blue-600 mt-0.5">📞</span>
-                              <span className="break-all">{branch.contact_info}</span>
-                            </div>
+                          <div className="flex items-start text-sm text-gray-600">
+                            <span className="mr-2 text-blue-600 mt-0.5">📞</span>
+                            <span className="break-all">{branch.contact_info}</span>
                           </div>
-                        </CardContent>
-                      </Card>
-                    
+                        </div>
+                      </CardContent>
+                    </Card>
                   ))}
                 </div>
               </div>

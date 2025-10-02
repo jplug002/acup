@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
         ba.created_at,
         ba.views_count,
         ba.likes_count,
-        u.first_name || ' ' || u.last_name as author_name
+        COALESCE(u.first_name || ' ' || u.last_name, 'Unknown Author') as author_name
       FROM blog_articles ba
       LEFT JOIN users u ON ba.author_id = u.id
       WHERE 1=1
@@ -47,9 +47,17 @@ export async function GET(request: NextRequest) {
     const articles = await sql(query, params)
 
     return NextResponse.json({ articles })
-  } catch (error) {
-    console.error("Error fetching admin articles:", error)
-    return NextResponse.json({ error: "Failed to fetch articles" }, { status: 500 })
+  } catch (error: any) {
+    console.error("[v0] Error fetching admin articles:", error)
+    console.error("[v0] Error message:", error.message)
+    console.error("[v0] Error stack:", error.stack)
+    return NextResponse.json(
+      {
+        error: "Failed to fetch articles",
+        details: error.message,
+      },
+      { status: 500 },
+    )
   }
 }
 

@@ -1,6 +1,8 @@
-import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { neon } from "@neondatabase/serverless"
+
+export const dynamic = "force-dynamic"
+export const revalidate = 0
 
 const sql = neon(process.env.DATABASE_URL!)
 
@@ -79,33 +81,34 @@ export default async function EventsPage() {
                     const colorClass = colors[index % colors.length]
 
                     return (
-                      
-                        <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
-                          <div className={`${colorClass} text-white p-4`}>
-                            <div className="text-center">
-                              <div className="text-2xl font-bold">{new Date(event.event_date).getDate()}</div>
-                              <div className="text-sm">
-                                {new Date(event.event_date).toLocaleDateString("en-US", {
-                                  month: "long",
-                                  year: "numeric",
-                                })}
-                              </div>
-                            </div>
-                          </div>
-                          <div className="p-6">
-                            <h3 className="text-xl font-semibold mb-2 text-gray-900">{event.title}</h3>
-                            <p className="text-gray-700 mb-4 line-clamp-3">{event.description}</p>
-                            <div className="flex items-center text-sm text-gray-600 mb-2">
-                              <span className="mr-2 text-blue-600">📍</span>
-                              <span>{event.location}</span>
-                            </div>
-                            <div className="flex items-center text-sm text-gray-600">
-                              <span className="mr-2 text-blue-600">🕐</span>
-                              <span>{formatTime(event.event_date)}</span>
+                      <div
+                        key={event.id}
+                        className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow"
+                      >
+                        <div className={`${colorClass} text-white p-4`}>
+                          <div className="text-center">
+                            <div className="text-2xl font-bold">{new Date(event.event_date).getDate()}</div>
+                            <div className="text-sm">
+                              {new Date(event.event_date).toLocaleDateString("en-US", {
+                                month: "long",
+                                year: "numeric",
+                              })}
                             </div>
                           </div>
                         </div>
-                      
+                        <div className="p-6">
+                          <h3 className="text-xl font-semibold mb-2 text-gray-900">{event.title}</h3>
+                          <p className="text-gray-700 mb-4 line-clamp-3">{event.description}</p>
+                          <div className="flex items-center text-sm text-gray-600 mb-2">
+                            <span className="mr-2 text-blue-600">📍</span>
+                            <span>{event.location}</span>
+                          </div>
+                          <div className="flex items-center text-sm text-gray-600">
+                            <span className="mr-2 text-blue-600">🕐</span>
+                            <span>{formatTime(event.event_date)}</span>
+                          </div>
+                        </div>
+                      </div>
                     )
                   })}
                 </div>

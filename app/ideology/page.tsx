@@ -4,6 +4,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { neon } from "@neondatabase/serverless"
 
+export const dynamic = "force-dynamic"
+export const revalidate = 0
+
 const sql = neon(process.env.DATABASE_URL!)
 
 interface Ideology {
@@ -79,28 +82,28 @@ export default async function IdeologyPage() {
                 </div>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                   {adminIdeologies.map((ideology) => (
-  
-                      <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-gray-200 h-full">
-                        <CardHeader className="pb-4">
-                          <div className="flex items-center justify-between mb-3">
-                            <Badge className={getStatusColor(ideology.status)}>{ideology.status || "Published"}</Badge>
-                            <div className="flex items-center text-gray-600 text-xs">
-                              <span>📅</span>
-                              <span className="ml-1">{formatDate(ideology.created_at)}</span>
-                            </div>
+                    <Card
+                      key={ideology.id}
+                      className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-gray-200 h-full"
+                    >
+                      <CardHeader className="pb-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <Badge className={getStatusColor(ideology.status)}>{ideology.status || "Published"}</Badge>
+                          <div className="flex items-center text-gray-600 text-xs">
+                            <span>📅</span>
+                            <span className="ml-1">{formatDate(ideology.created_at)}</span>
                           </div>
-                          <CardTitle className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2">
-                            {ideology.title}
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className="flex-1 flex flex-col">
-                          <CardDescription className="text-sm text-gray-700 mb-4 line-clamp-4 leading-relaxed flex-1">
-                            {ideology.content}
-                          </CardDescription>
-                          
-                        </CardContent>
-                      </Card>
-                    
+                        </div>
+                        <CardTitle className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2">
+                          {ideology.title}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="flex-1 flex flex-col">
+                        <CardDescription className="text-sm text-gray-700 mb-4 line-clamp-4 leading-relaxed flex-1">
+                          {ideology.content}
+                        </CardDescription>
+                      </CardContent>
+                    </Card>
                   ))}
                 </div>
               </div>
