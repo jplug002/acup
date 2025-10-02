@@ -15,12 +15,11 @@ export async function GET(request: NextRequest) {
       SELECT 
         a.id,
         a.title,
-        a.slug,
         a.status,
         a.published_at,
         a.created_at,
-        a.views_count,
-        a.likes_count,
+        a.excerpt,
+        a.category,
         COALESCE(u.first_name || ' ' || u.last_name, 'Unknown Author') as author_name
       FROM articles a
       LEFT JOIN users u ON a.author_id::text = u.id::text
@@ -67,7 +66,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     console.log("[v0] Request body:", JSON.stringify(body, null, 2))
 
-    const { title, slug, content, excerpt, featured_image, status, category, tags } = body
+    const { title, content, excerpt, featured_image, status, category, tags } = body
 
     if (!title || !content) {
       console.log("[v0] Missing required fields - title or content")
@@ -99,30 +98,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const finalSlug =
-      slug?.trim() ||
-      title
-        .toLowerCase()
-        .replace(/[^a-z0-9 -]/g, "")
-        .replace(/\s+/g, "-")
-        .replace(/-+/g, "-")
-        .trim()
-
-    console.log("[v0] Generated slug:", finalSlug)
-
-    const existingSlug = await sql`SELECT id FROM articles WHERE slug = ${finalSlug}`
-    if (existingSlug.length > 0) {
-      console.log("[v0] Slug already exists:", finalSlug)
-      return NextResponse.json(
-        {
-          error: "An article with this URL slug already exists",
-          slug: finalSlug,
-          hint: "Please use a different title or manually set a unique slug",
-        },
-        { status: 409 },
-      )
-    }
-
     const authorId = session.user.id
 
     console.log("[v0] Using author ID:", authorId)
@@ -151,7 +126,6 @@ export async function POST(request: NextRequest) {
 
     console.log("[v0] Inserting article into database with params:", {
       title,
-      slug: finalSlug,
       contentLength: content.length,
       excerpt: excerpt?.substring(0, 50) + "...",
       featured_image: featured_image || "none",
@@ -164,12 +138,11 @@ export async function POST(request: NextRequest) {
 
     const result = await sql(
       `INSERT INTO articles 
-       (title, slug, content, excerpt, featured_image, author_id, status, published_at, category, tags) 
-       VALUES ($1, $2, $3, $4, $5, $6::uuid, $7, $8, $9, $10) 
-       RETURNING id, slug, title, status`,
+       (title, content, excerpt, featured_image, author_id, status, published_at, category, tags) 
+       VALUES ($1, $2, $3, $4, $5::uuid, $6, $7, $8, $9) 
+       RETURNING id, title, status`,
       [
         title,
-        finalSlug,
         content,
         excerpt || null,
         featured_image || null,
@@ -208,7 +181,7 @@ export async function POST(request: NextRequest) {
       errorHint = "Some required information is missing"
     } else if (error.message?.includes("column") && error.message?.includes("does not exist")) {
       errorMessage = "Database schema mismatch"
-      errorHint = "Run the migration script to add missing columns"
+      errorHint = "The database schema needs to be updated. Contact your administrator."
     }
 
     return NextResponse.json(
