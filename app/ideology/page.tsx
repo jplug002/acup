@@ -97,10 +97,7 @@ export default async function IdeologyPage() {
                           <CardDescription className="text-sm text-gray-700 mb-4 line-clamp-4 leading-relaxed flex-1">
                             {ideology.content}
                           </CardDescription>
-                          <div className="flex items-center text-blue-600 text-sm font-medium mt-auto">
-                            <span className="mr-2">📖</span>
-                            <span>Read Full Ideology</span>
-                          </div>
+                          
                         </CardContent>
                       </Card>
                     

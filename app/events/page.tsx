@@ -79,7 +79,7 @@ export default async function EventsPage() {
                     const colorClass = colors[index % colors.length]
 
                     return (
-                      <Link key={event.id} href={`/events/${event.id}`}>
+                      
                         <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
                           <div className={`${colorClass} text-white p-4`}>
                             <div className="text-center">
@@ -105,7 +105,7 @@ export default async function EventsPage() {
                             </div>
                           </div>
                         </div>
-                      </Link>
+                      
                     )
                   })}
                 </div>

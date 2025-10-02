@@ -86,7 +86,7 @@ export default async function BranchesPage() {
                 </div>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                   {adminBranches.map((branch) => (
-                    <Link key={branch.id} href={`/branches/${branch.id}`}>
+                    
                       <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-gray-200">
                         <CardHeader className="pb-4">
                           <div className="flex items-center justify-between mb-3">
@@ -111,7 +111,7 @@ export default async function BranchesPage() {
                           </div>
                         </CardContent>
                       </Card>
-                    </Link>
+                    
                   ))}
                 </div>
               </div>
