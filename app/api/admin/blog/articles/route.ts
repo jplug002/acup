@@ -13,12 +13,15 @@ export async function GET(request: NextRequest) {
       SELECT 
         a.id,
         a.title,
+        a.slug,
         a.status,
         a.published_at,
         a.created_at,
         a.excerpt,
         a.category,
-        COALESCE(u.first_name || ' ' || u.last_name, 'Unknown Author') as author_name
+        a.views_count,
+        a.likes_count,
+        COALESCE(u.first_name || ' ' || u.last_name, 'ACUP Admin') as author_name
       FROM articles a
       LEFT JOIN users u ON a.author_id = u.id
       WHERE 1=1
