@@ -3,7 +3,6 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { CountryFlag } from "@/components/CountryFlag"
 import { neon } from "@neondatabase/serverless"
 
 export const dynamic = "force-dynamic"
@@ -21,6 +20,12 @@ interface Branch {
   created_at: string
 }
 
+interface ContactInfo {
+  email?: string
+  phone?: string
+  description?: string
+}
+
 async function getBranches(): Promise<Branch[]> {
   try {
     const branches = await sql`
@@ -36,24 +41,28 @@ async function getBranches(): Promise<Branch[]> {
   }
 }
 
+function parseContactInfo(contactInfoStr: string): ContactInfo {
+  try {
+    return JSON.parse(contactInfoStr)
+  } catch {
+    return {}
+  }
+}
+
 export default async function BranchesPage() {
   const adminBranches = await getBranches()
 
   const getStatusColor = (status: string) => {
     switch (status?.toLowerCase()) {
       case "active":
-        return "bg-green-100 text-green-800"
+        return "bg-emerald-100 text-emerald-700 border-emerald-200"
       case "establishing":
-        return "bg-blue-100 text-blue-800"
+        return "bg-blue-100 text-blue-700 border-blue-200"
       case "inactive":
-        return "bg-gray-100 text-gray-800"
+        return "bg-gray-100 text-gray-700 border-gray-200"
       default:
-        return "bg-blue-100 text-blue-800"
+        return "bg-blue-100 text-blue-700 border-blue-200"
     }
-  }
-
-  const getCountryFlag = (country: string) => {
-    return <CountryFlag country={country} size={32} className="mx-auto" />
   }
 
   return (
@@ -88,35 +97,73 @@ export default async function BranchesPage() {
                   </p>
                 </div>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {adminBranches.map((branch) => (
-                    <Card
-                      key={branch.id}
-                      className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-gray-200"
-                    >
-                      <CardHeader className="pb-4">
-                        <div className="flex items-center justify-between mb-3">
-                          <Badge className={getStatusColor(branch.status)}>{branch.status || "Active"}</Badge>
-                          {getCountryFlag(branch.country)}
-                        </div>
-                        <CardTitle className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
-                          {branch.name}
-                        </CardTitle>
-                        <CardDescription className="text-sm text-gray-600">{branch.country}</CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-3">
-                          <div className="flex items-center text-sm text-gray-600">
-                            <span className="mr-2 text-blue-600">📍</span>
-                            <span>{branch.location}</span>
+                  {adminBranches.map((branch) => {
+                    const contactInfo = parseContactInfo(branch.contact_info)
+
+                    return (
+                      <Card
+                        key={branch.id}
+                        className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-gray-200"
+                      >
+                        <CardHeader className="pb-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <Badge className={getStatusColor(branch.status)}>{branch.status || "Active"}</Badge>
+                            {/* Removed country flag */}
                           </div>
-                          <div className="flex items-start text-sm text-gray-600">
-                            <span className="mr-2 text-blue-600 mt-0.5">📞</span>
-                            <span className="break-all">{branch.contact_info}</span>
+                          <CardTitle className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
+                            {branch.name}
+                          </CardTitle>
+                          <CardDescription className="text-sm text-gray-600">{branch.country}</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-3">
+                            {/* Location */}
+                            {branch.location && (
+                              <div className="flex items-start text-sm text-gray-600">
+                                <span className="mr-2 text-blue-600">📍</span>
+                                <span>{branch.location}</span>
+                              </div>
+                            )}
+
+                            {/* Email */}
+                            {contactInfo.email && (
+                              <div className="flex items-start text-sm text-gray-600">
+                                <span className="mr-2 text-blue-600">📧</span>
+                                <a
+                                  href={`mailto:${contactInfo.email}`}
+                                  className="text-sm text-gray-600 hover:text-blue-600 transition-colors break-all"
+                                >
+                                  {contactInfo.email}
+                                </a>
+                              </div>
+                            )}
+
+                            {/* Phone */}
+                            {contactInfo.phone && (
+                              <div className="flex items-start text-sm text-gray-600">
+                                <span className="mr-2 text-blue-600">📞</span>
+                                <a
+                                  href={`tel:${contactInfo.phone}`}
+                                  className="text-sm text-gray-600 hover:text-blue-600 transition-colors"
+                                >
+                                  {contactInfo.phone}
+                                </a>
+                              </div>
+                            )}
+
+                            {/* Description */}
+                            {contactInfo.description && (
+                              <div className="pt-2 border-t border-gray-200">
+                                <p className="text-sm text-gray-600 italic leading-relaxed">
+                                  {contactInfo.description}
+                                </p>
+                              </div>
+                            )}
                           </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                        </CardContent>
+                      </Card>
+                    )
+                  })}
                 </div>
               </div>
             ) : (
