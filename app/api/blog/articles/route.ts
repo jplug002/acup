@@ -13,48 +13,93 @@ export async function GET(request: NextRequest) {
     const limit = Number.parseInt(searchParams.get("limit") || "12")
     const offset = Number.parseInt(searchParams.get("offset") || "0")
 
-    let query = `
-      SELECT 
-        a.id,
-        a.title,
-        a.slug,
-        a.excerpt,
-        a.featured_image,
-        a.published_at,
-        a.views_count,
-        a.likes_count,
-        a.category,
-        COALESCE(u.first_name || ' ' || u.last_name, 'ACUP Admin') as author_name
-      FROM articles a
-      LEFT JOIN users u ON a.author_id = u.id
-      WHERE a.status = 'published'
-    `
+    let results
 
-    const params: any[] = []
-    let paramIndex = 1
-
-    if (category) {
-      query += ` AND LOWER(a.category) = LOWER($${paramIndex})`
-      params.push(category)
-      paramIndex++
+    if (category && search) {
+      // Both category and search filters
+      results = await sql`
+        SELECT 
+          a.id,
+          a.title,
+          a.slug,
+          a.excerpt,
+          a.featured_image,
+          a.published_at,
+          a.views_count,
+          a.likes_count,
+          a.category,
+          COALESCE(u.first_name || ' ' || u.last_name, 'ACUP Admin') as author_name
+        FROM articles a
+        LEFT JOIN users u ON a.author_id = u.id
+        WHERE a.status = 'published'
+          AND LOWER(a.category) = LOWER(${category})
+          AND (a.title ILIKE ${`%${search}%`} OR a.content ILIKE ${`%${search}%`})
+        ORDER BY a.published_at DESC NULLS LAST, a.created_at DESC
+        LIMIT ${limit} OFFSET ${offset}
+      `
+    } else if (category) {
+      // Only category filter
+      results = await sql`
+        SELECT 
+          a.id,
+          a.title,
+          a.slug,
+          a.excerpt,
+          a.featured_image,
+          a.published_at,
+          a.views_count,
+          a.likes_count,
+          a.category,
+          COALESCE(u.first_name || ' ' || u.last_name, 'ACUP Admin') as author_name
+        FROM articles a
+        LEFT JOIN users u ON a.author_id = u.id
+        WHERE a.status = 'published'
+          AND LOWER(a.category) = LOWER(${category})
+        ORDER BY a.published_at DESC NULLS LAST, a.created_at DESC
+        LIMIT ${limit} OFFSET ${offset}
+      `
+    } else if (search) {
+      // Only search filter
+      results = await sql`
+        SELECT 
+          a.id,
+          a.title,
+          a.slug,
+          a.excerpt,
+          a.featured_image,
+          a.published_at,
+          a.views_count,
+          a.likes_count,
+          a.category,
+          COALESCE(u.first_name || ' ' || u.last_name, 'ACUP Admin') as author_name
+        FROM articles a
+        LEFT JOIN users u ON a.author_id = u.id
+        WHERE a.status = 'published'
+          AND (a.title ILIKE ${`%${search}%`} OR a.content ILIKE ${`%${search}%`})
+        ORDER BY a.published_at DESC NULLS LAST, a.created_at DESC
+        LIMIT ${limit} OFFSET ${offset}
+      `
+    } else {
+      // No filters
+      results = await sql`
+        SELECT 
+          a.id,
+          a.title,
+          a.slug,
+          a.excerpt,
+          a.featured_image,
+          a.published_at,
+          a.views_count,
+          a.likes_count,
+          a.category,
+          COALESCE(u.first_name || ' ' || u.last_name, 'ACUP Admin') as author_name
+        FROM articles a
+        LEFT JOIN users u ON a.author_id = u.id
+        WHERE a.status = 'published'
+        ORDER BY a.published_at DESC NULLS LAST, a.created_at DESC
+        LIMIT ${limit} OFFSET ${offset}
+      `
     }
-
-    if (search) {
-      query += ` AND (a.title ILIKE $${paramIndex} OR a.content ILIKE $${paramIndex})`
-      params.push(`%${search}%`)
-      paramIndex++
-    }
-
-    query += `
-      ORDER BY a.published_at DESC NULLS LAST, a.created_at DESC
-      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
-    `
-    params.push(limit, offset)
-
-    console.log("[v0] Executing query:", query)
-    console.log("[v0] Query params:", params)
-
-    const results = await sql(query, params)
 
     console.log("[v0] Found articles:", results.length)
 
