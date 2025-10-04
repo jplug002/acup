@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
         a.category,
         COALESCE(u.first_name || ' ' || u.last_name, 'Unknown Author') as author_name
       FROM articles a
-      LEFT JOIN users u ON a.author_id::text = u.id::text
+      LEFT JOIN users u ON a.author_id = u.id
       WHERE 1=1
     `
 
@@ -77,8 +77,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Use provided author_id or default to a system user
-    const authorId = author_id || "00000000-0000-0000-0000-000000000000"
+    const authorId = author_id || 1
 
     console.log("[v0] Using author ID:", authorId)
 
@@ -99,7 +98,7 @@ export async function POST(request: NextRequest) {
     const result = await sql(
       `INSERT INTO articles 
        (title, content, excerpt, featured_image, author_id, status, published_at, category, tags) 
-       VALUES ($1, $2, $3, $4, $5::uuid, $6, $7, $8, $9) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
        RETURNING id, title, status`,
       [
         title,
