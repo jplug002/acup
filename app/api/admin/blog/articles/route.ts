@@ -113,10 +113,19 @@ export async function POST(request: NextRequest) {
 
     console.log("[v0] Using author ID:", authorId)
 
+    const slug = title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .substring(0, 100) // Limit length
+
+    console.log("[v0] Generated slug:", slug)
+
     const publishedAt = status === "published" ? new Date().toISOString() : null
 
     console.log("[v0] Preparing to insert article with params:", {
       title,
+      slug,
       contentLength: content.length,
       excerpt: excerpt?.substring(0, 50) + "...",
       featured_image: featured_image || "none",
@@ -129,9 +138,10 @@ export async function POST(request: NextRequest) {
 
     const result = await sql`
       INSERT INTO articles 
-      (title, content, excerpt, featured_image, author_id, status, published_at, category, tags) 
+      (title, slug, content, excerpt, featured_image, author_id, status, published_at, category, tags) 
       VALUES (
-        ${title}, 
+        ${title},
+        ${slug},
         ${content}, 
         ${excerpt || null}, 
         ${featured_image || null}, 
@@ -141,7 +151,7 @@ export async function POST(request: NextRequest) {
         ${category || null}, 
         ${tags || []}
       ) 
-      RETURNING id, title, status
+      RETURNING id, title, slug, status
     `
 
     console.log("[v0] Article created successfully:", result[0])
