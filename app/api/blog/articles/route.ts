@@ -21,10 +21,10 @@ export async function GET(request: NextRequest) {
         a.published_at,
         a.views_count,
         a.likes_count,
-        u.first_name || ' ' || u.last_name as author_name,
+        COALESCE(u.first_name || ' ' || u.last_name, 'ACUP Admin') as author_name,
         a.category
       FROM articles a
-      LEFT JOIN users u ON a.author_id::text = u.id::text
+      LEFT JOIN users u ON a.author_id = u.id
       WHERE a.status = 'published'
     `
 
@@ -44,16 +44,21 @@ export async function GET(request: NextRequest) {
     }
 
     query += `
-      ORDER BY a.published_at DESC
+      ORDER BY a.published_at DESC NULLS LAST, a.created_at DESC
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
     `
     params.push(limit, offset)
 
+    console.log("[v0] Fetching articles with query:", query)
+    console.log("[v0] Query params:", params)
+
     const articles = await sql(query, params)
+
+    console.log("[v0] Found articles:", articles.length)
 
     return NextResponse.json({ articles })
   } catch (error) {
-    console.error("Error fetching articles:", error)
+    console.error("[v0] Error fetching articles:", error)
     return NextResponse.json({ error: "Failed to fetch articles" }, { status: 500 })
   }
 }

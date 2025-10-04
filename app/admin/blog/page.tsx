@@ -1,8 +1,11 @@
 "use client"
 
+import type React from "react"
+
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Eye } from "lucide-react"
+import Image from "next/image"
 
 interface BlogArticle {
   id: string
@@ -19,6 +22,7 @@ interface BlogArticle {
 export default function AdminBlogPage() {
   const [articles, setArticles] = useState<BlogArticle[]>([])
   const [loading, setLoading] = useState(true)
+  const [imagePreview, setImagePreview] = useState<string>("")
   const [newArticle, setNewArticle] = useState({
     title: "",
     content: "",
@@ -45,6 +49,70 @@ export default function AdminBlogPage() {
       console.error("Error fetching articles:", error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const compressImage = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.readAsDataURL(file)
+      reader.onload = (event) => {
+        const img = document.createElement("img")
+        img.src = event.target?.result as string
+        img.onload = () => {
+          const canvas = document.createElement("canvas")
+          const ctx = canvas.getContext("2d")
+          if (!ctx) {
+            reject(new Error("Failed to get canvas context"))
+            return
+          }
+
+          const maxSize = 800
+          let width = img.width
+          let height = img.height
+
+          if (width > height && width > maxSize) {
+            height = (height * maxSize) / width
+            width = maxSize
+          } else if (height > maxSize) {
+            width = (width * maxSize) / height
+            height = maxSize
+          }
+
+          canvas.width = width
+          canvas.height = height
+          ctx.drawImage(img, 0, 0, width, height)
+
+          const compressedBase64 = canvas.toDataURL("image/jpeg", 0.8)
+          resolve(compressedBase64)
+        }
+        img.onerror = reject
+      }
+      reader.onerror = reject
+    })
+  }
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (!file.type.startsWith("image/")) {
+      alert("Please select an image file")
+      return
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Image size should be less than 5MB")
+      return
+    }
+
+    try {
+      const compressedImage = await compressImage(file)
+      setNewArticle({ ...newArticle, featured_image: compressedImage })
+      setImagePreview(compressedImage)
+    } catch (error) {
+      console.error("Error processing image:", error)
+      alert("Failed to process image")
     }
   }
 
@@ -80,6 +148,7 @@ export default function AdminBlogPage() {
       }
 
       alert("Article created successfully!")
+      setImagePreview("")
       setNewArticle({
         title: "",
         content: "",
@@ -135,7 +204,6 @@ export default function AdminBlogPage() {
       </header>
 
       <main className="p-6">
-        {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-white border border-gray-200 rounded-lg p-6">
             <h3 className="text-sm font-medium text-gray-600">Total Articles</h3>
@@ -220,16 +288,24 @@ export default function AdminBlogPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">Featured Image URL</label>
+                  <label className="text-sm font-medium text-gray-700">Featured Image</label>
                   <input
-                    type="text"
-                    value={newArticle.featured_image}
-                    onChange={(e) => setNewArticle({ ...newArticle, featured_image: e.target.value })}
-                    placeholder="https://example.com/image.jpg"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
                   />
+                  <p className="text-xs text-gray-500">Max size: 5MB. Image will be compressed automatically.</p>
                 </div>
               </div>
+              {imagePreview && (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700">Image Preview</label>
+                  <div className="relative w-full h-48 border border-gray-300 rounded-md overflow-hidden">
+                    <Image src={imagePreview || "/placeholder.svg"} alt="Preview" fill className="object-cover" />
+                  </div>
+                </div>
+              )}
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700">Status</label>
                 <select
