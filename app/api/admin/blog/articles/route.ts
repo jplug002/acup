@@ -77,13 +77,45 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    try {
+      console.log("[v0] Checking if articles table exists...")
+      const tableCheck = await sql`
+        SELECT EXISTS (
+          SELECT FROM information_schema.tables 
+          WHERE table_name = 'articles'
+        );
+      `
+      console.log("[v0] Articles table exists:", tableCheck[0].exists)
+
+      if (!tableCheck[0].exists) {
+        return NextResponse.json(
+          {
+            error: "Articles table does not exist",
+            hint: "Please run the migration scripts: 01-backup-articles.sql through 05-seed-sample-data.sql",
+          },
+          { status: 500 },
+        )
+      }
+
+      console.log("[v0] Checking articles table structure...")
+      const columns = await sql`
+        SELECT column_name, data_type 
+        FROM information_schema.columns 
+        WHERE table_name = 'articles'
+        ORDER BY ordinal_position;
+      `
+      console.log("[v0] Articles table columns:", columns)
+    } catch (checkError: any) {
+      console.error("[v0] Error checking table:", checkError.message)
+    }
+
     const authorId = author_id || 1
 
     console.log("[v0] Using author ID:", authorId)
 
     const publishedAt = status === "published" ? new Date().toISOString() : null
 
-    console.log("[v0] Inserting article into database with params:", {
+    console.log("[v0] Preparing to insert article with params:", {
       title,
       contentLength: content.length,
       excerpt: excerpt?.substring(0, 50) + "...",
@@ -95,23 +127,22 @@ export async function POST(request: NextRequest) {
       publishedAt,
     })
 
-    const result = await sql(
-      `INSERT INTO articles 
-       (title, content, excerpt, featured_image, author_id, status, published_at, category, tags) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
-       RETURNING id, title, status`,
-      [
-        title,
-        content,
-        excerpt || null,
-        featured_image || null,
-        authorId,
-        status || "draft",
-        publishedAt,
-        category || null,
-        tags || [],
-      ],
-    )
+    const result = await sql`
+      INSERT INTO articles 
+      (title, content, excerpt, featured_image, author_id, status, published_at, category, tags) 
+      VALUES (
+        ${title}, 
+        ${content}, 
+        ${excerpt || null}, 
+        ${featured_image || null}, 
+        ${authorId}, 
+        ${status || "draft"}, 
+        ${publishedAt}, 
+        ${category || null}, 
+        ${tags || []}
+      ) 
+      RETURNING id, title, status
+    `
 
     console.log("[v0] Article created successfully:", result[0])
 
@@ -125,6 +156,7 @@ export async function POST(request: NextRequest) {
     console.error("[v0] Error name:", error.name)
     console.error("[v0] Error message:", error.message)
     console.error("[v0] Error stack:", error.stack)
+    console.error("[v0] Full error object:", JSON.stringify(error, Object.getOwnPropertyNames(error), 2))
 
     let errorMessage = "Failed to create article"
     let errorHint = "Check the console logs for more details"
@@ -141,6 +173,9 @@ export async function POST(request: NextRequest) {
     } else if (error.message?.includes("column") && error.message?.includes("does not exist")) {
       errorMessage = "Database schema mismatch"
       errorHint = "The database schema needs to be updated. Run the migration scripts."
+    } else if (error.message?.includes("relation") && error.message?.includes("does not exist")) {
+      errorMessage = "Articles table does not exist"
+      errorHint = "Please run the migration scripts to create the articles table"
     }
 
     return NextResponse.json(
