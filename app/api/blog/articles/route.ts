@@ -5,6 +5,8 @@ const sql = neon(process.env.DATABASE_URL!)
 
 export async function GET(request: NextRequest) {
   try {
+    console.log("[v0] Starting to fetch articles...")
+
     const { searchParams } = new URL(request.url)
     const category = searchParams.get("category")
     const search = searchParams.get("search")
@@ -21,15 +23,10 @@ export async function GET(request: NextRequest) {
         a.published_at,
         a.views_count,
         a.likes_count,
-        COALESCE(u.first_name || ' ' || u.last_name, 'ACUP Admin') as author_name,
         a.category,
-        bc.id as category_id,
-        bc.name as category_name,
-        bc.slug as category_slug,
-        bc.color as category_color
+        COALESCE(u.first_name || ' ' || u.last_name, 'ACUP Admin') as author_name
       FROM articles a
       LEFT JOIN users u ON a.author_id = u.id
-      LEFT JOIN blog_categories bc ON LOWER(a.category) = LOWER(bc.slug) OR LOWER(a.category) = LOWER(bc.name)
       WHERE a.status = 'published'
     `
 
@@ -37,7 +34,7 @@ export async function GET(request: NextRequest) {
     let paramIndex = 1
 
     if (category) {
-      query += ` AND (LOWER(a.category) = LOWER($${paramIndex}) OR LOWER(bc.slug) = LOWER($${paramIndex}))`
+      query += ` AND LOWER(a.category) = LOWER($${paramIndex})`
       params.push(category)
       paramIndex++
     }
@@ -54,7 +51,7 @@ export async function GET(request: NextRequest) {
     `
     params.push(limit, offset)
 
-    console.log("[v0] Fetching articles with query:", query)
+    console.log("[v0] Executing query:", query)
     console.log("[v0] Query params:", params)
 
     const results = await sql(query, params)
@@ -62,14 +59,30 @@ export async function GET(request: NextRequest) {
     console.log("[v0] Found articles:", results.length)
 
     const articles = results.map((row: any) => {
-      // Create category object from blog_categories if matched, otherwise from article category string
       const categories = []
       if (row.category) {
+        // Generate a simple slug from the category name
+        const slug = row.category
+          .toLowerCase()
+          .replace(/\s+/g, "-")
+          .replace(/[^a-z0-9-]/g, "")
+
+        // Assign colors based on category name for consistency
+        const colorMap: { [key: string]: string } = {
+          politics: "#3B82F6",
+          news: "#10B981",
+          opinion: "#F59E0B",
+          analysis: "#8B5CF6",
+          events: "#EF4444",
+          default: "#6B7280",
+        }
+        const color = colorMap[slug] || colorMap.default
+
         categories.push({
-          id: row.category_id || 0,
-          name: row.category_name || row.category,
-          slug: row.category_slug || row.category.toLowerCase().replace(/\s+/g, "-"),
-          color: row.category_color || "#3B82F6", // Default blue color
+          id: 0, // No ID since we're not using blog_categories table
+          name: row.category,
+          slug: slug,
+          color: color,
         })
       }
 
@@ -80,16 +93,23 @@ export async function GET(request: NextRequest) {
         excerpt: row.excerpt,
         featured_image: row.featured_image,
         published_at: row.published_at,
-        views_count: row.views_count,
-        likes_count: row.likes_count,
+        views_count: row.views_count || 0,
+        likes_count: row.likes_count || 0,
         author_name: row.author_name,
         categories: categories,
       }
     })
 
+    console.log("[v0] Returning articles:", articles.length)
     return NextResponse.json({ articles })
   } catch (error) {
     console.error("[v0] Error fetching articles:", error)
-    return NextResponse.json({ error: "Failed to fetch articles" }, { status: 500 })
+    return NextResponse.json(
+      {
+        error: "Failed to fetch articles",
+        details: error instanceof Error ? error.message : String(error),
+      },
+      { status: 500 },
+    )
   }
 }
