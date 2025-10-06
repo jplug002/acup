@@ -7,7 +7,7 @@ export async function GET(request: NextRequest, { params }: { params: { slug: st
   try {
     const { slug } = params
 
-    const articleQuery = `
+    const articles = await sql`
       SELECT 
         a.id,
         a.title,
@@ -20,13 +20,11 @@ export async function GET(request: NextRequest, { params }: { params: { slug: st
         a.likes_count,
         a.category,
         a.tags,
-        u.first_name || ' ' || u.last_name as author_name
+        COALESCE(u.first_name || ' ' || u.last_name, 'ACUP Admin') as author_name
       FROM articles a
-      LEFT JOIN users u ON a.author_id::text = u.id::text
-      WHERE a.slug = $1 AND a.status = 'published'
+      LEFT JOIN users u ON a.author_id = u.id
+      WHERE a.slug = ${slug} AND a.status = 'published'
     `
-
-    const articles = await sql(articleQuery, [slug])
 
     if (articles.length === 0) {
       return NextResponse.json({ error: "Article not found" }, { status: 404 })
@@ -34,12 +32,42 @@ export async function GET(request: NextRequest, { params }: { params: { slug: st
 
     const article = articles[0]
 
-    // Increment view count
-    await sql("UPDATE articles SET views_count = views_count + 1 WHERE id = $1", [article.id])
+    await sql`UPDATE articles SET views_count = views_count + 1 WHERE id = ${article.id}`
 
-    return NextResponse.json({ article })
+    const categoryColors: Record<string, string> = {
+      Politics: "#3b82f6",
+      "Pan-Africanism": "#10b981",
+      Democracy: "#8b5cf6",
+      News: "#ef4444",
+      Analysis: "#f59e0b",
+      Opinion: "#ec4899",
+    }
+
+    const categories = article.category
+      ? [
+          {
+            id: 1,
+            name: article.category,
+            slug: article.category.toLowerCase().replace(/\s+/g, "-"),
+            color: categoryColors[article.category] || "#6b7280",
+          },
+        ]
+      : []
+
+    return NextResponse.json({
+      article: {
+        ...article,
+        categories,
+      },
+    })
   } catch (error) {
-    console.error("Error fetching article:", error)
-    return NextResponse.json({ error: "Failed to fetch article" }, { status: 500 })
+    console.error("[v0] Error fetching article:", error)
+    return NextResponse.json(
+      {
+        error: "Failed to fetch article",
+        details: error instanceof Error ? error.message : String(error),
+      },
+      { status: 500 },
+    )
   }
 }
