@@ -4,6 +4,7 @@ import type React from "react"
 
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
+import { useSession } from "next-auth/react"
 import Image from "next/image"
 import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
@@ -40,6 +41,7 @@ interface Comment {
 }
 
 export default function BlogArticlePage() {
+  const { data: session, status } = useSession()
   const params = useParams()
   const router = useRouter()
   const [article, setArticle] = useState<BlogArticle | null>(null)
@@ -47,13 +49,17 @@ export default function BlogArticlePage() {
   const [newComment, setNewComment] = useState("")
   const [loading, setLoading] = useState(true)
   const [isLiked, setIsLiked] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
     if (params.slug) {
       fetchArticle(params.slug as string)
       fetchComments(params.slug as string)
+      if (session?.user) {
+        checkLikeStatus(params.slug as string)
+      }
     }
-  }, [params.slug])
+  }, [params.slug, session])
 
   const fetchArticle = async (slug: string) => {
     try {
@@ -84,8 +90,26 @@ export default function BlogArticlePage() {
     }
   }
 
+  const checkLikeStatus = async (slug: string) => {
+    try {
+      const response = await fetch(`/api/blog/articles/${slug}/like`)
+      if (response.ok) {
+        const data = await response.json()
+        setIsLiked(data.liked)
+      }
+    } catch (error) {
+      console.error("Error checking like status:", error)
+    }
+  }
+
   const handleLike = async () => {
     if (!article) return
+
+    if (!session?.user) {
+      alert("Please log in to like articles")
+      router.push("/auth/login")
+      return
+    }
 
     try {
       const response = await fetch(`/api/blog/articles/${article.slug}/like`, {
@@ -93,11 +117,15 @@ export default function BlogArticlePage() {
       })
 
       if (response.ok) {
-        setIsLiked(!isLiked)
+        const data = await response.json()
+        setIsLiked(data.liked)
         setArticle({
           ...article,
-          likes_count: isLiked ? article.likes_count - 1 : article.likes_count + 1,
+          likes_count: data.liked ? article.likes_count + 1 : article.likes_count - 1,
         })
+      } else if (response.status === 401) {
+        alert("Please log in to like articles")
+        router.push("/auth/login")
       }
     } catch (error) {
       console.error("Error liking article:", error)
@@ -107,6 +135,14 @@ export default function BlogArticlePage() {
   const handleCommentSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!article || !newComment.trim()) return
+
+    if (!session?.user) {
+      alert("Please log in to comment")
+      router.push("/auth/login")
+      return
+    }
+
+    setIsSubmitting(true)
 
     try {
       const response = await fetch(`/api/blog/articles/${article.slug}/comments`, {
@@ -118,9 +154,14 @@ export default function BlogArticlePage() {
       if (response.ok) {
         setNewComment("")
         fetchComments(article.slug)
+      } else if (response.status === 401) {
+        alert("Please log in to comment")
+        router.push("/auth/login")
       }
     } catch (error) {
       console.error("Error submitting comment:", error)
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -228,9 +269,10 @@ export default function BlogArticlePage() {
                 variant={isLiked ? "default" : "outline"}
                 onClick={handleLike}
                 className="flex items-center gap-2"
+                disabled={status === "loading"}
               >
                 <Heart className={`h-4 w-4 ${isLiked ? "fill-current" : ""}`} />
-                {article.likes_count} Likes
+                {article.likes_count} {article.likes_count === 1 ? "Like" : "Likes"}
               </Button>
 
               <Button variant="outline" className="flex items-center gap-2 bg-transparent">
@@ -249,19 +291,28 @@ export default function BlogArticlePage() {
               Comments ({comments.length})
             </h3>
 
-            {/* Comment Form */}
-            <form onSubmit={handleCommentSubmit} className="mb-8">
-              <Textarea
-                placeholder="Share your thoughts..."
-                value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
-                className="mb-4"
-                rows={4}
-              />
-              <Button type="submit" disabled={!newComment.trim()}>
-                Post Comment
-              </Button>
-            </form>
+            {session?.user ? (
+              <form onSubmit={handleCommentSubmit} className="mb-8">
+                <Textarea
+                  placeholder="Share your thoughts..."
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  className="mb-4"
+                  rows={4}
+                  disabled={isSubmitting}
+                />
+                <Button type="submit" disabled={!newComment.trim() || isSubmitting}>
+                  {isSubmitting ? "Posting..." : "Post Comment"}
+                </Button>
+              </form>
+            ) : (
+              <div className="mb-8 p-4 bg-gray-100 rounded-lg text-center">
+                <p className="text-gray-600 mb-3">Please log in to comment on this article</p>
+                <Link href="/auth/login">
+                  <Button>Log In</Button>
+                </Link>
+              </div>
+            )}
 
             {/* Comments List */}
             <div className="space-y-6">

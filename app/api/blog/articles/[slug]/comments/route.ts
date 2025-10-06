@@ -1,4 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth"
 import { neon } from "@neondatabase/serverless"
 
 const sql = neon(process.env.DATABASE_URL!)
@@ -7,56 +9,66 @@ export async function GET(request: NextRequest, { params }: { params: { slug: st
   try {
     const { slug } = params
 
-    const commentsQuery = `
+    const comments = await sql`
       SELECT 
-        bc.id,
-        bc.content,
-        bc.created_at,
+        ac.id,
+        ac.content,
+        ac.created_at,
         u.first_name || ' ' || u.last_name as user_name
-      FROM blog_comments bc
-      JOIN articles a ON bc.article_id = a.id::integer
-      JOIN users u ON bc.user_id = u.id
-      WHERE a.slug = $1 AND bc.status = 'approved'
-      ORDER BY bc.created_at DESC
+      FROM article_comments ac
+      JOIN articles a ON ac.article_id = a.id
+      JOIN users u ON ac.user_id = u.id
+      WHERE a.slug = ${slug} AND ac.status = 'approved'
+      ORDER BY ac.created_at DESC
     `
-
-    const comments = await sql(commentsQuery, [slug])
 
     return NextResponse.json({ comments })
   } catch (error) {
-    console.error("Error fetching comments:", error)
-    return NextResponse.json({ error: "Failed to fetch comments" }, { status: 500 })
+    console.error("[v0] Error fetching comments:", error)
+    return NextResponse.json(
+      { error: "Failed to fetch comments", details: error instanceof Error ? error.message : "Unknown error" },
+      { status: 500 },
+    )
   }
 }
 
 export async function POST(request: NextRequest, { params }: { params: { slug: string } }) {
   try {
+    const session = await getServerSession(authOptions)
+
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "You must be logged in to comment" }, { status: 401 })
+    }
+
     const { slug } = params
     const { content } = await request.json()
+    const userId = Number.parseInt(session.user.id)
 
     if (!content?.trim()) {
       return NextResponse.json({ error: "Comment content is required" }, { status: 400 })
     }
 
-    const articleResult = await sql("SELECT id FROM articles WHERE slug = $1", [slug])
+    const articleResult = await sql`
+      SELECT id FROM articles WHERE slug = ${slug}
+    `
 
     if (articleResult.length === 0) {
       return NextResponse.json({ error: "Article not found" }, { status: 404 })
     }
 
-    // For now, we'll use a default user ID (1) since we don't have auth context
-    // In a real app, you'd get this from the session
-    const userId = 1
+    const articleId = articleResult[0].id
 
-    await sql(
-      `INSERT INTO blog_comments (article_id, user_id, content, status) 
-       VALUES ($1, $2, $3, 'approved')`,
-      [articleResult[0].id, userId, content.trim()],
-    )
+    await sql`
+      INSERT INTO article_comments (article_id, user_id, content, status) 
+      VALUES (${articleId}, ${userId}, ${content.trim()}, 'approved')
+    `
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("Error creating comment:", error)
-    return NextResponse.json({ error: "Failed to create comment" }, { status: 500 })
+    console.error("[v0] Error creating comment:", error)
+    return NextResponse.json(
+      { error: "Failed to create comment", details: error instanceof Error ? error.message : "Unknown error" },
+      { status: 500 },
+    )
   }
 }
