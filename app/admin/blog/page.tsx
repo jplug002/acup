@@ -209,50 +209,53 @@ export default function AdminBlogPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <header className="border-b bg-white">
-        <div className="flex h-16 items-center justify-between px-6">
-          <div className="flex items-center space-x-4">
-            <Link href="/admin" className="text-red-600 hover:text-red-700 font-medium transition-colors">
-              ← Back to Admin
+      <header className="border-b bg-white sticky top-0 z-10">
+        <div className="flex h-16 items-center justify-between px-4 sm:px-6">
+          <div className="flex items-center space-x-2 sm:space-x-4">
+            <Link
+              href="/admin"
+              className="text-red-600 hover:text-red-700 font-medium transition-colors text-sm sm:text-base whitespace-nowrap"
+            >
+              ← Back
             </Link>
-            <div className="h-6 w-px bg-gray-300"></div>
-            <h1 className="text-xl font-semibold text-gray-900">Blog Management</h1>
+            <div className="h-6 w-px bg-gray-300 hidden sm:block"></div>
+            <h1 className="text-base sm:text-xl font-semibold text-gray-900 truncate">Blog Management</h1>
           </div>
         </div>
       </header>
 
-      <main className="p-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white border border-gray-200 rounded-lg p-6">
-            <h3 className="text-sm font-medium text-gray-600">Total Articles</h3>
-            <div className="text-2xl font-bold text-gray-900 mt-2">{articles.length}</div>
+      <main className="p-4 sm:p-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
+          <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6">
+            <h3 className="text-xs sm:text-sm font-medium text-gray-600">Total Articles</h3>
+            <div className="text-xl sm:text-2xl font-bold text-gray-900 mt-1 sm:mt-2">{articles.length}</div>
           </div>
-          <div className="bg-white border border-gray-200 rounded-lg p-6">
-            <h3 className="text-sm font-medium text-gray-600">Published</h3>
-            <div className="text-2xl font-bold text-gray-900 mt-2">
+          <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6">
+            <h3 className="text-xs sm:text-sm font-medium text-gray-600">Published</h3>
+            <div className="text-xl sm:text-2xl font-bold text-gray-900 mt-1 sm:mt-2">
               {articles.filter((a) => a.status === "published").length}
             </div>
           </div>
-          <div className="bg-white border border-gray-200 rounded-lg p-6">
-            <h3 className="text-sm font-medium text-gray-600">Drafts</h3>
-            <div className="text-2xl font-bold text-gray-900 mt-2">
+          <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6">
+            <h3 className="text-xs sm:text-sm font-medium text-gray-600">Drafts</h3>
+            <div className="text-xl sm:text-2xl font-bold text-gray-900 mt-1 sm:mt-2">
               {articles.filter((a) => a.status === "draft").length}
             </div>
           </div>
-          <div className="bg-white border border-gray-200 rounded-lg p-6">
-            <h3 className="text-sm font-medium text-gray-600">Total Views</h3>
-            <div className="text-2xl font-bold text-gray-900 mt-2">
+          <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6">
+            <h3 className="text-xs sm:text-sm font-medium text-gray-600">Total Views</h3>
+            <div className="text-xl sm:text-2xl font-bold text-gray-900 mt-1 sm:mt-2">
               {articles.reduce((sum, a) => sum + (a.views_count || 0), 0)}
             </div>
           </div>
         </div>
 
         <div className="space-y-6">
-          <div className="bg-white border border-gray-200 rounded-lg p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">Create New Article</h2>
-            <p className="text-gray-600 mb-6">Add a new blog article</p>
+          <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6">
+            <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">Create New Article</h2>
+            <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">Add a new blog article</p>
             <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-700">Title *</label>
                   <input
@@ -260,7 +263,7 @@ export default function AdminBlogPage() {
                     value={newArticle.title}
                     onChange={(e) => setNewArticle({ ...newArticle, title: e.target.value })}
                     placeholder="Enter article title"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                    className="w-full px-3 py-2.5 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
                   />
                 </div>
                 <div className="space-y-2">
@@ -270,7 +273,7 @@ export default function AdminBlogPage() {
                     value={newArticle.category}
                     onChange={(e) => setNewArticle({ ...newArticle, category: e.target.value })}
                     placeholder="e.g., Politics, News"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                    className="w-full px-3 py-2.5 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
                   />
                 </div>
               </div>
@@ -281,7 +284,7 @@ export default function AdminBlogPage() {
                   onChange={(e) => setNewArticle({ ...newArticle, excerpt: e.target.value })}
                   placeholder="Brief summary of the article"
                   rows={2}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                  className="w-full px-3 py-2.5 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
                 />
               </div>
               <div className="space-y-2">
@@ -291,10 +294,10 @@ export default function AdminBlogPage() {
                   onChange={(e) => setNewArticle({ ...newArticle, content: e.target.value })}
                   placeholder="Enter article content"
                   rows={6}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                  className="w-full px-3 py-2.5 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
                 />
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-700">Tags</label>
                   <input
@@ -302,7 +305,7 @@ export default function AdminBlogPage() {
                     value={newArticle.tags}
                     onChange={(e) => setNewArticle({ ...newArticle, tags: e.target.value })}
                     placeholder="Comma-separated tags"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                    className="w-full px-3 py-2.5 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
                   />
                 </div>
                 <div className="space-y-2">
@@ -311,7 +314,7 @@ export default function AdminBlogPage() {
                     type="file"
                     accept="image/*"
                     onChange={handleImageUpload}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                    className="w-full px-3 py-2.5 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-red-50 file:text-red-600 hover:file:bg-red-100"
                   />
                   <p className="text-xs text-gray-500">Max size: 5MB. Image will be compressed automatically.</p>
                 </div>
@@ -329,7 +332,7 @@ export default function AdminBlogPage() {
                 <select
                   value={newArticle.status}
                   onChange={(e) => setNewArticle({ ...newArticle, status: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                  className="w-full px-3 py-2.5 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
                 >
                   <option value="draft">Draft</option>
                   <option value="published">Published</option>
@@ -338,30 +341,30 @@ export default function AdminBlogPage() {
               </div>
               <button
                 onClick={handleCreateArticle}
-                className="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-md transition-colors"
+                className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white py-3 px-6 rounded-md transition-colors font-medium"
               >
                 Create Article
               </button>
             </div>
           </div>
 
-          <div className="bg-white border border-gray-200 rounded-lg p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Existing Articles</h2>
+          <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6">
+            <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Existing Articles</h2>
             {loading ? (
-              <p>Loading articles...</p>
+              <p className="text-sm sm:text-base">Loading articles...</p>
             ) : articles.length === 0 ? (
-              <p className="text-gray-500">No articles found.</p>
+              <p className="text-sm sm:text-base text-gray-500">No articles found.</p>
             ) : (
               <div className="space-y-4">
                 {articles.map((article) => (
                   <div
                     key={article.id}
-                    className="flex items-start justify-between p-4 border border-gray-200 rounded-lg"
+                    className="flex flex-col sm:flex-row sm:items-start sm:justify-between p-4 border border-gray-200 rounded-lg gap-3"
                   >
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-gray-900">{article.title}</h3>
-                      <p className="text-sm text-gray-500">/{article.slug}</p>
-                      <div className="flex items-center gap-3 mt-2">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-gray-900 text-sm sm:text-base break-words">{article.title}</h3>
+                      <p className="text-xs sm:text-sm text-gray-500 truncate">/{article.slug}</p>
+                      <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-2">
                         <span
                           className={`inline-block px-2 py-1 text-xs rounded-full ${
                             article.status === "published"
@@ -373,24 +376,24 @@ export default function AdminBlogPage() {
                         >
                           {article.status.charAt(0).toUpperCase() + article.status.slice(1)}
                         </span>
-                        <span className="text-sm text-gray-500">
+                        <span className="text-xs sm:text-sm text-gray-500">
                           {article.published_at ? formatDate(article.published_at) : "Not published"}
                         </span>
-                        <span className="text-sm text-gray-500">👁 {article.views_count || 0}</span>
-                        <span className="text-sm text-gray-500">❤️ {article.likes_count || 0}</span>
+                        <span className="text-xs sm:text-sm text-gray-500">👁 {article.views_count || 0}</span>
+                        <span className="text-xs sm:text-sm text-gray-500">❤️ {article.likes_count || 0}</span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex sm:flex-col gap-2 w-full sm:w-auto">
                       <Link
                         href={`/blog/${article.slug}`}
-                        className="px-3 py-1 text-sm border border-gray-300 rounded-md text-gray-600 hover:text-gray-900 transition-colors"
+                        className="flex-1 sm:flex-none px-3 py-2 text-sm text-center border border-gray-300 rounded-md text-gray-600 hover:text-gray-900 transition-colors whitespace-nowrap"
                       >
                         <Eye className="h-4 w-4 inline mr-1" />
                         View
                       </Link>
                       <button
                         onClick={() => handleDelete(article.id)}
-                        className="px-3 py-1 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+                        className="flex-1 sm:flex-none px-3 py-2 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors whitespace-nowrap"
                       >
                         Delete
                       </button>

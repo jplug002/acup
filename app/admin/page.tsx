@@ -549,94 +549,95 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="border-b bg-white">
-        <div className="flex h-16 items-center justify-between px-6">
-          <div className="flex items-center space-x-4">
-            <Link href="/" className="text-red-600 hover:text-red-700 font-medium transition-colors">
-              ← Back to Site
+      <header className="border-b bg-white sticky top-0 z-10">
+        <div className="flex h-16 items-center justify-between px-4 sm:px-6">
+          <div className="flex items-center space-x-2 sm:space-x-4 overflow-hidden">
+            <Link
+              href="/"
+              className="text-red-600 hover:text-red-700 font-medium transition-colors text-sm sm:text-base whitespace-nowrap"
+            >
+              ← Back
             </Link>
-            <div className="h-6 w-px bg-gray-300"></div>
-            <h1 className="text-xl font-semibold text-gray-900">ACUP Admin Dashboard</h1>
+            <div className="h-6 w-px bg-gray-300 hidden sm:block"></div>
+            <h1 className="text-base sm:text-xl font-semibold text-gray-900 truncate">ACUP Admin</h1>
           </div>
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-4">
             <button
               onClick={() => setIsAuthenticated(false)}
-              className="px-3 py-1 text-sm border border-gray-300 rounded-md text-gray-600 hover:text-gray-900 transition-colors"
+              className="px-2 sm:px-3 py-1 text-xs sm:text-sm border border-gray-300 rounded-md text-gray-600 hover:text-gray-900 transition-colors"
             >
               Logout
             </button>
-            <span className="hidden sm:inline-flex px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
-              Welcome, Admin
-            </span>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="p-6">
+      <main className="p-4 sm:p-6">
         {/* Stats Overview */}
-        {/* Updated grid to accommodate new leadership stat */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
-          <div className="bg-white border border-gray-200 rounded-lg p-6">
-            <h3 className="text-sm font-medium text-gray-600">Total Branches</h3>
-            <div className="text-2xl font-bold text-gray-900 mt-2">{stats.branches}</div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-6 mb-6 sm:mb-8">
+          <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6">
+            <h3 className="text-xs sm:text-sm font-medium text-gray-600">Branches</h3>
+            <div className="text-xl sm:text-2xl font-bold text-gray-900 mt-1 sm:mt-2">{stats.branches}</div>
           </div>
-          <div className="bg-white border border-gray-200 rounded-lg p-6">
-            <h3 className="text-sm font-medium text-gray-600">Ideologies</h3>
-            <div className="text-2xl font-bold text-gray-900 mt-2">{stats.ideologies}</div>
+          <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6">
+            <h3 className="text-xs sm:text-sm font-medium text-gray-600">Ideologies</h3>
+            <div className="text-xl sm:text-2xl font-bold text-gray-900 mt-1 sm:mt-2">{stats.ideologies}</div>
           </div>
-          <div className="bg-white border border-gray-200 rounded-lg p-6">
-            <h3 className="text-sm font-medium text-gray-600">Events</h3>
-            <div className="text-2xl font-bold text-gray-900 mt-2">{stats.events}</div>
+          <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6">
+            <h3 className="text-xs sm:text-sm font-medium text-gray-600">Events</h3>
+            <div className="text-xl sm:text-2xl font-bold text-gray-900 mt-1 sm:mt-2">{stats.events}</div>
           </div>
           <Link
             href="/admin/blog"
-            className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow"
+            className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 hover:shadow-md transition-shadow"
           >
-            <h3 className="text-sm font-medium text-gray-600">Articles</h3>
-            <div className="text-2xl font-bold text-gray-900 mt-2">Manage →</div>
+            <h3 className="text-xs sm:text-sm font-medium text-gray-600">Articles</h3>
+            <div className="text-xl sm:text-2xl font-bold text-gray-900 mt-1 sm:mt-2">Manage →</div>
           </Link>
-          <div className="bg-white border border-gray-200 rounded-lg p-6">
-            <h3 className="text-sm font-medium text-gray-600">Leadership</h3>
-            <div className="text-2xl font-bold text-gray-900 mt-2">{stats.leadership}</div>
+          <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6">
+            <h3 className="text-xs sm:text-sm font-medium text-gray-600">Leadership</h3>
+            <div className="text-xl sm:text-2xl font-bold text-gray-900 mt-1 sm:mt-2">{stats.leadership}</div>
           </div>
         </div>
 
         {/* Management Tabs */}
         <div className="space-y-6">
-          <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg w-fit">
-            <button
-              onClick={() => setActiveTab("events")}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                activeTab === "events" ? "bg-white text-gray-900 shadow-sm" : "text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              Events
-            </button>
-            <button
-              onClick={() => setActiveTab("branches")}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                activeTab === "branches" ? "bg-white text-gray-900 shadow-sm" : "text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              Branches
-            </button>
-            <button
-              onClick={() => setActiveTab("ideologies")}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                activeTab === "ideologies" ? "bg-white text-gray-900 shadow-sm" : "text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              Ideologies
-            </button>
-            <button
-              onClick={() => setActiveTab("leadership")}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                activeTab === "leadership" ? "bg-white text-gray-900 shadow-sm" : "text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              Leadership
-            </button>
+          <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+            <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg w-fit min-w-full sm:min-w-0">
+              <button
+                onClick={() => setActiveTab("events")}
+                className={`px-3 sm:px-4 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${
+                  activeTab === "events" ? "bg-white text-gray-900 shadow-sm" : "text-gray-600 hover:text-gray-900"
+                }`}
+              >
+                Events
+              </button>
+              <button
+                onClick={() => setActiveTab("branches")}
+                className={`px-3 sm:px-4 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${
+                  activeTab === "branches" ? "bg-white text-gray-900 shadow-sm" : "text-gray-600 hover:text-gray-900"
+                }`}
+              >
+                Branches
+              </button>
+              <button
+                onClick={() => setActiveTab("ideologies")}
+                className={`px-3 sm:px-4 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${
+                  activeTab === "ideologies" ? "bg-white text-gray-900 shadow-sm" : "text-gray-600 hover:text-gray-900"
+                }`}
+              >
+                Ideologies
+              </button>
+              <button
+                onClick={() => setActiveTab("leadership")}
+                className={`px-3 sm:px-4 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${
+                  activeTab === "leadership" ? "bg-white text-gray-900 shadow-sm" : "text-gray-600 hover:text-gray-900"
+                }`}
+              >
+                Leadership
+              </button>
+            </div>
           </div>
 
           {/* Events Tab */}
