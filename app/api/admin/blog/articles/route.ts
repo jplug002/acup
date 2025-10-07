@@ -5,46 +5,95 @@ const sql = neon(process.env.DATABASE_URL!)
 
 export async function GET(request: NextRequest) {
   try {
+    console.log("[v0] Fetching admin articles...")
+
     const { searchParams } = new URL(request.url)
     const search = searchParams.get("search")
     const status = searchParams.get("status")
 
-    let query = `
-      SELECT 
-        a.id,
-        a.title,
-        a.slug,
-        a.status,
-        a.published_at,
-        a.created_at,
-        a.excerpt,
-        a.category,
-        a.views_count,
-        a.likes_count,
-        COALESCE(u.first_name || ' ' || u.last_name, 'ACUP Admin') as author_name
-      FROM articles a
-      LEFT JOIN users u ON a.author_id = u.id
-      WHERE 1=1
-    `
+    console.log("[v0] Search params:", { search, status })
 
-    const params: any[] = []
-    let paramIndex = 1
+    let articles
 
-    if (search) {
-      query += ` AND a.title ILIKE $${paramIndex}`
-      params.push(`%${search}%`)
-      paramIndex++
+    if (search && status) {
+      articles = await sql`
+        SELECT 
+          a.id,
+          a.title,
+          a.slug,
+          a.status,
+          a.published_at,
+          a.created_at,
+          a.excerpt,
+          a.category,
+          a.views_count,
+          a.likes_count,
+          COALESCE(u.first_name || ' ' || u.last_name, 'ACUP Admin') as author_name
+        FROM articles a
+        LEFT JOIN users u ON a.author_id = u.id
+        WHERE a.title ILIKE ${`%${search}%`}
+        AND a.status = ${status}
+        ORDER BY a.created_at DESC
+      `
+    } else if (search) {
+      articles = await sql`
+        SELECT 
+          a.id,
+          a.title,
+          a.slug,
+          a.status,
+          a.published_at,
+          a.created_at,
+          a.excerpt,
+          a.category,
+          a.views_count,
+          a.likes_count,
+          COALESCE(u.first_name || ' ' || u.last_name, 'ACUP Admin') as author_name
+        FROM articles a
+        LEFT JOIN users u ON a.author_id = u.id
+        WHERE a.title ILIKE ${`%${search}%`}
+        ORDER BY a.created_at DESC
+      `
+    } else if (status) {
+      articles = await sql`
+        SELECT 
+          a.id,
+          a.title,
+          a.slug,
+          a.status,
+          a.published_at,
+          a.created_at,
+          a.excerpt,
+          a.category,
+          a.views_count,
+          a.likes_count,
+          COALESCE(u.first_name || ' ' || u.last_name, 'ACUP Admin') as author_name
+        FROM articles a
+        LEFT JOIN users u ON a.author_id = u.id
+        WHERE a.status = ${status}
+        ORDER BY a.created_at DESC
+      `
+    } else {
+      articles = await sql`
+        SELECT 
+          a.id,
+          a.title,
+          a.slug,
+          a.status,
+          a.published_at,
+          a.created_at,
+          a.excerpt,
+          a.category,
+          a.views_count,
+          a.likes_count,
+          COALESCE(u.first_name || ' ' || u.last_name, 'ACUP Admin') as author_name
+        FROM articles a
+        LEFT JOIN users u ON a.author_id = u.id
+        ORDER BY a.created_at DESC
+      `
     }
 
-    if (status) {
-      query += ` AND a.status = $${paramIndex}`
-      params.push(status)
-      paramIndex++
-    }
-
-    query += ` ORDER BY a.created_at DESC`
-
-    const articles = await sql(query, params)
+    console.log("[v0] Found articles:", articles.length)
 
     return NextResponse.json({ articles })
   } catch (error: any) {
