@@ -166,18 +166,36 @@ export default function AdminBlogPage() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this article?")) return
+    const article = articles.find((a) => a.id === id)
+    const confirmMessage = article
+      ? `Are you sure you want to delete "${article.title}"? This action cannot be undone.`
+      : "Are you sure you want to delete this article? This action cannot be undone."
+
+    if (!confirm(confirmMessage)) return
 
     try {
+      console.log("[v0] Deleting article:", id)
+
       const response = await fetch(`/api/admin/blog/articles/${id}`, {
         method: "DELETE",
       })
 
-      if (response.ok) {
-        fetchArticles()
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error("[v0] Delete failed:", errorData)
+        alert(`Failed to delete article: ${errorData.error || "Unknown error"}`)
+        return
       }
+
+      const result = await response.json()
+      console.log("[v0] Article deleted successfully:", result)
+
+      alert("Article deleted successfully!")
+
+      fetchArticles()
     } catch (error) {
-      console.error("Error deleting article:", error)
+      console.error("[v0] Error deleting article:", error)
+      alert("Failed to delete article. Please try again.")
     }
   }
 
