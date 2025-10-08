@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Search, Calendar, User, Eye, Heart } from "lucide-react"
+import { Search, Calendar, Eye, Heart, MessageCircle } from "lucide-react"
 
 interface BlogArticle {
   id: number
@@ -19,6 +19,7 @@ interface BlogArticle {
   published_at: string
   views_count: number
   likes_count: number
+  comments_count: number
   categories: Array<{
     id: number
     name: string
@@ -163,11 +164,11 @@ export default function BlogPage() {
               <>
                 <h3 className="text-2xl font-semibold text-gray-600 mb-4">No blog posts yet</h3>
                 <p className="text-gray-500 mb-6">Check back soon for news and updates from ACUP</p>
-                <Image 
-                  src="/placeholder.svg" 
-                  alt="No blogs yet" 
-                  width={200} 
-                  height={200} 
+                <Image
+                  src="/placeholder.svg"
+                  alt="No blogs yet"
+                  width={200}
+                  height={200}
                   className="mx-auto opacity-50"
                 />
               </>
@@ -208,15 +209,9 @@ export default function BlogPage() {
                   <p className="text-gray-600 mb-4 line-clamp-3">{article.excerpt}</p>
 
                   <div className="flex items-center justify-between text-sm text-gray-500">
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-1">
-                        <User className="h-4 w-4" />
-                        <span>{article.author_name}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Calendar className="h-4 w-4" />
-                        <span>{formatDate(article.published_at)}</span>
-                      </div>
+                    <div className="flex items-center gap-1">
+                      <Calendar className="h-4 w-4" />
+                      <span>{formatDate(article.published_at)}</span>
                     </div>
 
                     <div className="flex items-center gap-3">
@@ -227,6 +222,10 @@ export default function BlogPage() {
                       <div className="flex items-center gap-1">
                         <Heart className="h-4 w-4" />
                         <span>{article.likes_count}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <MessageCircle className="h-4 w-4" />
+                        <span>{article.comments_count}</span>
                       </div>
                     </div>
                   </div>

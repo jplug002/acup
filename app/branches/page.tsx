@@ -2,7 +2,6 @@ import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { neon } from "@neondatabase/serverless"
 
 export const dynamic = "force-dynamic"
@@ -65,6 +64,19 @@ export default async function BranchesPage() {
     }
   }
 
+  const getBranchColor = (name: string) => {
+    const colors = [
+      "bg-gradient-to-r from-blue-600 to-blue-700",
+      "bg-gradient-to-r from-red-600 to-red-700",
+      "bg-gradient-to-r from-green-600 to-green-700",
+      "bg-gradient-to-r from-purple-600 to-purple-700",
+      "bg-gradient-to-r from-orange-600 to-orange-700",
+      "bg-gradient-to-r from-teal-600 to-teal-700",
+    ]
+    const index = name.length % colors.length
+    return colors[index]
+  }
+
   return (
     <main className="min-h-screen bg-white">
       <section className="bg-blue-900 text-white py-20">
@@ -103,19 +115,13 @@ export default async function BranchesPage() {
                     return (
                       <Card
                         key={branch.id}
-                        className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-gray-200"
+                        className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-gray-200 overflow-hidden"
                       >
-                        <CardHeader className="pb-4">
-                          <div className="flex items-center justify-between mb-3">
-                            <Badge className={getStatusColor(branch.status)}>{branch.status || "Active"}</Badge>
-                            {/* Removed country flag */}
-                          </div>
-                          <CardTitle className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
-                            {branch.name}
-                          </CardTitle>
-                          <CardDescription className="text-sm text-gray-600">{branch.country}</CardDescription>
-                        </CardHeader>
-                        <CardContent>
+                        <div className={`${getBranchColor(branch.name)} text-white py-4 px-6`}>
+                          <h3 className="text-xl font-bold">{branch.name}</h3>
+                        </div>
+
+                        <CardContent className="pt-6">
                           <div className="space-y-3">
                             {/* Location */}
                             {branch.location && (

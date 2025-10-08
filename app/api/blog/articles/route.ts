@@ -28,7 +28,8 @@ export async function GET(request: NextRequest) {
           a.views_count,
           a.likes_count,
           a.category,
-          COALESCE(u.first_name || ' ' || u.last_name, 'ACUP Admin') as author_name
+          COALESCE(u.first_name || ' ' || u.last_name, 'ACUP Admin') as author_name,
+          (SELECT COUNT(*) FROM article_comments WHERE article_id = a.id AND status = 'approved') as comments_count
         FROM articles a
         LEFT JOIN users u ON a.author_id = u.id
         WHERE a.status = 'published'
@@ -50,7 +51,8 @@ export async function GET(request: NextRequest) {
           a.views_count,
           a.likes_count,
           a.category,
-          COALESCE(u.first_name || ' ' || u.last_name, 'ACUP Admin') as author_name
+          COALESCE(u.first_name || ' ' || u.last_name, 'ACUP Admin') as author_name,
+          (SELECT COUNT(*) FROM article_comments WHERE article_id = a.id AND status = 'approved') as comments_count
         FROM articles a
         LEFT JOIN users u ON a.author_id = u.id
         WHERE a.status = 'published'
@@ -71,7 +73,8 @@ export async function GET(request: NextRequest) {
           a.views_count,
           a.likes_count,
           a.category,
-          COALESCE(u.first_name || ' ' || u.last_name, 'ACUP Admin') as author_name
+          COALESCE(u.first_name || ' ' || u.last_name, 'ACUP Admin') as author_name,
+          (SELECT COUNT(*) FROM article_comments WHERE article_id = a.id AND status = 'approved') as comments_count
         FROM articles a
         LEFT JOIN users u ON a.author_id = u.id
         WHERE a.status = 'published'
@@ -92,7 +95,8 @@ export async function GET(request: NextRequest) {
           a.views_count,
           a.likes_count,
           a.category,
-          COALESCE(u.first_name || ' ' || u.last_name, 'ACUP Admin') as author_name
+          COALESCE(u.first_name || ' ' || u.last_name, 'ACUP Admin') as author_name,
+          (SELECT COUNT(*) FROM article_comments WHERE article_id = a.id AND status = 'approved') as comments_count
         FROM articles a
         LEFT JOIN users u ON a.author_id = u.id
         WHERE a.status = 'published'
@@ -141,6 +145,7 @@ export async function GET(request: NextRequest) {
         views_count: row.views_count || 0,
         likes_count: row.likes_count || 0,
         author_name: row.author_name,
+        comments_count: Number(row.comments_count) || 0,
         categories: categories,
       }
     })

@@ -1,7 +1,6 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { neon } from "@neondatabase/serverless"
 
 export const dynamic = "force-dynamic"
@@ -35,17 +34,10 @@ async function getIdeologies(): Promise<Ideology[]> {
 export default async function IdeologyPage() {
   const adminIdeologies = await getIdeologies()
 
-  const getStatusColor = (status: string) => {
-    switch (status?.toLowerCase()) {
-      case "published":
-        return "bg-green-100 text-green-800"
-      case "draft":
-        return "bg-gray-100 text-gray-800"
-      case "featured":
-        return "bg-blue-100 text-blue-800"
-      default:
-        return "bg-gray-100 text-gray-800"
-    }
+  const getTitleColor = (title: string) => {
+    const colors = ["bg-blue-600", "bg-red-600", "bg-green-600", "bg-purple-600", "bg-orange-600", "bg-teal-600"]
+    const index = title.length % colors.length
+    return colors[index]
   }
 
   const formatDate = (dateString: string) => {
@@ -84,22 +76,13 @@ export default async function IdeologyPage() {
                   {adminIdeologies.map((ideology) => (
                     <Card
                       key={ideology.id}
-                      className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-gray-200 h-full"
+                      className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-gray-200 h-full overflow-hidden"
                     >
-                      <CardHeader className="pb-4">
-                        <div className="flex items-center justify-between mb-3">
-                          <Badge className={getStatusColor(ideology.status)}>{ideology.status || "Published"}</Badge>
-                          <div className="flex items-center text-gray-600 text-xs">
-                            <span>📅</span>
-                            <span className="ml-1">{formatDate(ideology.created_at)}</span>
-                          </div>
-                        </div>
-                        <CardTitle className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2">
-                          {ideology.title}
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="flex-1 flex flex-col">
-                        <CardDescription className="text-sm text-gray-700 mb-4 line-clamp-4 leading-relaxed flex-1">
+                      <div className={`${getTitleColor(ideology.title)} text-white px-6 py-4`}>
+                        <h3 className="text-xl font-bold">{ideology.title}</h3>
+                      </div>
+                      <CardContent className="pt-6 flex-1 flex flex-col">
+                        <CardDescription className="text-sm text-gray-700 leading-relaxed flex-1">
                           {ideology.content}
                         </CardDescription>
                       </CardContent>
