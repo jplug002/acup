@@ -64,17 +64,9 @@ export default async function BranchesPage() {
     }
   }
 
-  const getBranchColor = (name: string) => {
-    const colors = [
-      "bg-gradient-to-r from-blue-600 to-blue-700",
-      "bg-gradient-to-r from-red-600 to-red-700",
-      "bg-gradient-to-r from-green-600 to-green-700",
-      "bg-gradient-to-r from-purple-600 to-purple-700",
-      "bg-gradient-to-r from-orange-600 to-orange-700",
-      "bg-gradient-to-r from-teal-600 to-teal-700",
-    ]
-    const index = name.length % colors.length
-    return colors[index]
+  const getBranchColor = (index: number) => {
+    // Alternate between blue and red based on index
+    return index % 2 === 0 ? "bg-blue-600" : "bg-red-600"
   }
 
   return (
@@ -109,7 +101,7 @@ export default async function BranchesPage() {
                   </p>
                 </div>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {adminBranches.map((branch) => {
+                  {adminBranches.map((branch, index) => {
                     const contactInfo = parseContactInfo(branch.contact_info)
 
                     return (
@@ -117,7 +109,7 @@ export default async function BranchesPage() {
                         key={branch.id}
                         className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-gray-200 overflow-hidden"
                       >
-                        <div className={`${getBranchColor(branch.name)} text-white py-4 px-6`}>
+                        <div className={`${getBranchColor(index)} text-white py-4 px-6`}>
                           <h3 className="text-xl font-bold">{branch.name}</h3>
                         </div>
 

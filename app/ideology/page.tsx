@@ -34,10 +34,9 @@ async function getIdeologies(): Promise<Ideology[]> {
 export default async function IdeologyPage() {
   const adminIdeologies = await getIdeologies()
 
-  const getTitleColor = (title: string) => {
-    const colors = ["bg-blue-600", "bg-red-600", "bg-green-600", "bg-purple-600", "bg-orange-600", "bg-teal-600"]
-    const index = title.length % colors.length
-    return colors[index]
+  const getTitleColor = (title: string, index: number) => {
+    // Alternate between blue and red based on index
+    return index % 2 === 0 ? "bg-blue-600" : "bg-red-600"
   }
 
   const formatDate = (dateString: string) => {
@@ -73,12 +72,12 @@ export default async function IdeologyPage() {
                   </p>
                 </div>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {adminIdeologies.map((ideology) => (
+                  {adminIdeologies.map((ideology, index) => (
                     <Card
                       key={ideology.id}
                       className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-gray-200 h-full overflow-hidden"
                     >
-                      <div className={`${getTitleColor(ideology.title)} text-white px-6 py-4`}>
+                      <div className={`${getTitleColor(ideology.title, index)} text-white px-6 py-4`}>
                         <h3 className="text-xl font-bold">{ideology.title}</h3>
                       </div>
                       <CardContent className="pt-6 flex-1 flex flex-col">
@@ -161,15 +160,6 @@ export default async function IdeologyPage() {
                       build sustainable societies that serve as models for democratic excellence and social progress
                       across the continent.
                     </p>
-                    <div className="pt-4">
-                      <Button
-                        variant="outline"
-                        className="font-semibold border-gray-300 text-gray-900 hover:bg-gray-50 bg-transparent"
-                      >
-                        <span className="mr-2">⚖️</span>
-                        Learn About Our Mission
-                      </Button>
-                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -232,13 +222,6 @@ export default async function IdeologyPage() {
                   policies
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <Button
-                    size="lg"
-                    variant="secondary"
-                    className="font-semibold bg-white text-gray-900 hover:bg-gray-100"
-                  >
-                    Explore All Ideologies
-                  </Button>
                   <Button
                     size="lg"
                     variant="outline"

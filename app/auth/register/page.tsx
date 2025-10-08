@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-
+import { signIn } from "next-auth/react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
@@ -56,7 +56,17 @@ export default function RegisterPage() {
         throw new Error(data.error || "Registration failed")
       }
 
-      router.push("/auth/login?message=Registration successful! Please log in.")
+      const loginResult = await signIn("credentials", {
+        email: formData.email,
+        password: formData.password,
+        redirect: false,
+      })
+
+      if (loginResult?.error) {
+        router.push("/auth/login?message=Registration successful! Please log in.")
+      } else {
+        router.push("/dashboard?welcome=true")
+      }
     } catch (error) {
       setError(error instanceof Error ? error.message : "Registration failed")
     } finally {
@@ -76,8 +86,8 @@ export default function RegisterPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <ACUPLogo />
-          <CardTitle className="text-2xl font-bold text-gray-900">Create Your Account</CardTitle>
-          <CardDescription>Join ACUP and become part of Africa's future</CardDescription>
+          <CardTitle className="text-2xl font-bold text-blue-900">Create Your Account</CardTitle>
+          <CardDescription className="text-blue-700">Join ACUP and become part of Africa's future</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -167,9 +177,9 @@ export default function RegisterPage() {
           </form>
 
           <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-blue-700">
               Already have an account?{" "}
-              <Link href="/auth/login" className="text-blue-600 hover:text-blue-500 font-medium">
+              <Link href="/auth/login" className="text-blue-600 hover:text-blue-500 font-medium underline">
                 Sign in
               </Link>
             </p>

@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useSession } from "next-auth/react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -53,8 +53,11 @@ interface MembershipInfo {
 export default function DashboardPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const isWelcome = searchParams.get("welcome") === "true"
   const [isEditing, setIsEditing] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [showBioAlert, setShowBioAlert] = useState(false)
   const [profileData, setProfileData] = useState<UserProfile>({
     id: "",
     name: "",
@@ -139,6 +142,10 @@ export default function DashboardPage() {
             sponsor_name: profile.sponsor_name,
             membership_duration: "Annual",
           })
+        }
+
+        if (isWelcome && !profile.bio) {
+          setShowBioAlert(true)
         }
       }
     } catch (error) {
@@ -227,6 +234,51 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {showBioAlert && (
+          <div className="mb-6 bg-blue-50 border-l-4 border-blue-600 p-4 rounded-lg shadow-sm">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <svg
+                  className="h-5 w-5 text-blue-600"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+              <div className="ml-3 flex-1">
+                <h3 className="text-sm font-medium text-blue-900">Complete Your Profile</h3>
+                <p className="mt-1 text-sm text-blue-700">
+                  Welcome to ACUP! Please complete your bio and profile information to get the most out of your
+                  membership.
+                </p>
+                <div className="mt-3 flex gap-2">
+                  <Button
+                    onClick={() => {
+                      setIsEditing(true)
+                      setShowBioAlert(false)
+                      // Scroll to profile tab
+                      document.querySelector('[value="profile"]')?.scrollIntoView({ behavior: "smooth" })
+                    }}
+                    size="sm"
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    Complete Profile Now
+                  </Button>
+                  <Button onClick={() => setShowBioAlert(false)} size="sm" variant="outline">
+                    Dismiss
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Header */}
         <div className="mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
@@ -304,7 +356,9 @@ export default function DashboardPage() {
               <CardTitle className="text-sm font-medium text-gray-600">Membership Type</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold text-gray-900 capitalize">{membershipInfo?.membership_type || "Member"}</p>
+              <p className="text-2xl font-bold text-gray-900 capitalize">
+                {membershipInfo?.membership_type || "Member"}
+              </p>
             </CardContent>
           </Card>
 

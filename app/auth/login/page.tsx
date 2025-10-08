@@ -38,7 +38,7 @@ export default function LoginPage() {
       if (result?.error) {
         setError("You don't have an account with us. Register now.")
       } else {
-        router.push("/dashboard")
+        router.push("/dashboard?welcome=true")
       }
     } catch (error) {
       setError("Login failed. Please try again.")
@@ -59,8 +59,8 @@ export default function LoginPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <ACUPLogo />
-          <CardTitle className="text-2xl font-bold text-gray-900">Welcome Back</CardTitle>
-          <CardDescription>Sign in to your ACUP account</CardDescription>
+          <CardTitle className="text-2xl font-bold text-blue-900">Welcome Back</CardTitle>
+          <CardDescription className="text-blue-700">Sign in to your ACUP account</CardDescription>
         </CardHeader>
         <CardContent>
           {message && (
@@ -115,9 +115,9 @@ export default function LoginPage() {
           </form>
 
           <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-blue-700">
               Don't have an account?{" "}
-              <Link href="/auth/register" className="text-blue-600 hover:text-blue-500 font-medium">
+              <Link href="/auth/register" className="text-blue-600 hover:text-blue-500 font-medium underline">
                 Create one
               </Link>
             </p>
