@@ -19,27 +19,28 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
   }
 }
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const { id } = params
-    const body = await request.json()
-    const { title, description, category, priority, status } = body
+    const { title, content, status } = await request.json()
 
     const result = await sql`
       UPDATE ideologies SET
-        title = ${title},
-        description = ${description},
-        category = ${category},
-        priority = ${priority},
-        status = ${status || "active"},
+        title = COALESCE(${title}, title),
+        content = COALESCE(${content}, content),
+        status = COALESCE(${status}, status),
         updated_at = NOW()
       WHERE id = ${id}
       RETURNING *
     `
 
-    return NextResponse.json(result[0])
+    if (result.length === 0) {
+      return NextResponse.json({ error: "Ideology not found" }, { status: 404 })
+    }
+
+    return NextResponse.json({ success: true, ideology: result[0] })
   } catch (error) {
     console.error("Error updating ideology:", error)
-    return NextResponse.json({ error: "Failed to delete ideology" }, { status: 500 })
+    return NextResponse.json({ error: "Failed to update ideology" }, { status: 500 })
   }
 }

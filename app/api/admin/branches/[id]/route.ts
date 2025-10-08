@@ -19,29 +19,28 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
   }
 }
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const { id } = params
-    const body = await request.json()
-    const { name, description, address, city, country, contact_email, contact_phone, established_date, status } = body
+    const { name, location, country, contact_info, status } = await request.json()
 
     const result = await sql`
       UPDATE branches SET
-        name = ${name},
-        description = ${description},
-        address = ${address},
-        city = ${city},
-        country = ${country},
-        contact_email = ${contact_email},
-        contact_phone = ${contact_phone},
-        established_date = ${established_date},
-        status = ${status || "active"},
+        name = COALESCE(${name}, name),
+        location = COALESCE(${location}, location),
+        country = COALESCE(${country}, country),
+        contact_info = COALESCE(${contact_info}, contact_info),
+        status = COALESCE(${status}, status),
         updated_at = NOW()
       WHERE id = ${id}
       RETURNING *
     `
 
-    return NextResponse.json(result[0])
+    if (result.length === 0) {
+      return NextResponse.json({ error: "Branch not found" }, { status: 404 })
+    }
+
+    return NextResponse.json({ success: true, branch: result[0] })
   } catch (error) {
     console.error("Error updating branch:", error)
     return NextResponse.json({ error: "Failed to update branch" }, { status: 500 })

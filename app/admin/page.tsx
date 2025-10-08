@@ -94,6 +94,9 @@ export default function AdminDashboard() {
     category: "political",
   })
 
+  const [ideologyFile, setIdeologyFile] = useState<string>("")
+  const [ideologyFileName, setIdeologyFileName] = useState<string>("")
+
   const [newLeader, setNewLeader] = useState({
     name: "",
     role: "",
@@ -248,6 +251,46 @@ export default function AdminDashboard() {
     }
   }
 
+  const handleIdeologyFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      // Validate file type (PDF, DOC, DOCX)
+      const allowedTypes = [
+        "application/pdf",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      ]
+      if (!allowedTypes.includes(file.type)) {
+        alert("Please select a PDF or Word document")
+        return
+      }
+
+      // Validate file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        alert("File size should be less than 10MB")
+        return
+      }
+
+      try {
+        // Convert file to base64
+        const reader = new FileReader()
+        reader.onload = (e) => {
+          const base64 = e.target?.result as string
+          setIdeologyFile(base64)
+          setIdeologyFileName(file.name)
+          console.log("[v0] File loaded:", file.name, "Size:", file.size, "bytes")
+        }
+        reader.onerror = () => {
+          alert("Failed to read file. Please try again.")
+        }
+        reader.readAsDataURL(file)
+      } catch (error) {
+        console.error("[v0] Error processing file:", error)
+        alert("Failed to process file. Please try another file.")
+      }
+    }
+  }
+
   const handleCreateIdeology = async () => {
     try {
       console.log("[v0] Creating ideology with data:", newIdeology)
@@ -266,6 +309,8 @@ export default function AdminDashboard() {
           title: newIdeology.title,
           content: newIdeology.content,
           category: newIdeology.category,
+          file: ideologyFile,
+          fileName: ideologyFileName,
         }),
       })
 
@@ -289,6 +334,8 @@ export default function AdminDashboard() {
         content: "",
         category: "political",
       })
+      setIdeologyFile("")
+      setIdeologyFileName("")
       fetchData()
     } catch (error) {
       console.error("[v0] Error creating ideology:", error)
@@ -398,14 +445,13 @@ export default function AdminDashboard() {
       if (!event) return
 
       const response = await fetch(`/api/admin/events/${id}`, {
-        method: "PUT",
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: newEvent.title,
           description: newEvent.description,
-          date: newEvent.date,
+          event_date: newEvent.date, // Changed from 'date' to 'event_date' to match database
           location: newEvent.location,
-          registration_required: newEvent.registration_required,
         }),
       })
 
@@ -432,15 +478,19 @@ export default function AdminDashboard() {
 
   const handleUpdateBranch = async (id: string) => {
     try {
+      const contactInfo = JSON.stringify({
+        email: newBranch.contact_email,
+        phone: newBranch.contact_phone,
+        description: newBranch.description,
+      })
+
       const response = await fetch(`/api/admin/branches/${id}`, {
-        method: "PUT",
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: newBranch.name,
           location: newBranch.location,
-          contact_email: newBranch.contact_email,
-          contact_phone: newBranch.contact_phone,
-          description: newBranch.description,
+          contact_info: contactInfo, // Changed to match database schema
         }),
       })
 
@@ -468,12 +518,11 @@ export default function AdminDashboard() {
   const handleUpdateIdeology = async (id: string) => {
     try {
       const response = await fetch(`/api/admin/ideologies/${id}`, {
-        method: "PUT",
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: newIdeology.title,
-          content: newIdeology.content,
-          category: newIdeology.category,
+          content: newIdeology.content, // Changed from 'description' to 'content' to match database
         }),
       })
 
@@ -593,6 +642,8 @@ export default function AdminDashboard() {
       content: "",
       category: "political",
     })
+    setIdeologyFile("")
+    setIdeologyFileName("")
     setNewLeader({
       name: "",
       role: "",
@@ -1138,6 +1189,24 @@ export default function AdminDashboard() {
                       rows={6}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
                     />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">Upload Document (Optional)</label>
+                    <input
+                      type="file"
+                      accept=".pdf,.doc,.docx"
+                      onChange={handleIdeologyFileChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-red-50 file:text-red-600 hover:file:bg-red-100"
+                    />
+                    <p className="text-sm text-gray-500">Upload a PDF or Word document (max 10MB)</p>
+                    {ideologyFileName && (
+                      <div className="mt-2 flex items-center gap-2 text-sm text-green-600">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span>File selected: {ideologyFileName}</span>
+                      </div>
+                    )}
                   </div>
                   <div className="flex gap-2">
                     <button

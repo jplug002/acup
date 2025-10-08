@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     console.log("[v0] Received ideology data:", body)
 
-    const { title, content } = body
+    const { title, content, file, fileName } = body
 
     if (!title || !content) {
       console.log("[v0] Validation failed - missing required fields")
@@ -34,8 +34,58 @@ export async function POST(request: NextRequest) {
       RETURNING *
     `
 
-    console.log("[v0] Ideology created successfully:", result[0])
-    return NextResponse.json(result[0], { status: 201 })
+    const ideology = result[0]
+    console.log("[v0] Ideology created successfully:", ideology)
+
+    if (file && fileName) {
+      try {
+        // Get file extension and type
+        const fileExtension = fileName.split(".").pop()?.toLowerCase() || "pdf"
+        const fileType = fileExtension === "pdf" ? "application/pdf" : "application/msword"
+
+        // Calculate approximate file size from base64
+        const fileSizeBytes = Math.round((file.length * 3) / 4)
+        const fileSizeKB = Math.round(fileSizeBytes / 1024)
+        const fileSize = fileSizeKB > 1024 ? `${(fileSizeKB / 1024).toFixed(2)} MB` : `${fileSizeKB} KB`
+
+        const downloadResult = await sql`
+          INSERT INTO downloads (
+            title, 
+            description, 
+            file_url, 
+            file_name, 
+            file_type, 
+            file_size, 
+            category, 
+            status, 
+            download_count,
+            created_at, 
+            updated_at
+          )
+          VALUES (
+            ${title},
+            ${`Download the ${title} document`},
+            ${file},
+            ${fileName},
+            ${fileType},
+            ${fileSize},
+            ${"ideology"},
+            ${"ACTIVE"},
+            ${0},
+            NOW(),
+            NOW()
+          )
+          RETURNING *
+        `
+
+        console.log("[v0] Download entry created:", downloadResult[0])
+      } catch (downloadError) {
+        console.error("[v0] Error creating download entry:", downloadError)
+        // Don't fail the whole request if download creation fails
+      }
+    }
+
+    return NextResponse.json(ideology, { status: 201 })
   } catch (error) {
     console.error("[v0] Detailed error creating ideology:", {
       message: error.message,
