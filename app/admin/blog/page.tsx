@@ -32,6 +32,7 @@ export default function AdminBlogPage() {
     featured_image: "",
     status: "draft",
   })
+  const [editingArticle, setEditingArticle] = useState<string | null>(null)
 
   useEffect(() => {
     fetchArticles()
@@ -165,6 +166,82 @@ export default function AdminBlogPage() {
     }
   }
 
+  const handleUpdateArticle = async (id: string) => {
+    try {
+      if (!newArticle.title.trim() || !newArticle.content.trim()) {
+        alert("Please fill in title and content fields")
+        return
+      }
+
+      const response = await fetch(`/api/admin/blog/articles/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: newArticle.title,
+          content: newArticle.content,
+          excerpt: newArticle.excerpt,
+          category: newArticle.category,
+          tags: newArticle.tags
+            .split(",")
+            .map((tag) => tag.trim())
+            .filter(Boolean),
+          featured_image: newArticle.featured_image,
+          status: newArticle.status,
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        alert(`Failed to update article: ${errorData.error || "Unknown error"}`)
+        return
+      }
+
+      alert("Article updated successfully!")
+      setEditingArticle(null)
+      setImagePreview("")
+      setNewArticle({
+        title: "",
+        content: "",
+        excerpt: "",
+        category: "",
+        tags: "",
+        featured_image: "",
+        status: "draft",
+      })
+      fetchArticles()
+    } catch (error) {
+      console.error("Error updating article:", error)
+      alert("Failed to update article")
+    }
+  }
+
+  const startEditArticle = (article: BlogArticle) => {
+    setEditingArticle(article.id)
+    setNewArticle({
+      title: article.title,
+      content: "", // Content not available in list, will need to fetch
+      excerpt: "",
+      category: "",
+      tags: "",
+      featured_image: "",
+      status: article.status,
+    })
+  }
+
+  const cancelEdit = () => {
+    setEditingArticle(null)
+    setImagePreview("")
+    setNewArticle({
+      title: "",
+      content: "",
+      excerpt: "",
+      category: "",
+      tags: "",
+      featured_image: "",
+      status: "draft",
+    })
+  }
+
   const handleDelete = async (id: string) => {
     const article = articles.find((a) => a.id === id)
     const confirmMessage = article
@@ -252,8 +329,12 @@ export default function AdminBlogPage() {
 
         <div className="space-y-6">
           <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6">
-            <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">Create New Article</h2>
-            <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">Add a new blog article</p>
+            <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">
+              {editingArticle ? "Edit Article" : "Create New Article"}
+            </h2>
+            <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
+              {editingArticle ? "Update the article details" : "Add a new blog article"}
+            </p>
             <div className="space-y-4">
               <div className="grid grid-cols-1 gap-4">
                 <div className="space-y-2">
@@ -339,12 +420,22 @@ export default function AdminBlogPage() {
                   <option value="archived">Archived</option>
                 </select>
               </div>
-              <button
-                onClick={handleCreateArticle}
-                className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white py-3 px-6 rounded-md transition-colors font-medium"
-              >
-                Create Article
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => (editingArticle ? handleUpdateArticle(editingArticle) : handleCreateArticle())}
+                  className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white py-3 px-6 rounded-md transition-colors font-medium"
+                >
+                  {editingArticle ? "Update Article" : "Create Article"}
+                </button>
+                {editingArticle && (
+                  <button
+                    onClick={cancelEdit}
+                    className="w-full sm:w-auto bg-gray-200 hover:bg-gray-300 text-gray-800 py-3 px-6 rounded-md transition-colors font-medium"
+                  >
+                    Cancel
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 
@@ -384,6 +475,12 @@ export default function AdminBlogPage() {
                       </div>
                     </div>
                     <div className="flex sm:flex-col gap-2 w-full sm:w-auto">
+                      <button
+                        onClick={() => startEditArticle(article)}
+                        className="flex-1 sm:flex-none px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors whitespace-nowrap"
+                      >
+                        Edit
+                      </button>
                       <Link
                         href={`/blog/${article.slug}`}
                         className="flex-1 sm:flex-none px-3 py-2 text-sm text-center border border-gray-300 rounded-md text-gray-600 hover:text-gray-900 transition-colors whitespace-nowrap"

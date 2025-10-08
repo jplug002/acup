@@ -104,6 +104,11 @@ export default function AdminDashboard() {
 
   const [leaderImagePreview, setLeaderImagePreview] = useState<string>("")
 
+  const [editingEvent, setEditingEvent] = useState<string | null>(null)
+  const [editingBranch, setEditingBranch] = useState<string | null>(null)
+  const [editingIdeology, setEditingIdeology] = useState<string | null>(null)
+  const [editingLeader, setEditingLeader] = useState<number | null>(null)
+
   const handlePasswordSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (password === "acup@123") {
@@ -387,6 +392,217 @@ export default function AdminDashboard() {
     }
   }
 
+  const handleUpdateEvent = async (id: string) => {
+    try {
+      const event = events.find((e) => e.id === id)
+      if (!event) return
+
+      const response = await fetch(`/api/admin/events/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: newEvent.title,
+          description: newEvent.description,
+          date: newEvent.date,
+          location: newEvent.location,
+          registration_required: newEvent.registration_required,
+        }),
+      })
+
+      if (response.ok) {
+        alert("Event updated successfully!")
+        setEditingEvent(null)
+        setNewEvent({
+          title: "",
+          description: "",
+          date: "",
+          location: "",
+          registration_required: true,
+        })
+        fetchData()
+      } else {
+        const errorData = await response.json()
+        alert(`Failed to update event: ${errorData.error || "Unknown error"}`)
+      }
+    } catch (error) {
+      console.error("Error updating event:", error)
+      alert("Failed to update event")
+    }
+  }
+
+  const handleUpdateBranch = async (id: string) => {
+    try {
+      const response = await fetch(`/api/admin/branches/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: newBranch.name,
+          location: newBranch.location,
+          contact_email: newBranch.contact_email,
+          contact_phone: newBranch.contact_phone,
+          description: newBranch.description,
+        }),
+      })
+
+      if (response.ok) {
+        alert("Branch updated successfully!")
+        setEditingBranch(null)
+        setNewBranch({
+          name: "",
+          location: "",
+          contact_email: "",
+          contact_phone: "",
+          description: "",
+        })
+        fetchData()
+      } else {
+        const errorData = await response.json()
+        alert(`Failed to update branch: ${errorData.error || "Unknown error"}`)
+      }
+    } catch (error) {
+      console.error("Error updating branch:", error)
+      alert("Failed to update branch")
+    }
+  }
+
+  const handleUpdateIdeology = async (id: string) => {
+    try {
+      const response = await fetch(`/api/admin/ideologies/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: newIdeology.title,
+          content: newIdeology.content,
+          category: newIdeology.category,
+        }),
+      })
+
+      if (response.ok) {
+        alert("Ideology updated successfully!")
+        setEditingIdeology(null)
+        setNewIdeology({
+          title: "",
+          content: "",
+          category: "political",
+        })
+        fetchData()
+      } else {
+        const errorData = await response.json()
+        alert(`Failed to update ideology: ${errorData.error || "Unknown error"}`)
+      }
+    } catch (error) {
+      console.error("Error updating ideology:", error)
+      alert("Failed to update ideology")
+    }
+  }
+
+  const handleUpdateLeader = async (id: number) => {
+    try {
+      const response = await fetch(`/api/admin/leadership/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newLeader),
+      })
+
+      if (response.ok) {
+        alert("Leader updated successfully!")
+        setEditingLeader(null)
+        setNewLeader({
+          name: "",
+          role: "",
+          title: "",
+          bio: "",
+          photo_url: "",
+        })
+        setLeaderImagePreview("")
+        fetchData()
+      } else {
+        const errorData = await response.json()
+        alert(`Failed to update leader: ${errorData.error || "Unknown error"}`)
+      }
+    } catch (error) {
+      console.error("Error updating leader:", error)
+      alert("Failed to update leader")
+    }
+  }
+
+  const startEditEvent = (event: Event) => {
+    setEditingEvent(event.id)
+    setNewEvent({
+      title: event.title,
+      description: event.description,
+      date: new Date(event.event_date).toISOString().slice(0, 16),
+      location: event.location,
+      registration_required: event.registration_required,
+    })
+  }
+
+  const startEditBranch = (branch: Branch) => {
+    setEditingBranch(branch.id)
+    setNewBranch({
+      name: branch.name,
+      location: branch.city,
+      contact_email: branch.contact_email,
+      contact_phone: branch.contact_phone,
+      description: branch.description,
+    })
+  }
+
+  const startEditIdeology = (ideology: Ideology) => {
+    setEditingIdeology(ideology.id)
+    setNewIdeology({
+      title: ideology.title,
+      content: ideology.description,
+      category: ideology.category,
+    })
+  }
+
+  const startEditLeader = (leader: LeadershipProfile) => {
+    setEditingLeader(leader.id)
+    setNewLeader({
+      name: leader.name,
+      role: leader.role,
+      title: leader.title,
+      bio: leader.bio,
+      photo_url: leader.photo_url,
+    })
+    setLeaderImagePreview(leader.photo_url)
+  }
+
+  const cancelEdit = () => {
+    setEditingEvent(null)
+    setEditingBranch(null)
+    setEditingIdeology(null)
+    setEditingLeader(null)
+    setNewEvent({
+      title: "",
+      description: "",
+      date: "",
+      location: "",
+      registration_required: true,
+    })
+    setNewBranch({
+      name: "",
+      location: "",
+      contact_email: "",
+      contact_phone: "",
+      description: "",
+    })
+    setNewIdeology({
+      title: "",
+      content: "",
+      category: "political",
+    })
+    setNewLeader({
+      name: "",
+      role: "",
+      title: "",
+      bio: "",
+      photo_url: "",
+    })
+    setLeaderImagePreview("")
+  }
+
   const compressImage = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader()
@@ -644,8 +860,12 @@ export default function AdminDashboard() {
           {activeTab === "events" && (
             <div className="space-y-6">
               <div className="bg-white border border-gray-200 rounded-lg p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-2">Create New Event</h2>
-                <p className="text-gray-600 mb-6">Add a new event to the ACUP calendar</p>
+                <h2 className="text-lg font-semibold text-gray-900 mb-2">
+                  {editingEvent ? "Edit Event" : "Create New Event"}
+                </h2>
+                <p className="text-gray-600 mb-6">
+                  {editingEvent ? "Update the event details" : "Add a new event to the ACUP calendar"}
+                </p>
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
@@ -688,12 +908,22 @@ export default function AdminDashboard() {
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
                     />
                   </div>
-                  <button
-                    onClick={handleCreateEvent}
-                    className="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-md transition-colors"
-                  >
-                    Create Event
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => (editingEvent ? handleUpdateEvent(editingEvent) : handleCreateEvent())}
+                      className="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-md transition-colors"
+                    >
+                      {editingEvent ? "Update Event" : "Create Event"}
+                    </button>
+                    {editingEvent && (
+                      <button
+                        onClick={cancelEdit}
+                        className="bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-4 rounded-md transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -718,6 +948,12 @@ export default function AdminDashboard() {
                         </div>
                         <div className="flex items-center gap-2">
                           <button
+                            onClick={() => startEditEvent(event)}
+                            className="px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                          >
+                            Edit
+                          </button>
+                          <button
                             onClick={() => handleDeleteEvent(event.id)}
                             className="px-3 py-1 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
                           >
@@ -736,8 +972,12 @@ export default function AdminDashboard() {
           {activeTab === "branches" && (
             <div className="space-y-6">
               <div className="bg-white border border-gray-200 rounded-lg p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-2">Create New Branch</h2>
-                <p className="text-gray-600 mb-6">Add a new ACUP branch location</p>
+                <h2 className="text-lg font-semibold text-gray-900 mb-2">
+                  {editingBranch ? "Edit Branch" : "Create New Branch"}
+                </h2>
+                <p className="text-gray-600 mb-6">
+                  {editingBranch ? "Update the branch details" : "Add a new ACUP branch location"}
+                </p>
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
@@ -793,12 +1033,22 @@ export default function AdminDashboard() {
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
                     />
                   </div>
-                  <button
-                    onClick={handleCreateBranch}
-                    className="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-md transition-colors"
-                  >
-                    Create Branch
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => (editingBranch ? handleUpdateBranch(editingBranch) : handleCreateBranch())}
+                      className="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-md transition-colors"
+                    >
+                      {editingBranch ? "Update Branch" : "Create Branch"}
+                    </button>
+                    {editingBranch && (
+                      <button
+                        onClick={cancelEdit}
+                        className="bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-4 rounded-md transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -823,6 +1073,12 @@ export default function AdminDashboard() {
                         </div>
                         <div className="flex items-center gap-2">
                           <button
+                            onClick={() => startEditBranch(branch)}
+                            className="px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                          >
+                            Edit
+                          </button>
+                          <button
                             onClick={() => handleDeleteBranch(branch.id)}
                             className="px-3 py-1 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
                           >
@@ -841,8 +1097,12 @@ export default function AdminDashboard() {
           {activeTab === "ideologies" && (
             <div className="space-y-6">
               <div className="bg-white border border-gray-200 rounded-lg p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-2">Create New Ideology</h2>
-                <p className="text-gray-600 mb-6">Add a new ideological content piece</p>
+                <h2 className="text-lg font-semibold text-gray-900 mb-2">
+                  {editingIdeology ? "Edit Ideology" : "Create New Ideology"}
+                </h2>
+                <p className="text-gray-600 mb-6">
+                  {editingIdeology ? "Update the ideology details" : "Add a new ideological content piece"}
+                </p>
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
@@ -879,12 +1139,22 @@ export default function AdminDashboard() {
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
                     />
                   </div>
-                  <button
-                    onClick={handleCreateIdeology}
-                    className="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-md transition-colors"
-                  >
-                    Create Ideology
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => (editingIdeology ? handleUpdateIdeology(editingIdeology) : handleCreateIdeology())}
+                      className="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-md transition-colors"
+                    >
+                      {editingIdeology ? "Update Ideology" : "Create Ideology"}
+                    </button>
+                    {editingIdeology && (
+                      <button
+                        onClick={cancelEdit}
+                        className="bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-4 rounded-md transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -911,6 +1181,12 @@ export default function AdminDashboard() {
                         </div>
                         <div className="flex items-center gap-2">
                           <button
+                            onClick={() => startEditIdeology(ideology)}
+                            className="px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                          >
+                            Edit
+                          </button>
+                          <button
                             onClick={() => handleDeleteIdeology(ideology.id)}
                             className="px-3 py-1 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
                           >
@@ -928,8 +1204,12 @@ export default function AdminDashboard() {
           {activeTab === "leadership" && (
             <div className="space-y-6">
               <div className="bg-white border border-gray-200 rounded-lg p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-2">Add Leadership Profile</h2>
-                <p className="text-gray-600 mb-6">Add a new leader to the leadership team</p>
+                <h2 className="text-lg font-semibold text-gray-900 mb-2">
+                  {editingLeader ? "Edit Leadership Profile" : "Add Leadership Profile"}
+                </h2>
+                <p className="text-gray-600 mb-6">
+                  {editingLeader ? "Update the leader details" : "Add a new leader to the leadership team"}
+                </p>
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
@@ -993,12 +1273,22 @@ export default function AdminDashboard() {
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
                     />
                   </div>
-                  <button
-                    onClick={handleCreateLeader}
-                    className="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-md transition-colors"
-                  >
-                    Add Leader
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => (editingLeader ? handleUpdateLeader(editingLeader) : handleCreateLeader())}
+                      className="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-md transition-colors"
+                    >
+                      {editingLeader ? "Update Leader" : "Add Leader"}
+                    </button>
+                    {editingLeader && (
+                      <button
+                        onClick={cancelEdit}
+                        className="bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-4 rounded-md transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -1031,6 +1321,12 @@ export default function AdminDashboard() {
                           {leader.bio && <p className="text-sm text-gray-500 mt-2 line-clamp-2">{leader.bio}</p>}
                         </div>
                         <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => startEditLeader(leader)}
+                            className="px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                          >
+                            Edit
+                          </button>
                           <button
                             onClick={() => handleDeleteLeader(leader.id)}
                             className="px-3 py-1 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
