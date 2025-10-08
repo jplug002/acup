@@ -108,6 +108,8 @@ export default function DashboardPage() {
       if (profileResponse.ok) {
         const { profile } = await profileResponse.json()
 
+        const userRegistrationDate = profile.created_at || new Date().toISOString()
+
         // Map database fields to component state
         setProfileData({
           id: profile.id?.toString() || "",
@@ -139,21 +141,18 @@ export default function DashboardPage() {
             : "",
         })
 
-        // Set membership info if available
-        if (profile.membership_type) {
-          setMembershipInfo({
-            id: profile.id?.toString() || "",
-            status: profile.membership_status || "pending",
-            membership_type: profile.membership_type || "regular",
-            membership_number: profile.membership_number || `ACUP-${String(profile.id).padStart(6, "0")}`,
-            application_date: profile.created_at || new Date().toISOString(),
-            approval_date: profile.membership_status === "approved" ? profile.joined_date : undefined,
-            registration_fee_paid: profile.membership_status === "approved",
-            branch_assigned: profile.branch_preference || profile.country,
-            sponsor_name: profile.sponsor_name,
-            membership_duration: "Annual",
-          })
-        }
+        setMembershipInfo({
+          id: profile.id?.toString() || "",
+          status: profile.membership_status || "active",
+          membership_type: profile.membership_type || "regular",
+          membership_number: profile.membership_number || `ACUP-${String(profile.id).padStart(6, "0")}`,
+          application_date: userRegistrationDate,
+          approval_date: profile.joined_date || userRegistrationDate,
+          registration_fee_paid: profile.membership_status === "approved",
+          branch_assigned: profile.branch_preference || profile.country,
+          sponsor_name: profile.sponsor_name,
+          membership_duration: "Annual",
+        })
 
         if (isWelcome && !profile.bio) {
           setShowBioAlert(true)
@@ -366,11 +365,13 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <p className="text-xl sm:text-2xl font-bold text-gray-900">
-                {membershipInfo?.approval_date
-                  ? new Date(membershipInfo.approval_date).getFullYear()
-                  : membershipInfo?.application_date
-                    ? new Date(membershipInfo.application_date).getFullYear()
-                    : "N/A"}
+                {membershipInfo?.application_date
+                  ? new Date(membershipInfo.application_date).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                    })
+                  : "N/A"}
               </p>
             </CardContent>
           </Card>
@@ -417,7 +418,7 @@ export default function DashboardPage() {
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div>
                     <CardTitle className="text-lg sm:text-xl">Profile Information</CardTitle>
-                    <CardDescription className="text-sm">Update your personal information and bio</CardDescription>
+                    <CardDescription className="text-sm text-blue-700">Update your personal information and bio</CardDescription>
                   </div>
                   <Button
                     onClick={() => setIsEditing(!isEditing)}
@@ -693,7 +694,7 @@ export default function DashboardPage() {
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg sm:text-xl">Membership Card Details</CardTitle>
-                <CardDescription className="text-sm">Your ACUP membership card information</CardDescription>
+                <CardDescription className="text-sm text-blue-700">Your ACUP membership card information</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -753,7 +754,7 @@ export default function DashboardPage() {
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg sm:text-xl">Upcoming Events</CardTitle>
-                <CardDescription className="text-sm">Events you can attend as an ACUP member</CardDescription>
+                <CardDescription className="text-sm text-blue-700">Events you can attend as an ACUP member</CardDescription>
               </CardHeader>
               <CardContent>
                 {events.length > 0 ? (
