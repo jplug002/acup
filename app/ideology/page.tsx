@@ -2,6 +2,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { neon } from "@neondatabase/serverless"
+import { DownloadIcon } from "lucide-react"
 
 export const dynamic = "force-dynamic"
 export const revalidate = 0
@@ -14,6 +15,18 @@ interface Ideology {
   content: string
   status: string
   created_at: string
+}
+
+interface IdeologyDownload {
+  id: number
+  title: string
+  description: string
+  file_url: string
+  file_name: string
+  file_type: string
+  file_size: number
+  category: string
+  status: string
 }
 
 async function getIdeologies(): Promise<Ideology[]> {
@@ -31,11 +44,25 @@ async function getIdeologies(): Promise<Ideology[]> {
   }
 }
 
+async function getDownloads(): Promise<IdeologyDownload[]> {
+  try {
+    const downloads = await sql`
+      SELECT * FROM downloads 
+      WHERE status = 'published' 
+      ORDER BY created_at DESC
+    `
+    return downloads as IdeologyDownload[]
+  } catch (error) {
+    console.error("Error fetching downloads:", error)
+    return []
+  }
+}
+
 export default async function IdeologyPage() {
   const adminIdeologies = await getIdeologies()
+  const downloads = await getDownloads()
 
   const getTitleColor = (title: string, index: number) => {
-    // Alternate between blue and red based on index
     return index % 2 === 0 ? "bg-blue-600" : "bg-red-600"
   }
 
@@ -45,6 +72,20 @@ export default async function IdeologyPage() {
       month: "long",
       day: "numeric",
     })
+  }
+
+  const getIdeologyDownload = (ideologyTitle: string) => {
+    return downloads.find(
+      (download) =>
+        download.title.toLowerCase().includes(ideologyTitle.toLowerCase()) ||
+        download.description?.toLowerCase().includes(ideologyTitle.toLowerCase()),
+    )
+  }
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return bytes + " B"
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB"
+    return (bytes / (1024 * 1024)).toFixed(1) + " MB"
   }
 
   return (
@@ -72,21 +113,41 @@ export default async function IdeologyPage() {
                   </p>
                 </div>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {adminIdeologies.map((ideology, index) => (
-                    <Card
-                      key={ideology.id}
-                      className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-gray-200 h-full overflow-hidden"
-                    >
-                      <div className={`${getTitleColor(ideology.title, index)} text-white px-6 py-4`}>
-                        <h3 className="text-xl font-bold">{ideology.title}</h3>
-                      </div>
-                      <CardContent className="pt-6 flex-1 flex flex-col">
-                        <CardDescription className="text-sm text-gray-700 leading-relaxed flex-1">
-                          {ideology.content}
-                        </CardDescription>
-                      </CardContent>
-                    </Card>
-                  ))}
+                  {adminIdeologies.map((ideology, index) => {
+                    const ideologyDownload = getIdeologyDownload(ideology.title)
+
+                    return (
+                      <Card
+                        key={ideology.id}
+                        className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-gray-200 h-full overflow-hidden flex flex-col"
+                      >
+                        <div className={`${getTitleColor(ideology.title, index)} text-white px-6 py-4`}>
+                          <h3 className="text-xl font-bold">{ideology.title}</h3>
+                        </div>
+                        <CardContent className="pt-6 flex-1 flex flex-col">
+                          <CardDescription className="text-sm text-gray-700 leading-relaxed flex-1 mb-4">
+                            {ideology.content}
+                          </CardDescription>
+
+                          {ideologyDownload && (
+                            <div className="mt-auto pt-4 border-t border-gray-200">
+                              <a
+                                href={ideologyDownload.file_url}
+                                download={ideologyDownload.file_name}
+                                className="flex items-center justify-between gap-2 w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg transition-all duration-200 hover:shadow-lg group"
+                              >
+                                <div className="flex items-center gap-2">
+                                  <DownloadIcon className="w-4 h-4" />
+                                  <span className="font-semibold text-sm">Download Document</span>
+                                </div>
+                                <span className="text-xs opacity-90">{formatFileSize(ideologyDownload.file_size)}</span>
+                              </a>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    )
+                  })}
                 </div>
               </div>
             ) : (
