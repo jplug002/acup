@@ -24,7 +24,7 @@ interface IdeologyDownload {
   file_url: string
   file_name: string
   file_type: string
-  file_size: number
+  file_size: string
   category: string
   status: string
 }
@@ -82,12 +82,6 @@ export default async function IdeologyPage() {
     )
   }
 
-  const formatFileSize = (bytes: number) => {
-    if (bytes < 1024) return bytes + " B"
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB"
-    return (bytes / (1024 * 1024)).toFixed(1) + " MB"
-  }
-
   return (
     <main className="min-h-screen bg-white">
       <section className="bg-blue-900 text-white py-20">
@@ -140,7 +134,7 @@ export default async function IdeologyPage() {
                                   <DownloadIcon className="w-4 h-4" />
                                   <span className="font-semibold text-sm">Download Document</span>
                                 </div>
-                                <span className="text-xs opacity-90">{formatFileSize(ideologyDownload.file_size)}</span>
+                                <span className="text-xs opacity-90">{ideologyDownload.file_size}</span>
                               </a>
                             </div>
                           )}

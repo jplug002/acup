@@ -15,6 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { signOut } from "next-auth/react"
 import Link from "next/link"
 import { Camera, User } from "lucide-react"
+import MembershipCard from "@/components/MembershipCard" // Import MembershipCard component
 
 interface UserProfile {
   id: string
@@ -418,7 +419,9 @@ export default function DashboardPage() {
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div>
                     <CardTitle className="text-lg sm:text-xl">Profile Information</CardTitle>
-                    <CardDescription className="text-sm text-blue-700">Update your personal information and bio</CardDescription>
+                    <CardDescription className="text-sm text-blue-700">
+                      Update your personal information and bio
+                    </CardDescription>
                   </div>
                   <Button
                     onClick={() => setIsEditing(!isEditing)}
@@ -694,12 +697,18 @@ export default function DashboardPage() {
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg sm:text-xl">Membership Card Details</CardTitle>
-                <CardDescription className="text-sm text-blue-700">Your ACUP membership card information</CardDescription>
+                <CardDescription className="text-sm text-blue-700">
+                  Your ACUP membership card information
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   {membershipInfo ? (
                     <>
+                      <div className="mb-6">
+                        <MembershipCard showActions={false} />
+                      </div>
+
                       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 sm:p-4 bg-gray-50 rounded-lg gap-2">
                         <div>
                           <h3 className="font-medium text-gray-900 text-sm sm:text-base">Membership Status</h3>
@@ -754,7 +763,9 @@ export default function DashboardPage() {
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg sm:text-xl">Upcoming Events</CardTitle>
-                <CardDescription className="text-sm text-blue-700">Events you can attend as an ACUP member</CardDescription>
+                <CardDescription className="text-sm text-blue-700">
+                  Events you can attend as an ACUP member
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 {events.length > 0 ? (

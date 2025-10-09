@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
             ${fileType},
             ${fileSize},
             ${"ideology"},
-            ${"ACTIVE"},
+            ${"published"},
             ${0},
             NOW(),
             NOW()
@@ -83,6 +83,8 @@ export async function POST(request: NextRequest) {
         console.error("[v0] Error creating download entry:", downloadError)
         // Don't fail the whole request if download creation fails
       }
+    } else {
+      console.log("[v0] No file uploaded with ideology")
     }
 
     return NextResponse.json(ideology, { status: 201 })
