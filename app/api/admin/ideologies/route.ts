@@ -7,8 +7,17 @@ const sql = neon(process.env.DATABASE_URL!)
 export async function GET() {
   try {
     const ideologies = await sql`
-      SELECT * FROM ideologies 
-      ORDER BY created_at DESC
+      SELECT 
+        i.*,
+        d.id as download_id,
+        d.file_url,
+        d.file_name,
+        d.file_type,
+        d.file_size,
+        d.download_count
+      FROM ideologies i
+      LEFT JOIN downloads d ON d.ideology_id = i.id AND d.status = 'published'
+      ORDER BY i.created_at DESC
     `
     return NextResponse.json(ideologies)
   } catch (error) {

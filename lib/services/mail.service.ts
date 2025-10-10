@@ -14,6 +14,7 @@ interface EmailOptions {
   to: string | string[]
   subject: string
   message: string
+  html?: string
 }
 
 interface EmailResponse {
@@ -69,7 +70,7 @@ export class MailService {
         to: recipients.join(", "),
         subject: options.subject,
         text: options.message,
-        html: options.message.replace(/\n/g, "<br>"),
+        html: options.html || options.message.replace(/\n/g, "<br>"),
       })
 
       console.log("[MailService] Email sent:", info.messageId)
