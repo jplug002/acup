@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createPasswordResetToken } from "@/lib/password-reset"
+import { mailService } from "@/lib/services/mail.service"
 
 // Rate limiting map (in production, use Redis or similar)
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>()
@@ -38,21 +39,40 @@ export async function POST(request: NextRequest) {
     // Generate reset token
     const token = await createPasswordResetToken(email)
 
-    // Always return success (don't reveal if email exists)
-    // In production, send email with reset link here
     if (token) {
-      const resetLink = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/auth/reset-password?token=${token}`
+      const resetLink = `${process.env.NEXT_PUBLIC_APP_URL || process.env.PUBLIC_URL || "http://localhost:3000"}/auth/reset-password?token=${token}`
 
-      console.log("[v0] Password reset link:", resetLink)
-      // TODO: Send email with resetLink
-      // await sendPasswordResetEmail(email, resetLink)
+      // Send password reset email
+      const emailResult = await mailService.sendEmail({
+        to: email,
+        subject: "Reset Your ACUP Password",
+        message: `Hello,
+
+You requested to reset your password for your ACUP account.
+
+Click the link below to reset your password:
+${resetLink}
+
+This link will expire in 1 hour.
+
+If you didn't request this password reset, please ignore this email.
+
+Best regards,
+ACUP Team`,
+      })
+
+      if (!emailResult.success) {
+        console.error("[Password Reset] Failed to send email:", emailResult.error)
+        // Don't reveal email sending failure to user for security
+      }
     }
 
+    // Always return success (don't reveal if email exists)
     return NextResponse.json({
       message: "If an account exists with this email, you will receive a password reset link.",
     })
   } catch (error) {
-    console.error("[v0] Forgot password error:", error)
+    console.error("[Password Reset] Error:", error)
     return NextResponse.json({ error: "An error occurred. Please try again." }, { status: 500 })
   }
 }

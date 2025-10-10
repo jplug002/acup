@@ -198,24 +198,27 @@ export default function AdminUsersPage() {
     <div className="min-h-screen bg-white">
       {/* Header */}
       <header className="border-b bg-white sticky top-0 z-10">
-        <div className="flex h-16 items-center justify-between px-4 sm:px-6">
-          <div className="flex items-center space-x-4">
-            <Link href="/admin" className="text-red-600 hover:text-red-700 font-medium transition-colors">
+        <div className="flex h-auto md:h-16 items-center justify-between px-4 sm:px-6 py-3 md:py-0 flex-col md:flex-row gap-3 md:gap-0">
+          <div className="flex items-center space-x-4 w-full md:w-auto">
+            <Link
+              href="/admin"
+              className="text-red-600 hover:text-red-700 font-medium transition-colors text-sm md:text-base"
+            >
               ← Back to Admin
             </Link>
-            <div className="h-6 w-px bg-gray-300"></div>
-            <h1 className="text-xl font-semibold text-gray-900">User Management</h1>
+            <div className="h-6 w-px bg-gray-300 hidden md:block"></div>
+            <h1 className="text-lg md:text-xl font-semibold text-gray-900">User Management</h1>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 w-full md:w-auto">
             <button
               onClick={() => openEmailModal()}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
+              className="flex-1 md:flex-none px-3 md:px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-xs md:text-sm"
             >
               📧 Email All
             </button>
             <button
               onClick={() => openSMSModal()}
-              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm"
+              className="flex-1 md:flex-none px-3 md:px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-xs md:text-sm"
             >
               💬 SMS All
             </button>
@@ -224,31 +227,30 @@ export default function AdminUsersPage() {
       </header>
 
       {/* Main Content */}
-      <main className="p-6">
+      <main className="p-3 md:p-6">
         <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-          <div className="p-6 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">Registered Users</h2>
-            <p className="text-sm text-gray-600 mt-1">Total: {users.length} users</p>
+          <div className="p-4 md:p-6 border-b border-gray-200">
+            <h2 className="text-base md:text-lg font-semibold text-gray-900">Registered Users</h2>
+            <p className="text-xs md:text-sm text-gray-600 mt-1">Total: {users.length} users</p>
           </div>
 
-          {/* Users Table */}
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full min-w-[640px]">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Full Name
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Email
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Phone
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
                     Registration Date
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
@@ -256,35 +258,39 @@ export default function AdminUsersPage() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {users.map((user) => (
                   <tr key={user.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
+                    <td className="px-3 md:px-6 py-4 whitespace-nowrap">
+                      <div className="text-xs md:text-sm font-medium text-gray-900">
                         {user.first_name} {user.last_name}
                       </div>
-                      <div className="text-sm text-gray-500">{user.role}</div>
+                      <div className="text-xs text-gray-500">{user.role}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{user.email}</div>
+                    <td className="px-3 md:px-6 py-4 whitespace-nowrap">
+                      <div className="text-xs md:text-sm text-gray-900 truncate max-w-[150px] md:max-w-none">
+                        {user.email}
+                      </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
+                    <td className="px-3 md:px-6 py-4 whitespace-nowrap">
+                      <div className="text-xs md:text-sm text-gray-900">
                         {user.phone || <span className="text-gray-400 italic">No phone</span>}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{new Date(user.created_at).toLocaleDateString()}</div>
+                    <td className="px-3 md:px-6 py-4 whitespace-nowrap hidden md:table-cell">
+                      <div className="text-xs md:text-sm text-gray-900">
+                        {new Date(user.created_at).toLocaleDateString()}
+                      </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <div className="flex gap-2">
+                    <td className="px-3 md:px-6 py-4 whitespace-nowrap text-xs md:text-sm">
+                      <div className="flex flex-col md:flex-row gap-1 md:gap-2">
                         <button
                           onClick={() => openEmailModal(user)}
-                          className="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                          className="px-2 md:px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-xs whitespace-nowrap"
                         >
                           Send Email
                         </button>
                         {user.phone && (
                           <button
                             onClick={() => openSMSModal(user)}
-                            className="px-3 py-1 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                            className="px-2 md:px-3 py-1 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-xs whitespace-nowrap"
                           >
                             Send SMS
                           </button>
@@ -299,7 +305,7 @@ export default function AdminUsersPage() {
 
           {users.length === 0 && (
             <div className="p-12 text-center">
-              <p className="text-gray-500">No users found</p>
+              <p className="text-gray-500 text-sm md:text-base">No users found</p>
             </div>
           )}
         </div>
@@ -307,37 +313,37 @@ export default function AdminUsersPage() {
 
       {/* Email Modal */}
       {showEmailModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 md:p-4">
           <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">Send Email</h3>
-              <p className="text-sm text-gray-600 mt-1">
+            <div className="p-4 md:p-6 border-b border-gray-200">
+              <h3 className="text-base md:text-lg font-semibold text-gray-900">Send Email</h3>
+              <p className="text-xs md:text-sm text-gray-600 mt-1">
                 {emailForm.recipients === "all"
                   ? `Sending to all ${users.length} users`
                   : `Sending to ${Array.isArray(emailForm.recipients) ? emailForm.recipients.length : 0} user(s)`}
               </p>
             </div>
 
-            <div className="p-6 space-y-4">
+            <div className="p-4 md:p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Subject *</label>
+                <label className="block text-xs md:text-sm font-medium text-gray-700 mb-2">Subject *</label>
                 <input
                   type="text"
                   value={emailForm.subject}
                   onChange={(e) => setEmailForm({ ...emailForm, subject: e.target.value })}
                   placeholder="Enter email subject"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Message *</label>
+                <label className="block text-xs md:text-sm font-medium text-gray-700 mb-2">Message *</label>
                 <textarea
                   value={emailForm.message}
                   onChange={(e) => setEmailForm({ ...emailForm, message: e.target.value })}
                   placeholder="Enter your message here..."
-                  rows={8}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  rows={6}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 <p className="text-xs text-gray-500 mt-1">
                   Tip: Use {"{name}"} to personalize the message with the recipient's name
@@ -346,7 +352,7 @@ export default function AdminUsersPage() {
 
               {emailResult && (
                 <div
-                  className={`p-4 rounded-md ${
+                  className={`p-3 md:p-4 rounded-md text-sm ${
                     emailResult.includes("success") ? "bg-green-50 text-green-800" : "bg-red-50 text-red-800"
                   }`}
                 >
@@ -355,18 +361,18 @@ export default function AdminUsersPage() {
               )}
             </div>
 
-            <div className="p-6 border-t border-gray-200 flex justify-end gap-2">
+            <div className="p-4 md:p-6 border-t border-gray-200 flex justify-end gap-2">
               <button
                 onClick={() => setShowEmailModal(false)}
                 disabled={sendingEmail}
-                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
+                className="px-3 md:px-4 py-2 text-sm border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSendEmail}
                 disabled={sendingEmail || !emailForm.subject || !emailForm.message}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-3 md:px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {sendingEmail ? "Sending..." : "Send Email"}
               </button>
@@ -377,27 +383,29 @@ export default function AdminUsersPage() {
 
       {/* SMS Modal */}
       {showSMSModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 md:p-4">
           <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">Send SMS</h3>
-              <p className="text-sm text-gray-600 mt-1">
+            <div className="p-4 md:p-6 border-b border-gray-200">
+              <h3 className="text-base md:text-lg font-semibold text-gray-900">Send SMS</h3>
+              <p className="text-xs md:text-sm text-gray-600 mt-1">
                 {smsForm.recipients === "all"
                   ? `Sending to all users with phone numbers`
                   : `Sending to ${Array.isArray(smsForm.recipients) ? smsForm.recipients.length : 0} user(s)`}
               </p>
             </div>
 
-            <div className="p-6 space-y-4">
+            <div className="p-4 md:p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Message * (Max 160 characters)</label>
+                <label className="block text-xs md:text-sm font-medium text-gray-700 mb-2">
+                  Message * (Max 160 characters)
+                </label>
                 <textarea
                   value={smsForm.message}
                   onChange={(e) => setSmsForm({ ...smsForm, message: e.target.value })}
                   placeholder="Enter your SMS message here..."
                   rows={4}
                   maxLength={160}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                 />
                 <p className="text-xs text-gray-500 mt-1">
                   {smsForm.message.length}/160 characters
@@ -408,7 +416,7 @@ export default function AdminUsersPage() {
 
               {smsResult && (
                 <div
-                  className={`p-4 rounded-md ${
+                  className={`p-3 md:p-4 rounded-md text-sm ${
                     smsResult.includes("success") ? "bg-green-50 text-green-800" : "bg-red-50 text-red-800"
                   }`}
                 >
@@ -417,18 +425,18 @@ export default function AdminUsersPage() {
               )}
             </div>
 
-            <div className="p-6 border-t border-gray-200 flex justify-end gap-2">
+            <div className="p-4 md:p-6 border-t border-gray-200 flex justify-end gap-2">
               <button
                 onClick={() => setShowSMSModal(false)}
                 disabled={sendingSMS}
-                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
+                className="px-3 md:px-4 py-2 text-sm border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSendSMS}
                 disabled={sendingSMS || !smsForm.message}
-                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-3 md:px-4 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {sendingSMS ? "Sending..." : "Send SMS"}
               </button>

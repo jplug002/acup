@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { neon } from "@neondatabase/serverless"
+import { saveBase64File, getBase64FileSize, getMimeType } from "@/lib/file-upload"
 
 const sql = neon(process.env.DATABASE_URL!)
 
@@ -19,7 +20,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    console.log("[v0] Received ideology data:", body)
+    console.log("[v0] Received ideology data:", { title: body.title, hasFile: !!body.file })
 
     const { title, content, file, fileName } = body
 
@@ -39,14 +40,27 @@ export async function POST(request: NextRequest) {
 
     if (file && fileName) {
       try {
-        // Get file extension and type
-        const fileExtension = fileName.split(".").pop()?.toLowerCase() || "pdf"
-        const fileType = fileExtension === "pdf" ? "application/pdf" : "application/msword"
+        console.log("[v0] Processing file upload:", fileName)
 
-        // Calculate approximate file size from base64
-        const fileSizeBytes = Math.round((file.length * 3) / 4)
-        const fileSizeKB = Math.round(fileSizeBytes / 1024)
-        const fileSize = fileSizeKB > 1024 ? `${(fileSizeKB / 1024).toFixed(2)} MB` : `${fileSizeKB} KB`
+        // Save file to public/uploads/ideologies folder
+        const uploadResult = await saveBase64File(file, fileName, "ideologies")
+
+        if (!uploadResult.success) {
+          console.error("[v0] File upload failed:", uploadResult.error)
+          return NextResponse.json(
+            {
+              error: "Failed to upload document",
+              details: uploadResult.error,
+            },
+            { status: 500 },
+          )
+        }
+
+        // Get file metadata
+        const fileSize = getBase64FileSize(file)
+        const fileType = getMimeType(fileName)
+
+        console.log("[v0] File saved to:", uploadResult.filePath)
 
         const downloadResult = await sql`
           INSERT INTO downloads (
@@ -65,8 +79,8 @@ export async function POST(request: NextRequest) {
           VALUES (
             ${title},
             ${`Download the ${title} document`},
-            ${file},
-            ${fileName},
+            ${uploadResult.filePath},
+            ${uploadResult.fileName},
             ${fileType},
             ${fileSize},
             ${"ideology"},
@@ -81,7 +95,14 @@ export async function POST(request: NextRequest) {
         console.log("[v0] Download entry created:", downloadResult[0])
       } catch (downloadError) {
         console.error("[v0] Error creating download entry:", downloadError)
-        // Don't fail the whole request if download creation fails
+        // Return error since file upload is part of the request
+        return NextResponse.json(
+          {
+            error: "Failed to save document",
+            details: downloadError instanceof Error ? downloadError.message : "Unknown error",
+          },
+          { status: 500 },
+        )
       }
     } else {
       console.log("[v0] No file uploaded with ideology")
@@ -90,14 +111,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(ideology, { status: 201 })
   } catch (error) {
     console.error("[v0] Detailed error creating ideology:", {
-      message: error.message,
-      stack: error.stack,
+      message: error instanceof Error ? error.message : "Unknown error",
+      stack: error instanceof Error ? error.stack : undefined,
     })
 
     return NextResponse.json(
       {
         error: "Failed to create ideology",
-        details: error.message,
+        details: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 },
     )
