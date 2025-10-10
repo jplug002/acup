@@ -19,6 +19,7 @@ interface Ideology {
 
 interface IdeologyDownload {
   id: number
+  ideology_id?: number
   title: string
   description: string
   file_url: string
@@ -47,7 +48,8 @@ async function getIdeologies(): Promise<Ideology[]> {
 async function getDownloads(): Promise<IdeologyDownload[]> {
   try {
     const downloads = await sql`
-      SELECT * FROM downloads 
+      SELECT id, ideology_id, title, description, file_url, file_name, file_type, file_size, category, status
+      FROM downloads 
       WHERE status = 'published' 
       ORDER BY created_at DESC
     `
@@ -74,12 +76,8 @@ export default async function IdeologyPage() {
     })
   }
 
-  const getIdeologyDownload = (ideologyTitle: string) => {
-    return downloads.find(
-      (download) =>
-        download.title.toLowerCase().includes(ideologyTitle.toLowerCase()) ||
-        download.description?.toLowerCase().includes(ideologyTitle.toLowerCase()),
-    )
+  const getIdeologyDownload = (ideologyId: number) => {
+    return downloads.find((download) => download.ideology_id === ideologyId)
   }
 
   return (
@@ -108,7 +106,7 @@ export default async function IdeologyPage() {
                 </div>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                   {adminIdeologies.map((ideology, index) => {
-                    const ideologyDownload = getIdeologyDownload(ideology.title)
+                    const ideologyDownload = getIdeologyDownload(ideology.id)
 
                     return (
                       <Card

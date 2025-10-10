@@ -64,6 +64,7 @@ export async function POST(request: NextRequest) {
 
         const downloadResult = await sql`
           INSERT INTO downloads (
+            ideology_id,
             title, 
             description, 
             file_url, 
@@ -77,6 +78,7 @@ export async function POST(request: NextRequest) {
             updated_at
           )
           VALUES (
+            ${ideology.id},
             ${title},
             ${`Download the ${title} document`},
             ${uploadResult.filePath},
