@@ -26,9 +26,16 @@ interface Branch {
 interface Ideology {
   id: string
   title: string
-  description: string
+  content: string
   category: string
+  status: string
   created_at: string
+  download_id?: number
+  file_url?: string
+  file_name?: string
+  file_type?: string
+  file_size?: number
+  download_count?: number
 }
 
 interface Event {
@@ -720,7 +727,7 @@ export default function AdminDashboard() {
     setEditingIdeology(ideology.id)
     setNewIdeology({
       title: ideology.title,
-      content: ideology.description,
+      content: ideology.content,
       category: ideology.category,
     })
   }
@@ -1384,7 +1391,8 @@ export default function AdminDashboard() {
                           <span className="inline-block px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded-full mt-1">
                             {ideology.category}
                           </span>
-                          <p className="text-sm text-gray-600 mt-2 line-clamp-2">{ideology.description}</p>
+                          <p className="text-sm text-gray-600 mt-2 line-clamp-2">{ideology.content}</p>
+                          {ideology.file_url && <p className="text-xs text-green-600 mt-1">📄 Document attached</p>}
                         </div>
                         <div className="flex items-center gap-2">
                           <button
