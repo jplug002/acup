@@ -104,7 +104,7 @@ export default function AdminDashboard() {
     category: "political",
   })
 
-  const [ideologyFile, setIdeologyFile] = useState<string>("")
+  const [ideologyFile, setIdeologyFile] = useState<File | null>(null)
   const [ideologyFileName, setIdeologyFileName] = useState<string>("")
 
   const [newLeader, setNewLeader] = useState({
@@ -315,31 +315,9 @@ export default function AdminDashboard() {
         return
       }
 
-      try {
-        // Convert file to base64
-        const reader = new FileReader()
-        reader.onload = (e) => {
-          const base64 = e.target?.result as string
-          setIdeologyFile(base64)
-          setIdeologyFileName(file.name)
-          console.log("[v0] File loaded:", file.name, "Size:", file.size, "bytes")
-        }
-        reader.onerror = () => {
-          toast({
-            title: "Error",
-            description: "Failed to read file. Please try again.",
-            variant: "destructive",
-          })
-        }
-        reader.readAsDataURL(file)
-      } catch (error) {
-        console.error("[v0] Error processing file:", error)
-        toast({
-          title: "Error",
-          description: "Failed to process file. Please try another file.",
-          variant: "destructive",
-        })
-      }
+      setIdeologyFile(file)
+      setIdeologyFileName(file.name)
+      console.log("[v0] File selected:", file.name, "Size:", file.size, "bytes")
     }
   }
 
@@ -356,18 +334,19 @@ export default function AdminDashboard() {
         return
       }
 
+      const formData = new FormData()
+      formData.append("title", newIdeology.title)
+      formData.append("content", newIdeology.content)
+      formData.append("category", newIdeology.category)
+
+      if (ideologyFile) {
+        formData.append("file", ideologyFile)
+        console.log("[v0] Appending file to FormData:", ideologyFile.name)
+      }
+
       const response = await fetch("/api/admin/ideologies", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          title: newIdeology.title,
-          content: newIdeology.content,
-          category: newIdeology.category,
-          file: ideologyFile,
-          fileName: ideologyFileName,
-        }),
+        body: formData, // Send FormData instead of JSON
       })
 
       console.log("[v0] Response status:", response.status)
@@ -420,7 +399,7 @@ export default function AdminDashboard() {
         content: "",
         category: "political",
       })
-      setIdeologyFile("")
+      setIdeologyFile(null) // Reset File object
       setIdeologyFileName("")
       fetchData()
     } catch (error) {
@@ -856,7 +835,7 @@ export default function AdminDashboard() {
       content: "",
       category: "political",
     })
-    setIdeologyFile("")
+    setIdeologyFile(null) // Reset File object
     setIdeologyFileName("")
     setNewLeader({
       name: "",

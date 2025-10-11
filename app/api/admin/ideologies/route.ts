@@ -1,12 +1,54 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { neon } from "@neondatabase/serverless"
-import { saveBase64File, getBase64FileSize, getMimeType } from "@/lib/file-upload"
+import { writeFile, mkdir } from "fs/promises"
+import { join } from "path"
+import { existsSync } from "fs"
 
 const sql = neon(process.env.DATABASE_URL!)
 
 export const runtime = "nodejs"
 export const maxDuration = 60
 export const dynamic = "force-dynamic"
+
+async function saveUploadedFile(
+  file: File,
+): Promise<{ success: boolean; filePath?: string; fileName?: string; error?: string }> {
+  try {
+    const bytes = await file.arrayBuffer()
+    const buffer = Buffer.from(bytes)
+
+    // Create unique filename
+    const timestamp = Date.now()
+    const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_")
+    const fileName = `${timestamp}-${sanitizedName}`
+
+    // Ensure upload directory exists
+    const uploadDir = join(process.cwd(), "public", "uploads", "ideologies")
+    if (!existsSync(uploadDir)) {
+      await mkdir(uploadDir, { recursive: true })
+    }
+
+    // Save file
+    const filePath = join(uploadDir, fileName)
+    await writeFile(filePath, buffer)
+
+    // Return public URL path
+    const publicPath = `/uploads/ideologies/${fileName}`
+    console.log("[v0] File saved successfully:", publicPath)
+
+    return {
+      success: true,
+      filePath: publicPath,
+      fileName: file.name,
+    }
+  } catch (error) {
+    console.error("[v0] Error saving file:", error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    }
+  }
+}
 
 export async function GET() {
   try {
@@ -32,45 +74,24 @@ export async function POST(request: NextRequest) {
   try {
     console.log("[v0] Ideology POST request received")
 
-    const bodyText = await request.text()
-    const contentLength = bodyText.length
+    const formData = await request.formData()
+    const title = formData.get("title") as string
+    const content = formData.get("content") as string
+    const category = formData.get("category") as string
+    const file = formData.get("file") as File | null
 
-    console.log("[v0] Request body size:", contentLength, "bytes")
-
-    const maxSize = 20 * 1024 * 1024 // 20MB limit
-
-    if (contentLength > maxSize) {
-      console.log("[v0] Request too large:", contentLength)
-      return NextResponse.json({ error: "File too large. Maximum size is 10MB." }, { status: 413 })
-    }
-
-    let body
-    try {
-      body = JSON.parse(bodyText)
-    } catch (parseError) {
-      console.error("[v0] Error parsing request body:", parseError)
-      return NextResponse.json({ error: "Invalid request format" }, { status: 400 })
-    }
-
-    console.log("[v0] Received ideology data:", { title: body.title, hasFile: !!body.file })
-
-    const { title, content, file, fileName } = body
+    console.log("[v0] Received ideology data:", { title, category, hasFile: !!file })
 
     if (!title || !content) {
       console.log("[v0] Validation failed - missing required fields")
       return NextResponse.json({ error: "Title and content are required" }, { status: 400 })
     }
 
-    if (file) {
-      const base64Content = file.includes(",") ? file.split(",")[1] : file
-      const fileSizeBytes = Math.round((base64Content.length * 3) / 4)
-      console.log("[v0] File size:", fileSizeBytes, "bytes")
-
-      if (fileSizeBytes > 10 * 1024 * 1024) {
-        return NextResponse.json({ error: "File too large. Maximum size is 10MB." }, { status: 413 })
-      }
+    if (file && file.size > 10 * 1024 * 1024) {
+      return NextResponse.json({ error: "File too large. Maximum size is 10MB." }, { status: 413 })
     }
 
+    // Create ideology
     const result = await sql`
       INSERT INTO ideologies (title, content, status, created_at, updated_at)
       VALUES (${title}, ${content}, 'ACTIVE', NOW(), NOW())
@@ -80,11 +101,11 @@ export async function POST(request: NextRequest) {
     const ideology = result[0]
     console.log("[v0] Ideology created successfully:", ideology.id)
 
-    if (file && fileName) {
+    if (file && file.size > 0) {
       try {
-        console.log("[v0] Processing file upload:", fileName)
+        console.log("[v0] Processing file upload:", file.name, "Size:", file.size, "bytes")
 
-        const uploadResult = await saveBase64File(file, fileName, "ideologies")
+        const uploadResult = await saveUploadedFile(file)
 
         if (!uploadResult.success) {
           console.error("[v0] File upload failed:", uploadResult.error)
@@ -97,11 +118,12 @@ export async function POST(request: NextRequest) {
           )
         }
 
-        const fileSize = getBase64FileSize(file)
-        const fileType = getMimeType(fileName)
+        // Get file type from file object
+        const fileType = file.type || "application/octet-stream"
 
         console.log("[v0] File saved to:", uploadResult.filePath)
 
+        // Create download entry
         const downloadResult = await sql`
           INSERT INTO downloads (
             ideology_id,
@@ -124,7 +146,7 @@ export async function POST(request: NextRequest) {
             ${uploadResult.filePath},
             ${uploadResult.fileName},
             ${fileType},
-            ${fileSize},
+            ${file.size},
             ${"ideology"},
             ${"published"},
             ${0},
