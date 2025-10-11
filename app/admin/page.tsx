@@ -374,15 +374,20 @@ export default function AdminDashboard() {
       console.log("[v0] Response ok:", response.ok)
 
       if (!response.ok) {
+        const responseClone = response.clone()
         let errorMessage = "Unknown error"
 
         try {
           const errorData = await response.json()
           errorMessage = errorData.error || errorData.details || errorMessage
         } catch (parseError) {
-          // If JSON parsing fails, it's likely an HTML error page
-          const textError = await response.text()
-          console.error("[v0] Non-JSON error response:", textError)
+          // If JSON parsing fails, try reading as text from the clone
+          try {
+            const textError = await responseClone.text()
+            console.error("[v0] Non-JSON error response:", textError)
+          } catch (textError) {
+            console.error("[v0] Could not read error response")
+          }
 
           if (response.status === 413) {
             errorMessage = "File too large. Please use a file smaller than 10MB."
@@ -493,10 +498,26 @@ export default function AdminDashboard() {
         method: "DELETE",
       })
       if (response.ok) {
+        toast({
+          title: "Success",
+          description: "Event deleted successfully",
+        })
         fetchData()
+      } else {
+        const errorData = await response.json()
+        toast({
+          title: "Error",
+          description: `Failed to delete event: ${errorData.error || "Unknown error"}`,
+          variant: "destructive",
+        })
       }
     } catch (error) {
       console.error("Error deleting event:", error)
+      toast({
+        title: "Error",
+        description: "Failed to delete event. Please try again.",
+        variant: "destructive",
+      })
     }
   }
 
@@ -506,10 +527,26 @@ export default function AdminDashboard() {
         method: "DELETE",
       })
       if (response.ok) {
+        toast({
+          title: "Success",
+          description: "Branch deleted successfully",
+        })
         fetchData()
+      } else {
+        const errorData = await response.json()
+        toast({
+          title: "Error",
+          description: `Failed to delete branch: ${errorData.error || "Unknown error"}`,
+          variant: "destructive",
+        })
       }
     } catch (error) {
       console.error("Error deleting branch:", error)
+      toast({
+        title: "Error",
+        description: "Failed to delete branch. Please try again.",
+        variant: "destructive",
+      })
     }
   }
 
@@ -519,10 +556,26 @@ export default function AdminDashboard() {
         method: "DELETE",
       })
       if (response.ok) {
+        toast({
+          title: "Success",
+          description: "Ideology deleted successfully",
+        })
         fetchData()
+      } else {
+        const errorData = await response.json()
+        toast({
+          title: "Error",
+          description: `Failed to delete ideology: ${errorData.error || "Unknown error"}`,
+          variant: "destructive",
+        })
       }
     } catch (error) {
       console.error("Error deleting ideology:", error)
+      toast({
+        title: "Error",
+        description: "Failed to delete ideology. Please try again.",
+        variant: "destructive",
+      })
     }
   }
 
@@ -532,10 +585,26 @@ export default function AdminDashboard() {
         method: "DELETE",
       })
       if (response.ok) {
+        toast({
+          title: "Success",
+          description: "Leadership profile deleted successfully",
+        })
         fetchData()
+      } else {
+        const errorData = await response.json()
+        toast({
+          title: "Error",
+          description: `Failed to delete leader: ${errorData.error || "Unknown error"}`,
+          variant: "destructive",
+        })
       }
     } catch (error) {
       console.error("Error deleting leader:", error)
+      toast({
+        title: "Error",
+        description: "Failed to delete leader. Please try again.",
+        variant: "destructive",
+      })
     }
   }
 
@@ -552,6 +621,7 @@ export default function AdminDashboard() {
           description: newEvent.description,
           event_date: newEvent.date, // Changed from 'date' to 'event_date' to match database
           location: newEvent.location,
+          registration_required: newEvent.registration_required,
         }),
       })
 

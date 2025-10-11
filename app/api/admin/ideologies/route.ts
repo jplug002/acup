@@ -4,59 +4,52 @@ import { saveBase64File, getBase64FileSize, getMimeType } from "@/lib/file-uploa
 
 const sql = neon(process.env.DATABASE_URL!)
 
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: "15mb",
-    },
-  },
-}
-
 export const runtime = "nodejs"
-export const maxDuration = 60 // 60 seconds timeout
+export const maxDuration = 60
 export const dynamic = "force-dynamic"
 
 export async function GET() {
   try {
+    console.log("[v0] Fetching ideologies...")
+
     const ideologies = await sql`
-      SELECT 
-        i.*,
-        d.id as download_id,
-        d.file_url,
-        d.file_name,
-        d.file_type,
-        d.file_size,
-        d.download_count
-      FROM ideologies i
-      LEFT JOIN downloads d ON d.ideology_id = i.id AND d.status = 'published'
-      ORDER BY i.created_at DESC
+      SELECT * FROM ideologies 
+      ORDER BY created_at DESC
     `
+
+    console.log("[v0] Fetched ideologies:", ideologies.length)
     return NextResponse.json(ideologies)
   } catch (error) {
     console.error("[v0] Error fetching ideologies:", error)
-    return NextResponse.json({ error: "Failed to fetch ideologies" }, { status: 500 })
+    return NextResponse.json(
+      { error: "Failed to fetch ideologies", details: error instanceof Error ? error.message : "Unknown error" },
+      { status: 500 },
+    )
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const contentLength = request.headers.get("content-length")
-    const maxSize = 15 * 1024 * 1024 // 15MB limit
+    console.log("[v0] Ideology POST request received")
 
-    if (contentLength && Number.parseInt(contentLength) > maxSize) {
+    const bodyText = await request.text()
+    const contentLength = bodyText.length
+
+    console.log("[v0] Request body size:", contentLength, "bytes")
+
+    const maxSize = 20 * 1024 * 1024 // 20MB limit
+
+    if (contentLength > maxSize) {
       console.log("[v0] Request too large:", contentLength)
       return NextResponse.json({ error: "File too large. Maximum size is 10MB." }, { status: 413 })
     }
 
     let body
     try {
-      body = await request.json()
+      body = JSON.parse(bodyText)
     } catch (parseError) {
       console.error("[v0] Error parsing request body:", parseError)
-      return NextResponse.json(
-        { error: "Request too large or invalid. Please use a file smaller than 10MB." },
-        { status: 413 },
-      )
+      return NextResponse.json({ error: "Invalid request format" }, { status: 400 })
     }
 
     console.log("[v0] Received ideology data:", { title: body.title, hasFile: !!body.file })
@@ -69,11 +62,9 @@ export async function POST(request: NextRequest) {
     }
 
     if (file) {
-      const fileSize = getBase64FileSize(file)
-      console.log("[v0] File size:", fileSize)
-
       const base64Content = file.includes(",") ? file.split(",")[1] : file
       const fileSizeBytes = Math.round((base64Content.length * 3) / 4)
+      console.log("[v0] File size:", fileSizeBytes, "bytes")
 
       if (fileSizeBytes > 10 * 1024 * 1024) {
         return NextResponse.json({ error: "File too large. Maximum size is 10MB." }, { status: 413 })
@@ -87,7 +78,7 @@ export async function POST(request: NextRequest) {
     `
 
     const ideology = result[0]
-    console.log("[v0] Ideology created successfully:", ideology)
+    console.log("[v0] Ideology created successfully:", ideology.id)
 
     if (file && fileName) {
       try {
@@ -143,33 +134,20 @@ export async function POST(request: NextRequest) {
           RETURNING *
         `
 
-        console.log("[v0] Download entry created:", downloadResult[0])
+        console.log("[v0] Download entry created:", downloadResult[0].id)
       } catch (downloadError) {
         console.error("[v0] Error creating download entry:", downloadError)
-        return NextResponse.json(
-          {
-            error: "Failed to save document",
-            details: downloadError instanceof Error ? downloadError.message : "Unknown error",
-          },
-          { status: 500 },
-        )
+        // Don't fail the whole request if download entry fails
+        console.log("[v0] Continuing despite download entry error")
       }
-    } else {
-      console.log("[v0] No file uploaded with ideology")
     }
 
     return NextResponse.json(ideology, { status: 201 })
   } catch (error) {
-    console.error("[v0] Detailed error creating ideology:", {
+    console.error("[v0] Error creating ideology:", {
       message: error instanceof Error ? error.message : "Unknown error",
       stack: error instanceof Error ? error.stack : undefined,
     })
-
-    if (error instanceof Error) {
-      if (error.message.includes("payload") || error.message.includes("body")) {
-        return NextResponse.json({ error: "Request too large. Please use a smaller file (max 10MB)." }, { status: 413 })
-      }
-    }
 
     return NextResponse.json(
       {
