@@ -4,6 +4,18 @@ import { saveBase64File, getBase64FileSize, getMimeType } from "@/lib/file-uploa
 
 const sql = neon(process.env.DATABASE_URL!)
 
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: "15mb",
+    },
+  },
+}
+
+export const runtime = "nodejs"
+export const maxDuration = 60 // 60 seconds timeout
+export const dynamic = "force-dynamic"
+
 export async function GET() {
   try {
     const ideologies = await sql`
@@ -21,14 +33,32 @@ export async function GET() {
     `
     return NextResponse.json(ideologies)
   } catch (error) {
-    console.error("Error fetching ideologies:", error)
+    console.error("[v0] Error fetching ideologies:", error)
     return NextResponse.json({ error: "Failed to fetch ideologies" }, { status: 500 })
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
+    const contentLength = request.headers.get("content-length")
+    const maxSize = 15 * 1024 * 1024 // 15MB limit
+
+    if (contentLength && Number.parseInt(contentLength) > maxSize) {
+      console.log("[v0] Request too large:", contentLength)
+      return NextResponse.json({ error: "File too large. Maximum size is 10MB." }, { status: 413 })
+    }
+
+    let body
+    try {
+      body = await request.json()
+    } catch (parseError) {
+      console.error("[v0] Error parsing request body:", parseError)
+      return NextResponse.json(
+        { error: "Request too large or invalid. Please use a file smaller than 10MB." },
+        { status: 413 },
+      )
+    }
+
     console.log("[v0] Received ideology data:", { title: body.title, hasFile: !!body.file })
 
     const { title, content, file, fileName } = body
@@ -36,6 +66,18 @@ export async function POST(request: NextRequest) {
     if (!title || !content) {
       console.log("[v0] Validation failed - missing required fields")
       return NextResponse.json({ error: "Title and content are required" }, { status: 400 })
+    }
+
+    if (file) {
+      const fileSize = getBase64FileSize(file)
+      console.log("[v0] File size:", fileSize)
+
+      const base64Content = file.includes(",") ? file.split(",")[1] : file
+      const fileSizeBytes = Math.round((base64Content.length * 3) / 4)
+
+      if (fileSizeBytes > 10 * 1024 * 1024) {
+        return NextResponse.json({ error: "File too large. Maximum size is 10MB." }, { status: 413 })
+      }
     }
 
     const result = await sql`
@@ -51,7 +93,6 @@ export async function POST(request: NextRequest) {
       try {
         console.log("[v0] Processing file upload:", fileName)
 
-        // Save file to public/uploads/ideologies folder
         const uploadResult = await saveBase64File(file, fileName, "ideologies")
 
         if (!uploadResult.success) {
@@ -65,7 +106,6 @@ export async function POST(request: NextRequest) {
           )
         }
 
-        // Get file metadata
         const fileSize = getBase64FileSize(file)
         const fileType = getMimeType(fileName)
 
@@ -106,7 +146,6 @@ export async function POST(request: NextRequest) {
         console.log("[v0] Download entry created:", downloadResult[0])
       } catch (downloadError) {
         console.error("[v0] Error creating download entry:", downloadError)
-        // Return error since file upload is part of the request
         return NextResponse.json(
           {
             error: "Failed to save document",
@@ -125,6 +164,12 @@ export async function POST(request: NextRequest) {
       message: error instanceof Error ? error.message : "Unknown error",
       stack: error instanceof Error ? error.stack : undefined,
     })
+
+    if (error instanceof Error) {
+      if (error.message.includes("payload") || error.message.includes("body")) {
+        return NextResponse.json({ error: "Request too large. Please use a smaller file (max 10MB)." }, { status: 413 })
+      }
+    }
 
     return NextResponse.json(
       {

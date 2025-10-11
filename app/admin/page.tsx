@@ -374,11 +374,29 @@ export default function AdminDashboard() {
       console.log("[v0] Response ok:", response.ok)
 
       if (!response.ok) {
-        const errorData = await response.json()
-        console.error("[v0] API Error:", errorData)
+        let errorMessage = "Unknown error"
+
+        try {
+          const errorData = await response.json()
+          errorMessage = errorData.error || errorData.details || errorMessage
+        } catch (parseError) {
+          // If JSON parsing fails, it's likely an HTML error page
+          const textError = await response.text()
+          console.error("[v0] Non-JSON error response:", textError)
+
+          if (response.status === 413) {
+            errorMessage = "File too large. Please use a file smaller than 10MB."
+          } else if (response.status === 500) {
+            errorMessage = "Server error. Please try again or use a smaller file."
+          } else {
+            errorMessage = `Server returned error ${response.status}`
+          }
+        }
+
+        console.error("[v0] API Error:", errorMessage)
         toast({
           title: "Error",
-          description: `Failed to create ideology: ${errorData.error || "Unknown error"}`,
+          description: errorMessage,
           variant: "destructive",
         })
         return
@@ -404,7 +422,7 @@ export default function AdminDashboard() {
       console.error("[v0] Error creating ideology:", error)
       toast({
         title: "Error",
-        description: "Failed to create ideology. Please try again.",
+        description: "Failed to create ideology. Please try again with a smaller file.",
         variant: "destructive",
       })
     }
