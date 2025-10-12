@@ -1,11 +1,3 @@
-/**
- * SMS Service using Africa's Talking API
- *
- * Configuration required:
- * - AFRICASTALKING_API_KEY: Your API key
- * - AFRICASTALKING_USERNAME: Your username (use 'sandbox' for testing)
- */
-
 interface SMSOptions {
   to: string | string[]
   message: string
@@ -119,4 +111,5 @@ export class SMSService {
   }
 }
 
-export const smsService = new SMSService()
+const smsServiceInstance = new SMSService()
+export { smsServiceInstance as smsService }

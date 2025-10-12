@@ -1,13 +1,3 @@
-/**
- * Email Service using Gmail SMTP
- *
- * Configuration required:
- * - SMTP_HOST: Gmail SMTP server (smtp.gmail.com)
- * - SMTP_PORT: Port number (587 for TLS)
- * - SMTP_USER: Your Gmail address
- * - SMTP_PASSWORD: Your Gmail app password (not regular password)
- */
-
 import nodemailer from "nodemailer"
 
 interface EmailOptions {
@@ -122,4 +112,5 @@ export class MailService {
   }
 }
 
-export const mailService = new MailService()
+const mailServiceInstance = new MailService()
+export { mailServiceInstance as mailService }

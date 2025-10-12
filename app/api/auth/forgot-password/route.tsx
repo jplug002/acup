@@ -36,6 +36,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Too many reset requests. Please try again later." }, { status: 429 })
     }
 
+    console.log("[v0] Password reset requested for:", email)
+    console.log(
+      "[v0] SMTP configured:",
+      !!process.env.SMTP_HOST && !!process.env.SMTP_USER && !!process.env.SMTP_PASSWORD,
+    )
+
     // Generate reset token
     const token = await createPasswordResetToken(email)
 
@@ -52,6 +58,7 @@ export async function POST(request: NextRequest) {
       console.log("[v0] Password reset - Base URL:", baseUrl)
       console.log("[v0] Password reset - Full link:", resetLink)
 
+      console.log("[v0] Attempting to send email to:", email)
       const emailResult = await mailService.sendEmail({
         to: email,
         subject: "Reset Your ACUP Password",
@@ -81,14 +88,12 @@ ACUP Team`,
     <tr>
       <td align="center">
         <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-           Header 
           <tr>
             <td style="background-color: #1e40af; padding: 30px; text-align: center;">
               <h1 style="color: #ffffff; margin: 0; font-size: 24px;">ACUP</h1>
             </td>
           </tr>
           
-           Content 
           <tr>
             <td style="padding: 40px 30px;">
               <h2 style="color: #333333; margin: 0 0 20px 0; font-size: 20px;">Reset Your Password</h2>
@@ -96,7 +101,6 @@ ACUP Team`,
                 You requested to reset your password for your ACUP account. Click the button below to create a new password.
               </p>
               
-               Button 
               <table width="100%" cellpadding="0" cellspacing="0" style="margin: 30px 0;">
                 <tr>
                   <td align="center">
@@ -118,7 +122,6 @@ ACUP Team`,
             </td>
           </tr>
           
-           Footer 
           <tr>
             <td style="background-color: #f8f9fa; padding: 20px 30px; text-align: center;">
               <p style="color: #999999; margin: 0; font-size: 12px;">
@@ -135,10 +138,18 @@ ACUP Team`,
         `,
       })
 
+      console.log("[v0] Email send result:", emailResult)
+
       if (!emailResult.success) {
-        console.error("[Password Reset] Failed to send email:", emailResult.error)
-        // Don't reveal email sending failure to user for security
+        console.error("[v0] Failed to send password reset email:", emailResult.error)
+        if (process.env.NODE_ENV === "development") {
+          return NextResponse.json({ error: `Failed to send email: ${emailResult.error}` }, { status: 500 })
+        }
+      } else {
+        console.log("[v0] Password reset email sent successfully")
       }
+    } else {
+      console.log("[v0] Failed to create password reset token for:", email)
     }
 
     // Always return success (don't reveal if email exists)
@@ -146,7 +157,7 @@ ACUP Team`,
       message: "If an account exists with this email, you will receive a password reset link.",
     })
   } catch (error) {
-    console.error("[Password Reset] Error:", error)
+    console.error("[v0] Password Reset Error:", error)
     return NextResponse.json({ error: "An error occurred. Please try again." }, { status: 500 })
   }
 }
