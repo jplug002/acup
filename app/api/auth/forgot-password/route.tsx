@@ -40,7 +40,17 @@ export async function POST(request: NextRequest) {
     const token = await createPasswordResetToken(email)
 
     if (token) {
-      const resetLink = `${process.env.NEXT_PUBLIC_APP_URL || process.env.PUBLIC_URL || "http://localhost:3000"}/auth/reset-password?token=${token}`
+      const host = request.headers.get("host")
+      const protocol = request.headers.get("x-forwarded-proto") || "https"
+      const baseUrl =
+        process.env.NEXT_PUBLIC_APP_URL ||
+        process.env.PUBLIC_URL ||
+        (host ? `${protocol}://${host}` : "http://localhost:3000")
+
+      const resetLink = `${baseUrl}/auth/reset-password?token=${token}`
+
+      console.log("[v0] Password reset - Base URL:", baseUrl)
+      console.log("[v0] Password reset - Full link:", resetLink)
 
       const emailResult = await mailService.sendEmail({
         to: email,

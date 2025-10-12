@@ -1,6 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { neon } from "@neondatabase/serverless"
 import { put } from "@vercel/blob"
+import formidable from "formidable"
+import { readFile } from "fs/promises"
 
 const sql = neon(process.env.DATABASE_URL!)
 
@@ -28,6 +30,48 @@ export async function GET() {
   }
 }
 
+async function parseFormData(request: NextRequest): Promise<{
+  fields: formidable.Fields
+  files: formidable.Files
+}> {
+  const form = formidable({
+    maxFileSize: 10 * 1024 * 1024, // 10MB
+    keepExtensions: true,
+  })
+
+  // Convert NextRequest to Node.js IncomingMessage format
+  const arrayBuffer = await request.arrayBuffer()
+  const buffer = Buffer.from(arrayBuffer)
+
+  return new Promise((resolve, reject) => {
+    // Create a mock request object that formidable can parse
+    const mockReq = {
+      headers: Object.fromEntries(request.headers.entries()),
+      method: request.method,
+      url: request.url,
+    } as any
+
+    // Parse the buffer directly
+    form.parse(mockReq, (err, fields, files) => {
+      if (err) {
+        reject(err)
+        return
+      }
+      resolve({ fields, files })
+    })
+
+    // Write the buffer to formidable
+    mockReq.emit = () => {}
+    mockReq.on = (event: string, callback: any) => {
+      if (event === "data") {
+        callback(buffer)
+      } else if (event === "end") {
+        callback()
+      }
+    }
+  })
+}
+
 export async function POST(request: NextRequest) {
   try {
     console.log("[v0] Ideology POST request received")
@@ -40,11 +84,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const formData = await request.formData()
-    const title = formData.get("title") as string
-    const content = formData.get("content") as string
-    const category = formData.get("category") as string
-    const file = formData.get("file") as File | null
+    const { fields, files } = await parseFormData(request)
+
+    const title = Array.isArray(fields.title) ? fields.title[0] : fields.title
+    const content = Array.isArray(fields.content) ? fields.content[0] : fields.content
+    const category = Array.isArray(fields.category) ? fields.category[0] : fields.category
+    const fileArray = Array.isArray(files.file) ? files.file : files.file ? [files.file] : []
+    const file = fileArray[0]
 
     console.log("[v0] Received ideology data:", { title, category, hasFile: !!file })
 
@@ -67,24 +113,27 @@ export async function POST(request: NextRequest) {
     const ideology = result[0]
     console.log("[v0] Ideology created successfully:", ideology.id)
 
+    let blobUrl = null
+
     if (file && file.size > 0) {
       try {
-        console.log("[v0] Uploading file to Vercel Blob:", file.name, "Size:", file.size, "bytes")
-        console.log("[v0] File type:", file.type)
+        console.log("[v0] Uploading file to Vercel Blob:", file.originalFilename, "Size:", file.size, "bytes")
 
-        const blobPath = `ideologies/${ideology.id}/${file.name}`
+        // Read the file from the temporary location
+        const fileBuffer = await readFile(file.filepath)
+        const fileName = file.originalFilename || "document.pdf"
+        const blobPath = `ideologies/${ideology.id}/${fileName}`
+
         console.log("[v0] Blob path:", blobPath)
 
-        // Upload to Vercel Blob with organized path
-        const blob = await put(blobPath, file, {
+        // Upload to Vercel Blob
+        const blob = await put(blobPath, fileBuffer, {
           access: "public",
+          contentType: file.mimetype || "application/octet-stream",
         })
 
+        blobUrl = blob.url
         console.log("[v0] File uploaded successfully to Blob:", blob.url)
-        console.log("[v0] Blob details:", { url: blob.url, pathname: blob.pathname, size: blob.size })
-
-        // Get file type from file object
-        const fileType = file.type || "application/octet-stream"
 
         // Create download entry with Blob URL
         const downloadResult = await sql`
@@ -107,8 +156,8 @@ export async function POST(request: NextRequest) {
             ${title},
             ${`Download the ${title} document`},
             ${blob.url},
-            ${file.name},
-            ${fileType},
+            ${fileName},
+            ${file.mimetype || "application/octet-stream"},
             ${file.size},
             ${"ideology"},
             ${"published"},
@@ -121,13 +170,7 @@ export async function POST(request: NextRequest) {
 
         console.log("[v0] Download entry created:", downloadResult[0].id)
       } catch (uploadError) {
-        console.error("[v0] Error uploading file or creating download entry:", uploadError)
-        console.error("[v0] Upload error details:", {
-          name: uploadError instanceof Error ? uploadError.name : "Unknown",
-          message: uploadError instanceof Error ? uploadError.message : "Unknown error",
-          stack: uploadError instanceof Error ? uploadError.stack : undefined,
-        })
-        // Return error if file upload fails
+        console.error("[v0] Error uploading file:", uploadError)
         return NextResponse.json(
           {
             error: "Failed to upload document",
@@ -138,7 +181,13 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return NextResponse.json(ideology, { status: 201 })
+    return NextResponse.json(
+      {
+        ...ideology,
+        fileUrl: blobUrl,
+      },
+      { status: 201 },
+    )
   } catch (error) {
     console.error("[v0] Error creating ideology:", {
       message: error instanceof Error ? error.message : "Unknown error",
