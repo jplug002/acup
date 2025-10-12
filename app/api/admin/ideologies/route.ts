@@ -1,54 +1,12 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { neon } from "@neondatabase/serverless"
-import { writeFile, mkdir } from "fs/promises"
-import { join } from "path"
-import { existsSync } from "fs"
+import { put } from "@vercel/blob"
 
 const sql = neon(process.env.DATABASE_URL!)
 
 export const runtime = "nodejs"
 export const maxDuration = 60
 export const dynamic = "force-dynamic"
-
-async function saveUploadedFile(
-  file: File,
-): Promise<{ success: boolean; filePath?: string; fileName?: string; error?: string }> {
-  try {
-    const bytes = await file.arrayBuffer()
-    const buffer = Buffer.from(bytes)
-
-    // Create unique filename
-    const timestamp = Date.now()
-    const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_")
-    const fileName = `${timestamp}-${sanitizedName}`
-
-    // Ensure upload directory exists
-    const uploadDir = join(process.cwd(), "public", "uploads", "ideologies")
-    if (!existsSync(uploadDir)) {
-      await mkdir(uploadDir, { recursive: true })
-    }
-
-    // Save file
-    const filePath = join(uploadDir, fileName)
-    await writeFile(filePath, buffer)
-
-    // Return public URL path
-    const publicPath = `/uploads/ideologies/${fileName}`
-    console.log("[v0] File saved successfully:", publicPath)
-
-    return {
-      success: true,
-      filePath: publicPath,
-      fileName: file.name,
-    }
-  } catch (error) {
-    console.error("[v0] Error saving file:", error)
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
-    }
-  }
-}
 
 export async function GET() {
   try {
@@ -73,6 +31,14 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     console.log("[v0] Ideology POST request received")
+
+    if (!process.env.BLOB_READ_WRITE_TOKEN) {
+      console.error("[v0] BLOB_READ_WRITE_TOKEN is not configured")
+      return NextResponse.json(
+        { error: "Blob storage is not configured. Please check environment variables." },
+        { status: 500 },
+      )
+    }
 
     const formData = await request.formData()
     const title = formData.get("title") as string
@@ -103,27 +69,24 @@ export async function POST(request: NextRequest) {
 
     if (file && file.size > 0) {
       try {
-        console.log("[v0] Processing file upload:", file.name, "Size:", file.size, "bytes")
+        console.log("[v0] Uploading file to Vercel Blob:", file.name, "Size:", file.size, "bytes")
+        console.log("[v0] File type:", file.type)
 
-        const uploadResult = await saveUploadedFile(file)
+        const blobPath = `ideologies/${ideology.id}/${file.name}`
+        console.log("[v0] Blob path:", blobPath)
 
-        if (!uploadResult.success) {
-          console.error("[v0] File upload failed:", uploadResult.error)
-          return NextResponse.json(
-            {
-              error: "Failed to upload document",
-              details: uploadResult.error,
-            },
-            { status: 500 },
-          )
-        }
+        // Upload to Vercel Blob with organized path
+        const blob = await put(blobPath, file, {
+          access: "public",
+        })
+
+        console.log("[v0] File uploaded successfully to Blob:", blob.url)
+        console.log("[v0] Blob details:", { url: blob.url, pathname: blob.pathname, size: blob.size })
 
         // Get file type from file object
         const fileType = file.type || "application/octet-stream"
 
-        console.log("[v0] File saved to:", uploadResult.filePath)
-
-        // Create download entry
+        // Create download entry with Blob URL
         const downloadResult = await sql`
           INSERT INTO downloads (
             ideology_id,
@@ -143,8 +106,8 @@ export async function POST(request: NextRequest) {
             ${ideology.id},
             ${title},
             ${`Download the ${title} document`},
-            ${uploadResult.filePath},
-            ${uploadResult.fileName},
+            ${blob.url},
+            ${file.name},
             ${fileType},
             ${file.size},
             ${"ideology"},
@@ -157,10 +120,21 @@ export async function POST(request: NextRequest) {
         `
 
         console.log("[v0] Download entry created:", downloadResult[0].id)
-      } catch (downloadError) {
-        console.error("[v0] Error creating download entry:", downloadError)
-        // Don't fail the whole request if download entry fails
-        console.log("[v0] Continuing despite download entry error")
+      } catch (uploadError) {
+        console.error("[v0] Error uploading file or creating download entry:", uploadError)
+        console.error("[v0] Upload error details:", {
+          name: uploadError instanceof Error ? uploadError.name : "Unknown",
+          message: uploadError instanceof Error ? uploadError.message : "Unknown error",
+          stack: uploadError instanceof Error ? uploadError.stack : undefined,
+        })
+        // Return error if file upload fails
+        return NextResponse.json(
+          {
+            error: "Failed to upload document",
+            details: uploadError instanceof Error ? uploadError.message : "Unknown error",
+          },
+          { status: 500 },
+        )
       }
     }
 
