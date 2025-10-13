@@ -507,24 +507,14 @@ export default function DashboardPage() {
                       <Label htmlFor="date_of_birth" className="text-sm sm:text-base">
                         Date of Birth
                       </Label>
-                      {!isEditing && profileData.date_of_birth ? (
-                        <div className="mt-1 px-3 py-2 bg-gray-50 rounded-md text-sm sm:text-base text-gray-900">
-                          {new Date(profileData.date_of_birth).toLocaleDateString("en-US", {
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                          })}
-                        </div>
-                      ) : (
-                        <Input
-                          id="date_of_birth"
-                          type="date"
-                          value={profileData.date_of_birth || ""}
-                          onChange={(e) => setProfileData({ ...profileData, date_of_birth: e.target.value })}
-                          disabled={!isEditing}
-                          className="mt-1 text-sm sm:text-base"
-                        />
-                      )}
+                      <Input
+                        id="date_of_birth"
+                        type="date"
+                        value={profileData.date_of_birth || ""}
+                        onChange={(e) => setProfileData({ ...profileData, date_of_birth: e.target.value })}
+                        disabled={!isEditing}
+                        className="mt-1 text-sm sm:text-base"
+                      />
                     </div>
                     <div>
                       <Label htmlFor="gender" className="text-sm sm:text-base">
