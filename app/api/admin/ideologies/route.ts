@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { neon } from "@neondatabase/serverless"
 import { put } from "@vercel/blob"
+import { Buffer } from "buffer"
 
 const sql = neon(process.env.DATABASE_URL!)
 
@@ -31,6 +32,14 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     console.log("[v0] Ideology POST request received")
+
+    if (!process.env.BLOB_READ_WRITE_TOKEN) {
+      console.error("[v0] BLOB_READ_WRITE_TOKEN is not configured!")
+      return NextResponse.json(
+        { error: "Blob storage is not configured. Please add BLOB_READ_WRITE_TOKEN to environment variables." },
+        { status: 500 },
+      )
+    }
 
     const formData = await request.formData()
 
@@ -64,14 +73,23 @@ export async function POST(request: NextRequest) {
 
     if (file && file.size > 0) {
       try {
-        console.log("[v0] Uploading file to Vercel Blob:", file.name, "Size:", file.size, "bytes")
+        console.log("[v0] Uploading file to Vercel Blob:", {
+          name: file.name,
+          size: file.size,
+          type: file.type,
+        })
 
         const blobPath = `ideologies/${ideology.id}/${file.name}`
         console.log("[v0] Blob path:", blobPath)
 
-        // Upload directly to Vercel Blob
-        const blob = await put(blobPath, file, {
+        const arrayBuffer = await file.arrayBuffer()
+        const buffer = Buffer.from(arrayBuffer)
+        console.log("[v0] File converted to buffer, size:", buffer.length)
+
+        // Upload to Vercel Blob
+        const blob = await put(blobPath, buffer, {
           access: "public",
+          contentType: file.type || "application/pdf",
         })
 
         blobUrl = blob.url
@@ -111,7 +129,12 @@ export async function POST(request: NextRequest) {
 
         console.log("[v0] Download entry created successfully")
       } catch (uploadError) {
-        console.error("[v0] Error uploading file:", uploadError)
+        console.error("[v0] Detailed upload error:", {
+          message: uploadError instanceof Error ? uploadError.message : "Unknown error",
+          stack: uploadError instanceof Error ? uploadError.stack : undefined,
+          name: uploadError instanceof Error ? uploadError.name : undefined,
+        })
+
         return NextResponse.json(
           {
             error: "Failed to upload document",
