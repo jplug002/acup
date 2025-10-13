@@ -346,7 +346,7 @@ export default function AdminDashboard() {
 
       const response = await fetch("/api/admin/ideologies", {
         method: "POST",
-        body: formData, // Send FormData instead of JSON
+        body: formData,
       })
 
       console.log("[v0] Response status:", response.status)
@@ -355,12 +355,17 @@ export default function AdminDashboard() {
       if (!response.ok) {
         const responseClone = response.clone()
         let errorMessage = "Unknown error"
+        let errorDetails = ""
+        let errorHint = ""
 
         try {
           const errorData = await response.json()
-          errorMessage = errorData.error || errorData.details || errorMessage
+          errorMessage = errorData.error || "Unknown error"
+          errorDetails = errorData.details || ""
+          errorHint = errorData.hint || ""
+
+          console.error("[v0] API Error Response:", errorData)
         } catch (parseError) {
-          // If JSON parsing fails, try reading as text from the clone
           try {
             const textError = await responseClone.text()
             console.error("[v0] Non-JSON error response:", textError)
@@ -377,10 +382,19 @@ export default function AdminDashboard() {
           }
         }
 
-        console.error("[v0] API Error:", errorMessage)
+        const fullErrorMessage = [
+          errorMessage,
+          errorDetails && `Details: ${errorDetails}`,
+          errorHint && `Hint: ${errorHint}`,
+        ]
+          .filter(Boolean)
+          .join("\n")
+
+        console.error("[v0] Full error message:", fullErrorMessage)
+
         toast({
-          title: "Error",
-          description: errorMessage,
+          title: "Error Creating Ideology",
+          description: fullErrorMessage,
           variant: "destructive",
         })
         return
@@ -399,14 +413,14 @@ export default function AdminDashboard() {
         content: "",
         category: "political",
       })
-      setIdeologyFile(null) // Reset File object
+      setIdeologyFile(null)
       setIdeologyFileName("")
       fetchData()
     } catch (error) {
       console.error("[v0] Error creating ideology:", error)
       toast({
         title: "Error",
-        description: "Failed to create ideology. Please try again with a smaller file.",
+        description: `Failed to create ideology: ${error instanceof Error ? error.message : "Unknown error"}`,
         variant: "destructive",
       })
     }

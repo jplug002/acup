@@ -33,14 +33,6 @@ export async function POST(request: NextRequest) {
   try {
     console.log("[v0] Ideology POST request received")
 
-    if (!process.env.BLOB_READ_WRITE_TOKEN) {
-      console.error("[v0] BLOB_READ_WRITE_TOKEN is not configured!")
-      return NextResponse.json(
-        { error: "Blob storage is not configured. Please add BLOB_READ_WRITE_TOKEN to environment variables." },
-        { status: 500 },
-      )
-    }
-
     const formData = await request.formData()
 
     const title = formData.get("title") as string
@@ -73,29 +65,34 @@ export async function POST(request: NextRequest) {
 
     if (file && file.size > 0) {
       try {
-        console.log("[v0] Uploading file to Vercel Blob:", {
+        console.log("[v0] Starting file upload:", {
           name: file.name,
           size: file.size,
           type: file.type,
         })
 
-        const blobPath = `ideologies/${ideology.id}/${file.name}`
+        const timestamp = Date.now()
+        const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_")
+        const blobPath = `ideologies-${ideology.id}-${timestamp}-${sanitizedFileName}`
+
         console.log("[v0] Blob path:", blobPath)
 
+        // Convert file to buffer
         const arrayBuffer = await file.arrayBuffer()
         const buffer = Buffer.from(arrayBuffer)
         console.log("[v0] File converted to buffer, size:", buffer.length)
 
-        // Upload to Vercel Blob
+        // Upload to Vercel Blob with explicit options
+        console.log("[v0] Calling Vercel Blob put()...")
         const blob = await put(blobPath, buffer, {
           access: "public",
           contentType: file.type || "application/pdf",
         })
 
         blobUrl = blob.url
-        console.log("[v0] File uploaded successfully to Blob:", blob.url)
+        console.log("[v0] File uploaded successfully:", blob.url)
 
-        // Create download entry with Blob URL
+        // Create download entry
         await sql`
           INSERT INTO downloads (
             ideology_id,
@@ -127,18 +124,27 @@ export async function POST(request: NextRequest) {
           )
         `
 
-        console.log("[v0] Download entry created successfully")
+        console.log("[v0] Download entry created")
       } catch (uploadError) {
-        console.error("[v0] Detailed upload error:", {
-          message: uploadError instanceof Error ? uploadError.message : "Unknown error",
-          stack: uploadError instanceof Error ? uploadError.stack : undefined,
-          name: uploadError instanceof Error ? uploadError.name : undefined,
+        const errorMessage = uploadError instanceof Error ? uploadError.message : "Unknown error"
+        const errorStack = uploadError instanceof Error ? uploadError.stack : undefined
+        const errorName = uploadError instanceof Error ? uploadError.name : undefined
+
+        console.error("[v0] BLOB UPLOAD FAILED:", {
+          message: errorMessage,
+          name: errorName,
+          stack: errorStack,
+          tokenConfigured: !!process.env.BLOB_READ_WRITE_TOKEN,
         })
 
+        // Return detailed error to help debug
         return NextResponse.json(
           {
-            error: "Failed to upload document",
-            details: uploadError instanceof Error ? uploadError.message : "Unknown error",
+            error: "Failed to upload document to Blob storage",
+            details: errorMessage,
+            hint: !process.env.BLOB_READ_WRITE_TOKEN
+              ? "BLOB_READ_WRITE_TOKEN environment variable is not configured"
+              : "Check Vercel deployment logs for detailed error information",
           },
           { status: 500 },
         )
