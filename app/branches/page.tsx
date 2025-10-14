@@ -27,29 +27,54 @@ interface ContactInfo {
 
 async function getBranches(): Promise<Branch[]> {
   try {
+    if (!process.env.DATABASE_URL) {
+      console.error("DATABASE_URL is not defined")
+      return []
+    }
+
     const branches = await sql`
       SELECT id, name, location, country, contact_info, status, created_at
       FROM branches 
       WHERE status = 'ACTIVE'
       ORDER BY name ASC
     `
+
+    console.log(`[Branches] Fetched ${branches.length} branches`)
     return branches as Branch[]
   } catch (error) {
-    console.error("Error fetching branches:", error)
+    console.error("[Branches] Error fetching branches:", error)
     return []
   }
 }
 
-function parseContactInfo(contactInfoStr: string): ContactInfo {
+function parseContactInfo(contactInfoStr: string | null | undefined): ContactInfo {
+  if (!contactInfoStr) {
+    return {}
+  }
+
   try {
-    return JSON.parse(contactInfoStr)
-  } catch {
+    // Handle case where contact_info might already be an object
+    if (typeof contactInfoStr === "object") {
+      return contactInfoStr as ContactInfo
+    }
+
+    const parsed = JSON.parse(contactInfoStr)
+    return parsed || {}
+  } catch (error) {
+    console.error("[Branches] Error parsing contact info:", error, "Raw value:", contactInfoStr)
     return {}
   }
 }
 
 export default async function BranchesPage() {
-  const adminBranches = await getBranches()
+  let adminBranches: Branch[] = []
+
+  try {
+    adminBranches = await getBranches()
+  } catch (error) {
+    console.error("[Branches] Fatal error loading branches:", error)
+    // Page will render with empty branches array
+  }
 
   const getStatusColor = (status: string) => {
     switch (status?.toLowerCase()) {

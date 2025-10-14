@@ -1,6 +1,7 @@
 "use client"
 import { useState, useEffect } from "react"
 import type React from "react"
+import { useToast } from "@/hooks/use-toast"
 
 import Link from "next/link"
 
@@ -25,9 +26,16 @@ interface Branch {
 interface Ideology {
   id: string
   title: string
-  description: string
+  content: string
   category: string
+  status: string
   created_at: string
+  download_id?: number
+  file_url?: string
+  file_name?: string
+  file_type?: string
+  file_size?: number
+  download_count?: number
 }
 
 interface Event {
@@ -52,6 +60,8 @@ interface LeadershipProfile {
 }
 
 export default function AdminDashboard() {
+  const { toast } = useToast()
+
   const [error, setError] = useState<string | null>(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [password, setPassword] = useState("")
@@ -94,7 +104,7 @@ export default function AdminDashboard() {
     category: "political",
   })
 
-  const [ideologyFile, setIdeologyFile] = useState<string>("")
+  const [ideologyFile, setIdeologyFile] = useState<File | null>(null)
   const [ideologyFileName, setIdeologyFileName] = useState<string>("")
 
   const [newLeader, setNewLeader] = useState({
@@ -188,12 +198,21 @@ export default function AdminDashboard() {
       if (!response.ok) {
         const errorData = await response.json()
         console.error("[v0] API Error:", errorData)
-        alert(`Failed to create event: ${errorData.error || "Unknown error"}`)
+        toast({
+          title: "Error",
+          description: `Failed to create event: ${errorData.error || "Unknown error"}`,
+          variant: "destructive",
+        })
         return
       }
 
       const result = await response.json()
       console.log("[v0] Event created successfully:", result)
+
+      toast({
+        title: "Success",
+        description: "Event has been successfully created",
+      })
 
       setNewEvent({
         title: "",
@@ -205,7 +224,11 @@ export default function AdminDashboard() {
       fetchData()
     } catch (error) {
       console.error("[v0] Error creating event:", error)
-      alert("Failed to create event. Please check the console for details.")
+      toast({
+        title: "Error",
+        description: "Failed to create event. Please try again.",
+        variant: "destructive",
+      })
     }
   }
 
@@ -230,12 +253,21 @@ export default function AdminDashboard() {
       if (!response.ok) {
         const errorData = await response.json()
         console.error("[v0] API Error:", errorData)
-        alert(`Failed to create branch: ${errorData.error || "Unknown error"}`)
+        toast({
+          title: "Error",
+          description: `Failed to create branch: ${errorData.error || "Unknown error"}`,
+          variant: "destructive",
+        })
         return
       }
 
       const result = await response.json()
       console.log("[v0] Branch created successfully:", result)
+
+      toast({
+        title: "Success",
+        description: "Branch has been successfully created",
+      })
 
       setNewBranch({
         name: "",
@@ -247,7 +279,11 @@ export default function AdminDashboard() {
       fetchData()
     } catch (error) {
       console.error("[v0] Error creating branch:", error)
-      alert("Failed to create branch. Please check the console for details.")
+      toast({
+        title: "Error",
+        description: "Failed to create branch. Please try again.",
+        variant: "destructive",
+      })
     }
   }
 
@@ -261,33 +297,27 @@ export default function AdminDashboard() {
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
       ]
       if (!allowedTypes.includes(file.type)) {
-        alert("Please select a PDF or Word document")
+        toast({
+          title: "Invalid File",
+          description: "Please select a PDF or Word document",
+          variant: "destructive",
+        })
         return
       }
 
       // Validate file size (max 10MB)
       if (file.size > 10 * 1024 * 1024) {
-        alert("File size should be less than 10MB")
+        toast({
+          title: "File Too Large",
+          description: "File size should be less than 10MB",
+          variant: "destructive",
+        })
         return
       }
 
-      try {
-        // Convert file to base64
-        const reader = new FileReader()
-        reader.onload = (e) => {
-          const base64 = e.target?.result as string
-          setIdeologyFile(base64)
-          setIdeologyFileName(file.name)
-          console.log("[v0] File loaded:", file.name, "Size:", file.size, "bytes")
-        }
-        reader.onerror = () => {
-          alert("Failed to read file. Please try again.")
-        }
-        reader.readAsDataURL(file)
-      } catch (error) {
-        console.error("[v0] Error processing file:", error)
-        alert("Failed to process file. Please try another file.")
-      }
+      setIdeologyFile(file)
+      setIdeologyFileName(file.name)
+      console.log("[v0] File selected:", file.name, "Size:", file.size, "bytes")
     }
   }
 
@@ -296,50 +326,103 @@ export default function AdminDashboard() {
       console.log("[v0] Creating ideology with data:", newIdeology)
 
       if (!newIdeology.title.trim() || !newIdeology.content.trim()) {
-        alert("Please fill in both title and content fields")
+        toast({
+          title: "Missing Information",
+          description: "Please fill in both title and content fields",
+          variant: "destructive",
+        })
         return
+      }
+
+      const formData = new FormData()
+      formData.append("title", newIdeology.title)
+      formData.append("content", newIdeology.content)
+      formData.append("category", newIdeology.category)
+
+      if (ideologyFile) {
+        formData.append("file", ideologyFile)
+        console.log("[v0] Appending file to FormData:", ideologyFile.name)
       }
 
       const response = await fetch("/api/admin/ideologies", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          title: newIdeology.title,
-          content: newIdeology.content,
-          category: newIdeology.category,
-          file: ideologyFile,
-          fileName: ideologyFileName,
-        }),
+        body: formData,
       })
 
       console.log("[v0] Response status:", response.status)
       console.log("[v0] Response ok:", response.ok)
 
       if (!response.ok) {
-        const errorData = await response.json()
-        console.error("[v0] API Error:", errorData)
-        alert(`Failed to create ideology: ${errorData.error || "Unknown error"}`)
+        const responseClone = response.clone()
+        let errorMessage = "Unknown error"
+        let errorDetails = ""
+        let errorHint = ""
+
+        try {
+          const errorData = await response.json()
+          errorMessage = errorData.error || "Unknown error"
+          errorDetails = errorData.details || ""
+          errorHint = errorData.hint || ""
+
+          console.error("[v0] API Error Response:", errorData)
+        } catch (parseError) {
+          try {
+            const textError = await responseClone.text()
+            console.error("[v0] Non-JSON error response:", textError)
+          } catch (textError) {
+            console.error("[v0] Could not read error response")
+          }
+
+          if (response.status === 413) {
+            errorMessage = "File too large. Please use a file smaller than 10MB."
+          } else if (response.status === 500) {
+            errorMessage = "Server error. Please try again or use a smaller file."
+          } else {
+            errorMessage = `Server returned error ${response.status}`
+          }
+        }
+
+        const fullErrorMessage = [
+          errorMessage,
+          errorDetails && `Details: ${errorDetails}`,
+          errorHint && `Hint: ${errorHint}`,
+        ]
+          .filter(Boolean)
+          .join("\n")
+
+        console.error("[v0] Full error message:", fullErrorMessage)
+
+        toast({
+          title: "Error Creating Ideology",
+          description: fullErrorMessage,
+          variant: "destructive",
+        })
         return
       }
 
       const result = await response.json()
       console.log("[v0] Ideology created successfully:", result)
 
-      alert("Ideology created successfully!")
+      toast({
+        title: "Success",
+        description: "Ideology has been successfully created",
+      })
 
       setNewIdeology({
         title: "",
         content: "",
         category: "political",
       })
-      setIdeologyFile("")
+      setIdeologyFile(null)
       setIdeologyFileName("")
       fetchData()
     } catch (error) {
       console.error("[v0] Error creating ideology:", error)
-      alert("Failed to create ideology. Please check the console for details.")
+      toast({
+        title: "Error",
+        description: `Failed to create ideology: ${error instanceof Error ? error.message : "Unknown error"}`,
+        variant: "destructive",
+      })
     }
   }
 
@@ -348,7 +431,11 @@ export default function AdminDashboard() {
       console.log("[v0] Creating leader with data:", newLeader)
 
       if (!newLeader.name.trim() || !newLeader.role.trim()) {
-        alert("Please fill in name and role fields")
+        toast({
+          title: "Missing Information",
+          description: "Please fill in name and role fields",
+          variant: "destructive",
+        })
         return
       }
 
@@ -363,14 +450,21 @@ export default function AdminDashboard() {
       if (!response.ok) {
         const errorData = await response.json()
         console.error("[v0] API Error:", errorData)
-        alert(`Failed to create leader: ${errorData.error || "Unknown error"}`)
+        toast({
+          title: "Error",
+          description: `Failed to create leader: ${errorData.error || "Unknown error"}`,
+          variant: "destructive",
+        })
         return
       }
 
       const result = await response.json()
       console.log("[v0] Leader created successfully:", result)
 
-      alert("Leader profile created successfully!")
+      toast({
+        title: "Success",
+        description: "Leadership profile has been successfully created",
+      })
 
       setNewLeader({
         name: "",
@@ -383,7 +477,11 @@ export default function AdminDashboard() {
       fetchData()
     } catch (error) {
       console.error("[v0] Error creating leader:", error)
-      alert("Failed to create leader. Please check the console for details.")
+      toast({
+        title: "Error",
+        description: "Failed to create leader. Please try again.",
+        variant: "destructive",
+      })
     }
   }
 
@@ -393,10 +491,26 @@ export default function AdminDashboard() {
         method: "DELETE",
       })
       if (response.ok) {
+        toast({
+          title: "Success",
+          description: "Event deleted successfully",
+        })
         fetchData()
+      } else {
+        const errorData = await response.json()
+        toast({
+          title: "Error",
+          description: `Failed to delete event: ${errorData.error || "Unknown error"}`,
+          variant: "destructive",
+        })
       }
     } catch (error) {
       console.error("Error deleting event:", error)
+      toast({
+        title: "Error",
+        description: "Failed to delete event. Please try again.",
+        variant: "destructive",
+      })
     }
   }
 
@@ -406,10 +520,26 @@ export default function AdminDashboard() {
         method: "DELETE",
       })
       if (response.ok) {
+        toast({
+          title: "Success",
+          description: "Branch deleted successfully",
+        })
         fetchData()
+      } else {
+        const errorData = await response.json()
+        toast({
+          title: "Error",
+          description: `Failed to delete branch: ${errorData.error || "Unknown error"}`,
+          variant: "destructive",
+        })
       }
     } catch (error) {
       console.error("Error deleting branch:", error)
+      toast({
+        title: "Error",
+        description: "Failed to delete branch. Please try again.",
+        variant: "destructive",
+      })
     }
   }
 
@@ -419,10 +549,26 @@ export default function AdminDashboard() {
         method: "DELETE",
       })
       if (response.ok) {
+        toast({
+          title: "Success",
+          description: "Ideology deleted successfully",
+        })
         fetchData()
+      } else {
+        const errorData = await response.json()
+        toast({
+          title: "Error",
+          description: `Failed to delete ideology: ${errorData.error || "Unknown error"}`,
+          variant: "destructive",
+        })
       }
     } catch (error) {
       console.error("Error deleting ideology:", error)
+      toast({
+        title: "Error",
+        description: "Failed to delete ideology. Please try again.",
+        variant: "destructive",
+      })
     }
   }
 
@@ -432,10 +578,26 @@ export default function AdminDashboard() {
         method: "DELETE",
       })
       if (response.ok) {
+        toast({
+          title: "Success",
+          description: "Leadership profile deleted successfully",
+        })
         fetchData()
+      } else {
+        const errorData = await response.json()
+        toast({
+          title: "Error",
+          description: `Failed to delete leader: ${errorData.error || "Unknown error"}`,
+          variant: "destructive",
+        })
       }
     } catch (error) {
       console.error("Error deleting leader:", error)
+      toast({
+        title: "Error",
+        description: "Failed to delete leader. Please try again.",
+        variant: "destructive",
+      })
     }
   }
 
@@ -452,11 +614,15 @@ export default function AdminDashboard() {
           description: newEvent.description,
           event_date: newEvent.date, // Changed from 'date' to 'event_date' to match database
           location: newEvent.location,
+          registration_required: newEvent.registration_required,
         }),
       })
 
       if (response.ok) {
-        alert("Event updated successfully!")
+        toast({
+          title: "Success",
+          description: "Event has been successfully updated",
+        })
         setEditingEvent(null)
         setNewEvent({
           title: "",
@@ -468,11 +634,19 @@ export default function AdminDashboard() {
         fetchData()
       } else {
         const errorData = await response.json()
-        alert(`Failed to update event: ${errorData.error || "Unknown error"}`)
+        toast({
+          title: "Error",
+          description: `Failed to update event: ${errorData.error || "Unknown error"}`,
+          variant: "destructive",
+        })
       }
     } catch (error) {
       console.error("Error updating event:", error)
-      alert("Failed to update event")
+      toast({
+        title: "Error",
+        description: "Failed to update event. Please try again.",
+        variant: "destructive",
+      })
     }
   }
 
@@ -495,7 +669,10 @@ export default function AdminDashboard() {
       })
 
       if (response.ok) {
-        alert("Branch updated successfully!")
+        toast({
+          title: "Success",
+          description: "Branch has been successfully updated",
+        })
         setEditingBranch(null)
         setNewBranch({
           name: "",
@@ -507,11 +684,19 @@ export default function AdminDashboard() {
         fetchData()
       } else {
         const errorData = await response.json()
-        alert(`Failed to update branch: ${errorData.error || "Unknown error"}`)
+        toast({
+          title: "Error",
+          description: `Failed to update branch: ${errorData.error || "Unknown error"}`,
+          variant: "destructive",
+        })
       }
     } catch (error) {
       console.error("Error updating branch:", error)
-      alert("Failed to update branch")
+      toast({
+        title: "Error",
+        description: "Failed to update branch. Please try again.",
+        variant: "destructive",
+      })
     }
   }
 
@@ -527,7 +712,10 @@ export default function AdminDashboard() {
       })
 
       if (response.ok) {
-        alert("Ideology updated successfully!")
+        toast({
+          title: "Success",
+          description: "Ideology has been successfully updated",
+        })
         setEditingIdeology(null)
         setNewIdeology({
           title: "",
@@ -537,11 +725,19 @@ export default function AdminDashboard() {
         fetchData()
       } else {
         const errorData = await response.json()
-        alert(`Failed to update ideology: ${errorData.error || "Unknown error"}`)
+        toast({
+          title: "Error",
+          description: `Failed to update ideology: ${errorData.error || "Unknown error"}`,
+          variant: "destructive",
+        })
       }
     } catch (error) {
       console.error("Error updating ideology:", error)
-      alert("Failed to update ideology")
+      toast({
+        title: "Error",
+        description: "Failed to update ideology. Please try again.",
+        variant: "destructive",
+      })
     }
   }
 
@@ -554,7 +750,10 @@ export default function AdminDashboard() {
       })
 
       if (response.ok) {
-        alert("Leader updated successfully!")
+        toast({
+          title: "Success",
+          description: "Leadership profile has been successfully updated",
+        })
         setEditingLeader(null)
         setNewLeader({
           name: "",
@@ -567,11 +766,19 @@ export default function AdminDashboard() {
         fetchData()
       } else {
         const errorData = await response.json()
-        alert(`Failed to update leader: ${errorData.error || "Unknown error"}`)
+        toast({
+          title: "Error",
+          description: `Failed to update leader: ${errorData.error || "Unknown error"}`,
+          variant: "destructive",
+        })
       }
     } catch (error) {
       console.error("Error updating leader:", error)
-      alert("Failed to update leader")
+      toast({
+        title: "Error",
+        description: "Failed to update leader. Please try again.",
+        variant: "destructive",
+      })
     }
   }
 
@@ -601,7 +808,7 @@ export default function AdminDashboard() {
     setEditingIdeology(ideology.id)
     setNewIdeology({
       title: ideology.title,
-      content: ideology.description,
+      content: ideology.content,
       category: ideology.category,
     })
   }
@@ -642,7 +849,7 @@ export default function AdminDashboard() {
       content: "",
       category: "political",
     })
-    setIdeologyFile("")
+    setIdeologyFile(null) // Reset File object
     setIdeologyFileName("")
     setNewLeader({
       name: "",
@@ -709,13 +916,21 @@ export default function AdminDashboard() {
     if (file) {
       // Validate file type
       if (!file.type.startsWith("image/")) {
-        alert("Please select an image file")
+        toast({
+          title: "Invalid File",
+          description: "Please select an image file",
+          variant: "destructive",
+        })
         return
       }
 
       // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
-        alert("Image size should be less than 5MB")
+        toast({
+          title: "File Too Large",
+          description: "Image size should be less than 5MB",
+          variant: "destructive",
+        })
         return
       }
 
@@ -726,7 +941,11 @@ export default function AdminDashboard() {
         setLeaderImagePreview(compressedBase64)
       } catch (error) {
         console.error("[v0] Error compressing image:", error)
-        alert("Failed to process image. Please try another image.")
+        toast({
+          title: "Error",
+          description: "Failed to process image. Please try another image.",
+          variant: "destructive",
+        })
       }
     }
   }
@@ -866,6 +1085,13 @@ export default function AdminDashboard() {
             <h3 className="text-xs sm:text-sm font-medium text-gray-600">Leadership</h3>
             <div className="text-xl sm:text-2xl font-bold text-gray-900 mt-1 sm:mt-2">{stats.leadership}</div>
           </div>
+          <Link
+            href="/admin/users"
+            className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 hover:shadow-md transition-shadow"
+          >
+            <h3 className="text-xs sm:text-sm font-medium text-gray-600">Users</h3>
+            <div className="text-xl sm:text-2xl font-bold text-gray-900 mt-1 sm:mt-2">Manage →</div>
+          </Link>
         </div>
 
         {/* Management Tabs */}
@@ -1246,7 +1472,8 @@ export default function AdminDashboard() {
                           <span className="inline-block px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded-full mt-1">
                             {ideology.category}
                           </span>
-                          <p className="text-sm text-gray-600 mt-2 line-clamp-2">{ideology.description}</p>
+                          <p className="text-sm text-gray-600 mt-2 line-clamp-2">{ideology.content}</p>
+                          {ideology.file_url && <p className="text-xs text-green-600 mt-1">📄 Document attached</p>}
                         </div>
                         <div className="flex items-center gap-2">
                           <button
