@@ -5,21 +5,10 @@ const sql = neon(process.env.DATABASE_URL!)
 
 export async function GET() {
   try {
-    // Join users with user_profiles to get phone numbers
     const users = await sql`
-      SELECT 
-        u.id, 
-        u.email, 
-        u.first_name, 
-        u.last_name, 
-        u.role, 
-        u.status, 
-        u.created_at, 
-        u.updated_at,
-        up.phone
-      FROM users u
-      LEFT JOIN user_profiles up ON u.id = up.user_id
-      ORDER BY u.created_at DESC
+      SELECT id, email, first_name, last_name, role, status, created_at, updated_at
+      FROM users 
+      ORDER BY created_at DESC
     `
     return NextResponse.json(users)
   } catch (error) {

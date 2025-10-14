@@ -32,18 +32,28 @@ export async function GET() {
 
     const userProfile = profile[0]
 
-    if (!userProfile.membership_number || userProfile.membership_number.startsWith("ACUP-")) {
-      const newMembershipNumber = generateMembershipNumber(userProfile.id)
+    if (userProfile.membership_number && userProfile.membership_number.startsWith("ACUP-")) {
+      // Check if we have all required fields to generate new membership number
+      if (userProfile.country && userProfile.date_of_birth && userProfile.gender) {
+        const newMembershipNumber = generateMembershipNumber(
+          userProfile.id,
+          userProfile.first_name,
+          userProfile.country,
+          userProfile.date_of_birth,
+          userProfile.gender,
+          userProfile.created_at,
+        )
 
-      // Update the membership number in the database
-      await sql`
-        UPDATE user_profiles 
-        SET membership_number = ${newMembershipNumber}, updated_at = CURRENT_TIMESTAMP
-        WHERE user_id = ${session.user.id}
-      `
+        // Update the membership number in the database
+        await sql`
+          UPDATE user_profiles 
+          SET membership_number = ${newMembershipNumber}, updated_at = CURRENT_TIMESTAMP
+          WHERE user_id = ${session.user.id}
+        `
 
-      // Update the profile object to return the new membership number
-      userProfile.membership_number = newMembershipNumber
+        // Update the profile object to return the new membership number
+        userProfile.membership_number = newMembershipNumber
+      }
     }
 
     return NextResponse.json({ profile: userProfile })
@@ -82,8 +92,15 @@ export async function POST(request: NextRequest) {
       let membershipNumber = existingProfile[0].membership_number
 
       const isOldFormat = membershipNumber && membershipNumber.startsWith("ACUP-")
-      if (!membershipNumber || isOldFormat) {
-        membershipNumber = generateMembershipNumber(user.id)
+      if ((!membershipNumber || isOldFormat) && data.country && data.date_of_birth && data.gender) {
+        membershipNumber = generateMembershipNumber(
+          user.id,
+          user.first_name,
+          data.country,
+          data.date_of_birth,
+          data.gender,
+          user.created_at,
+        )
       }
 
       // Update existing profile
@@ -124,7 +141,17 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json({ profile: updatedProfile[0] })
     } else {
-      const membershipNumber = generateMembershipNumber(user.id)
+      let membershipNumber = null
+      if (data.country && data.date_of_birth && data.gender) {
+        membershipNumber = generateMembershipNumber(
+          user.id,
+          user.first_name,
+          data.country,
+          data.date_of_birth,
+          data.gender,
+          user.created_at,
+        )
+      }
 
       // Create new profile
       const newProfile = await sql`

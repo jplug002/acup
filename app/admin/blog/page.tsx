@@ -174,7 +174,7 @@ export default function AdminBlogPage() {
       }
 
       const response = await fetch(`/api/admin/blog/articles/${id}`, {
-        method: "PUT",
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: newArticle.title,
@@ -215,39 +215,17 @@ export default function AdminBlogPage() {
     }
   }
 
-  const startEditArticle = async (article: BlogArticle) => {
-    try {
-      setLoading(true)
-      const response = await fetch(`/api/admin/blog/articles/${article.id}`)
-
-      if (!response.ok) {
-        alert("Failed to load article details")
-        return
-      }
-
-      const data = await response.json()
-      const fullArticle = data.article
-
-      setEditingArticle(article.id)
-      setNewArticle({
-        title: fullArticle.title || "",
-        content: fullArticle.content || "",
-        excerpt: fullArticle.excerpt || "",
-        category: fullArticle.category || "",
-        tags: Array.isArray(fullArticle.tags) ? fullArticle.tags.join(", ") : "",
-        featured_image: fullArticle.featured_image || "",
-        status: fullArticle.status || "draft",
-      })
-
-      if (fullArticle.featured_image) {
-        setImagePreview(fullArticle.featured_image)
-      }
-    } catch (error) {
-      console.error("Error loading article:", error)
-      alert("Failed to load article details")
-    } finally {
-      setLoading(false)
-    }
+  const startEditArticle = (article: BlogArticle) => {
+    setEditingArticle(article.id)
+    setNewArticle({
+      title: article.title,
+      content: "", // Content not available in list, will need to fetch
+      excerpt: "",
+      category: "",
+      tags: "",
+      featured_image: "",
+      status: article.status,
+    })
   }
 
   const cancelEdit = () => {
@@ -445,10 +423,9 @@ export default function AdminBlogPage() {
               <div className="flex gap-2">
                 <button
                   onClick={() => (editingArticle ? handleUpdateArticle(editingArticle) : handleCreateArticle())}
-                  disabled={loading}
-                  className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white py-3 px-6 rounded-md transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white py-3 px-6 rounded-md transition-colors font-medium"
                 >
-                  {loading ? "Loading..." : editingArticle ? "Update Article" : "Create Article"}
+                  {editingArticle ? "Update Article" : "Create Article"}
                 </button>
                 {editingArticle && (
                   <button
@@ -500,8 +477,7 @@ export default function AdminBlogPage() {
                     <div className="flex sm:flex-col gap-2 w-full sm:w-auto">
                       <button
                         onClick={() => startEditArticle(article)}
-                        disabled={loading}
-                        className="flex-1 sm:flex-none px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex-1 sm:flex-none px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors whitespace-nowrap"
                       >
                         Edit
                       </button>
