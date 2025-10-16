@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Target, BookOpen, Users, GraduationCap, Globe, Handshake } from "lucide-react"
+import Image from "next/image"
 
 const MissionSection = () => {
   return (
@@ -14,59 +15,76 @@ const MissionSection = () => {
           </div>
           
           <CardContent className="p-6">
-            <div className="mb-8 bg-blue-50 p-6 rounded-lg border border-blue-100">
-              <CardDescription className="text-xl font-medium text-blue-800 italic leading-relaxed">
-                "To create new leaders through our school of future African leaders in politics and in business, we
-                also aim to put new faces and ideas in leadership positions in countries around the continent."
-              </CardDescription>
-            </div>
-            
-            <div className="space-y-6">
-              <div className="flex items-start gap-4">
-                <BookOpen size={24} className="text-blue-600 mt-1 flex-shrink-0" />
-                <p className="text-base md:text-lg leading-relaxed text-gray-700">
-                  Based on our vision of setting a global power-base which is also our supreme guide. We believe that development is an inside-out process, rather than outside-in process, therefore, a
-                  society cannot be called developed on the basis of infrastructure only, if its people are not fully developed.
-                  Consequently, we focus on the mind transformation of our people. As people become aware of themselves and
-                  their reality worldwide, being mentally developed, they will be able to reflect their mental development onto
-                  their environment.
-                </p>
+            <div className="flex flex-col md:flex-row gap-8">
+              <div className="flex-1">
+                <div className="mb-8 bg-blue-50 p-6 rounded-lg border border-blue-100">
+                  <CardDescription className="text-xl font-medium text-blue-800 italic leading-relaxed">
+                    "To create new leaders through our school of future African leaders in politics and in business, we
+                    also aim to put new faces and ideas in leadership positions in countries around the continent."
+                  </CardDescription>
+                </div>
+                
+                <div className="space-y-6">
+                  <div className="flex items-start gap-4">
+                    <BookOpen size={24} className="text-blue-600 mt-1 flex-shrink-0" />
+                    <p className="text-base md:text-lg leading-relaxed text-gray-700">
+                      Based on our vision of setting a global power-base which is also our supreme guide. We believe that development is an inside-out process, rather than outside-in process, therefore, a
+                      society cannot be called developed on the basis of infrastructure only, if its people are not fully developed.
+                      Consequently, we focus on the mind transformation of our people. As people become aware of themselves and
+                      their reality worldwide, being mentally developed, they will be able to reflect their mental development onto
+                      their environment.
+                    </p>
+                  </div>
+                  
+                  <div className="flex items-start gap-4">
+                    <GraduationCap size={24} className="text-blue-600 mt-1 flex-shrink-0" />
+                    <p className="text-base md:text-lg leading-relaxed text-gray-700">
+                      We are aware that the world including Africa is at the time of danger and opportunity, our chance to
+                      survive depends on what type of leadership we put in charge and in which direction it is taking us. For that
+                      reason, we have an academy called 'The Free-Minded', a new school for future African leaders in politics and
+                      business. Through this education system, we will create political and business leaders who are fit for the
+                      future of Africa.
+                    </p>
+                  </div>
+                  
+                  <div className="flex items-start gap-4">
+                    <Users size={24} className="text-blue-600 mt-1 flex-shrink-0" />
+                    <p className="text-base md:text-lg leading-relaxed text-gray-700">
+                      Also, we are working in collaboration with all Africans around the world to design an agenda that takes into
+                      account all aspects of our respective communities and countries. In fact, we are not just creating leaders, we
+                      want to put them in positions of power in our respective communities and countries in order to fulfill our
+                      common vision.
+                    </p>
+                  </div>
+                  
+                  <div className="flex items-start gap-4">
+                    <Globe size={24} className="text-blue-600 mt-1 flex-shrink-0" />
+                    <p className="text-base md:text-lg leading-relaxed text-gray-700">
+                      Finally, we are aiming to work and strengthen our common position in order to create a continental agenda in
+                      all areas of activities for the future African generations and their leaderships.
+                    </p>
+                  </div>
+                  
+                  <div className="flex items-start gap-4">
+                    <Handshake size={24} className="text-blue-600 mt-1 flex-shrink-0" />
+                    <p className="text-base md:text-lg leading-relaxed text-gray-700 font-medium">
+                      Above all, our mission is to working with you.
+                    </p>
+                  </div>
+                </div>
               </div>
               
-              <div className="flex items-start gap-4">
-                <GraduationCap size={24} className="text-blue-600 mt-1 flex-shrink-0" />
-                <p className="text-base md:text-lg leading-relaxed text-gray-700">
-                  We are aware that the world including Africa is at the time of danger and opportunity, our chance to
-                  survive depends on what type of leadership we put in charge and in which direction it is taking us. For that
-                  reason, we have an academy called 'The Free-Minded', a new school for future African leaders in politics and
-                  business. Through this education system, we will create political and business leaders who are fit for the
-                  future of Africa.
-                </p>
-              </div>
-              
-              <div className="flex items-start gap-4">
-                <Users size={24} className="text-blue-600 mt-1 flex-shrink-0" />
-                <p className="text-base md:text-lg leading-relaxed text-gray-700">
-                  Also, we are working in collaboration with all Africans around the world to design an agenda that takes into
-                  account all aspects of our respective communities and countries. In fact, we are not just creating leaders, we
-                  want to put them in positions of power in our respective communities and countries in order to fulfill our
-                  common vision.
-                </p>
-              </div>
-              
-              <div className="flex items-start gap-4">
-                <Globe size={24} className="text-blue-600 mt-1 flex-shrink-0" />
-                <p className="text-base md:text-lg leading-relaxed text-gray-700">
-                  Finally, we are aiming to work and strengthen our common position in order to create a continental agenda in
-                  all areas of activities for the future African generations and their leaderships.
-                </p>
-              </div>
-              
-              <div className="flex items-start gap-4">
-                <Handshake size={24} className="text-blue-600 mt-1 flex-shrink-0" />
-                <p className="text-base md:text-lg leading-relaxed text-gray-700 font-medium">
-                  Above all, our mission is to working with you.
-                </p>
+              {/* Image container on the right side */}
+              <div className="md:w-1/3 flex-shrink-0 flex items-center justify-center">
+                <div className="relative w-full h-[300px] md:h-[400px] rounded-lg overflow-hidden border border-gray-200 shadow-md">
+                  <Image 
+                    src="/african-political-leader-portrait.jpg" 
+                    alt="African Leadership Mission" 
+                    fill
+                    style={{ objectFit: 'cover' }}
+                    className="hover:scale-105 transition-transform duration-500"
+                  />
+                </div>
               </div>
             </div>
           </CardContent>
