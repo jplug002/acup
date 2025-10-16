@@ -161,13 +161,16 @@ export default async function EventsPage() {
               <h2 className="text-3xl font-bold mb-4">Stay Connected</h2>
               <p className="text-xl mb-6">Don't miss out on upcoming events and opportunities to make a difference</p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Button className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+                  <span className="mr-2">👥</span>
+                  Subscribe to Updates
+                </Button>
                 <Button
                   variant="outline"
                   className="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition-colors bg-transparent"
                 >
                   <span className="mr-2">📅</span>
-                  <Link href="register">Join Acup Today
-                  </Link>
+                  View All Events
                 </Button>
               </div>
             </div>
