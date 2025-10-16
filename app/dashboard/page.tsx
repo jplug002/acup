@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useSession } from "next-auth/react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -14,7 +14,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { signOut } from "next-auth/react"
 import Link from "next/link"
-import { Camera, MapPin, Briefcase, Calendar, Phone, Mail, User } from "lucide-react"
+import { Camera, User } from "lucide-react"
+import MembershipCard from "@/components/MembershipCard" // Import MembershipCard component
 
 interface UserProfile {
   id: string
@@ -50,11 +51,24 @@ interface MembershipInfo {
   membership_duration?: string
 }
 
+interface Event {
+  id: number
+  title: string
+  description: string
+  location: string
+  event_date: string
+  status: string
+}
+
 export default function DashboardPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const isWelcome = searchParams.get("welcome") === "true"
   const [isEditing, setIsEditing] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [showBioAlert, setShowBioAlert] = useState(false)
+  const [events, setEvents] = useState<Event[]>([])
   const [profileData, setProfileData] = useState<UserProfile>({
     id: "",
     name: "",
@@ -83,6 +97,7 @@ export default function DashboardPage() {
     }
     if (session?.user?.id) {
       loadUserData()
+      loadEvents()
     }
   }, [status, session, router])
 
@@ -93,6 +108,8 @@ export default function DashboardPage() {
       const profileResponse = await fetch(`/api/profile`)
       if (profileResponse.ok) {
         const { profile } = await profileResponse.json()
+
+        const userRegistrationDate = profile.created_at || new Date().toISOString()
 
         // Map database fields to component state
         setProfileData({
@@ -125,26 +142,39 @@ export default function DashboardPage() {
             : "",
         })
 
-        // Set membership info if available
-        if (profile.membership_type) {
-          setMembershipInfo({
-            id: profile.id?.toString() || "",
-            status: profile.membership_status || "pending",
-            membership_type: profile.membership_type || "regular",
-            membership_number: profile.membership_number || `ACUP-${String(profile.id).padStart(6, "0")}`,
-            application_date: profile.created_at || new Date().toISOString(),
-            approval_date: profile.membership_status === "approved" ? profile.joined_date : undefined,
-            registration_fee_paid: profile.membership_status === "approved",
-            branch_assigned: profile.branch_preference || profile.country,
-            sponsor_name: profile.sponsor_name,
-            membership_duration: "Annual",
-          })
+        setMembershipInfo({
+          id: profile.id?.toString() || "",
+          status: profile.membership_status || "active",
+          membership_type: profile.membership_type || "regular",
+          membership_number: profile.membership_number || `ACUP-${String(profile.id).padStart(6, "0")}`,
+          application_date: userRegistrationDate,
+          approval_date: profile.joined_date || userRegistrationDate,
+          registration_fee_paid: profile.membership_status === "approved",
+          branch_assigned: profile.branch_preference || profile.country,
+          sponsor_name: profile.sponsor_name,
+          membership_duration: "Annual",
+        })
+
+        if (isWelcome && !profile.bio) {
+          setShowBioAlert(true)
         }
       }
     } catch (error) {
       console.error("Failed to load user data:", error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const loadEvents = async () => {
+    try {
+      const response = await fetch("/api/events")
+      if (response.ok) {
+        const data = await response.json()
+        setEvents(data)
+      }
+    } catch (error) {
+      console.error("Failed to load events:", error)
     }
   }
 
@@ -225,16 +255,63 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-50 py-4 sm:py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center space-x-4">
-              {/* Profile Picture */}
-              <Avatar className="h-16 w-16">
+        {showBioAlert && (
+          <div className="mb-4 sm:mb-6 bg-blue-50 border-l-4 border-blue-600 p-3 sm:p-4 rounded-lg shadow-sm">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <svg
+                  className="h-5 w-5 text-blue-600"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+              <div className="ml-3 flex-1">
+                <h3 className="text-sm font-medium text-blue-900">Complete Your Profile</h3>
+                <p className="mt-1 text-sm text-blue-700">
+                  Welcome to ACUP! Please complete your bio and profile information to get the most out of your
+                  membership.
+                </p>
+                <div className="mt-3 flex flex-col sm:flex-row gap-2">
+                  <Button
+                    onClick={() => {
+                      setIsEditing(true)
+                      setShowBioAlert(false)
+                      document.querySelector('[value="profile"]')?.scrollIntoView({ behavior: "smooth" })
+                    }}
+                    size="sm"
+                    className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto"
+                  >
+                    Complete Profile Now
+                  </Button>
+                  <Button
+                    onClick={() => setShowBioAlert(false)}
+                    size="sm"
+                    variant="outline"
+                    className="w-full sm:w-auto"
+                  >
+                    Dismiss
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="mb-6 sm:mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center space-x-3 sm:space-x-4">
+              <Avatar className="h-12 w-12 sm:h-16 sm:w-16">
                 <AvatarImage src={profileData.profile_picture || "/placeholder.svg"} alt={profileData.name} />
-                <AvatarFallback className="bg-red-100 text-red-600 text-xl">
+                <AvatarFallback className="bg-red-100 text-red-600 text-lg sm:text-xl">
                   {profileData.name
                     ?.split(" ")
                     .map((n) => n[0])
@@ -247,20 +324,20 @@ export default function DashboardPage() {
                 </AvatarFallback>
               </Avatar>
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
                   Welcome back, {profileData.name || session?.user?.name}
                 </h1>
-                <p className="mt-2 text-gray-600">
+                <p className="mt-1 sm:mt-2 text-gray-600">
                   {membershipInfo?.membership_number && (
-                    <span className="inline-flex items-center text-sm">
-                      <User className="h-4 w-4 mr-1" />
+                    <span className="inline-flex items-center text-xs sm:text-sm">
+                      <User className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
                       Member #{membershipInfo.membership_number}
                     </span>
                   )}
                 </p>
               </div>
             </div>
-            <div className="mt-4 sm:mt-0">
+            <div className="w-full sm:w-auto">
               <Button onClick={() => signOut({ callbackUrl: "/" })} variant="outline" className="w-full sm:w-auto">
                 Sign Out
               </Button>
@@ -268,15 +345,14 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Enhanced Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-gray-600">Membership Status</CardTitle>
             </CardHeader>
             <CardContent>
               <Badge className={getMembershipStatusColor(membershipInfo?.status || "none")}>
-                {membershipInfo?.status || "No Application"}
+                {membershipInfo?.status || "Active"}
               </Badge>
               {membershipInfo?.membership_number && (
                 <p className="text-xs text-gray-500 mt-1">ID: {membershipInfo.membership_number}</p>
@@ -289,12 +365,14 @@ export default function DashboardPage() {
               <CardTitle className="text-sm font-medium text-gray-600">Member Since</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold text-gray-900">
-                {membershipInfo?.approval_date
-                  ? new Date(membershipInfo.approval_date).getFullYear()
-                  : membershipInfo?.application_date
-                    ? new Date(membershipInfo.application_date).getFullYear()
-                    : "N/A"}
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">
+                {membershipInfo?.application_date
+                  ? new Date(membershipInfo.application_date).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                    })
+                  : "N/A"}
               </p>
             </CardContent>
           </Card>
@@ -304,52 +382,63 @@ export default function DashboardPage() {
               <CardTitle className="text-sm font-medium text-gray-600">Membership Type</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold text-gray-900 capitalize">{membershipInfo?.membership_type || "None"}</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900 capitalize">
+                {membershipInfo?.membership_type || "Member"}
+              </p>
             </CardContent>
           </Card>
 
-          {/* Branch Information */}
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-gray-600">Branch</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-lg font-bold text-gray-900">
+              <p className="text-base sm:text-lg font-bold text-gray-900">
                 {membershipInfo?.branch_assigned || profileData.country || "Not Assigned"}
               </p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Main Content */}
-        <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="profile">Profile</TabsTrigger>
-            <TabsTrigger value="membership">Membership</TabsTrigger>
-            <TabsTrigger value="registration">Registration</TabsTrigger>
-            <TabsTrigger value="events">Events</TabsTrigger>
+        <Tabs defaultValue="profile" className="space-y-4 sm:space-y-6">
+          <TabsList className="grid w-full grid-cols-3 h-auto">
+            <TabsTrigger value="profile" className="text-xs sm:text-sm py-2 sm:py-2.5">
+              Profile
+            </TabsTrigger>
+            <TabsTrigger value="membership" className="text-xs sm:text-sm py-2 sm:py-2.5">
+              Membership Card
+            </TabsTrigger>
+            <TabsTrigger value="events" className="text-xs sm:text-sm py-2 sm:py-2.5">
+              Events
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="profile">
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div>
-                    <CardTitle>Profile Information</CardTitle>
-                    <CardDescription>Update your personal information and bio</CardDescription>
+                    <CardTitle className="text-lg sm:text-xl">Profile Information</CardTitle>
+                    <CardDescription className="text-sm text-blue-700">
+                      Update your personal information and bio
+                    </CardDescription>
                   </div>
-                  <Button onClick={() => setIsEditing(!isEditing)} variant="outline" size="sm">
+                  <Button
+                    onClick={() => setIsEditing(!isEditing)}
+                    variant="outline"
+                    size="sm"
+                    className="w-full sm:w-auto"
+                  >
                     {isEditing ? "Cancel" : "Edit"}
                   </Button>
                 </div>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleProfileUpdate} className="space-y-6">
-                  {/* Profile Picture Upload Section */}
-                  <div className="flex items-center space-x-6">
-                    <Avatar className="h-24 w-24">
+                <form onSubmit={handleProfileUpdate} className="space-y-4 sm:space-y-6">
+                  <div className="flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-6">
+                    <Avatar className="h-20 w-20 sm:h-24 sm:w-24">
                       <AvatarImage src={profileData.profile_picture || "/placeholder.svg"} alt={profileData.name} />
-                      <AvatarFallback className="bg-red-100 text-red-600 text-2xl">
+                      <AvatarFallback className="bg-red-100 text-red-600 text-xl sm:text-2xl">
                         {profileData.name
                           ?.split(" ")
                           .map((n) => n[0])
@@ -357,11 +446,11 @@ export default function DashboardPage() {
                       </AvatarFallback>
                     </Avatar>
                     {isEditing && (
-                      <div>
+                      <div className="w-full sm:w-auto">
                         <Label htmlFor="profile-picture" className="cursor-pointer">
-                          <div className="flex items-center space-x-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+                          <div className="flex items-center justify-center space-x-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
                             <Camera className="h-4 w-4" />
-                            <span>Change Photo</span>
+                            <span className="text-sm sm:text-base">Change Photo</span>
                           </div>
                         </Label>
                         <Input
@@ -375,196 +464,236 @@ export default function DashboardPage() {
                     )}
                   </div>
 
-                  {/* Bio Section */}
                   <div>
-                    <Label htmlFor="bio">Bio</Label>
+                    <Label htmlFor="bio" className="text-sm sm:text-base">
+                      Bio
+                    </Label>
                     <Textarea
                       id="bio"
                       placeholder="Tell us about yourself, your political interests, and your goals..."
                       value={profileData.bio || ""}
                       onChange={(e) => setProfileData({ ...profileData, bio: e.target.value })}
                       disabled={!isEditing}
-                      className="mt-1 min-h-[100px]"
+                      className="mt-1 min-h-[100px] text-sm sm:text-base"
                     />
                   </div>
 
-                  {/* Basic Information */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                     <div>
-                      <Label htmlFor="name">Full Name</Label>
+                      <Label htmlFor="name" className="text-sm sm:text-base">
+                        Full Name
+                      </Label>
                       <Input
                         id="name"
                         value={profileData.name}
                         onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
                         disabled={!isEditing}
-                        className="mt-1"
+                        className="mt-1 text-sm sm:text-base"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="email">Email</Label>
-                      <Input id="email" type="email" value={profileData.email} disabled={true} className="mt-1" />
-                    </div>
-                    {/* Date of Birth and Gender */}
-                    <div>
-                      <Label htmlFor="date_of_birth">Date of Birth</Label>
+                      <Label htmlFor="email" className="text-sm sm:text-base">
+                        Email
+                      </Label>
                       <Input
-                        id="date_of_birth"
-                        type="date"
-                        value={profileData.date_of_birth || ""}
-                        onChange={(e) => setProfileData({ ...profileData, date_of_birth: e.target.value })}
-                        disabled={!isEditing}
-                        className="mt-1"
+                        id="email"
+                        type="email"
+                        value={profileData.email}
+                        disabled={true}
+                        className="mt-1 text-sm sm:text-base"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="gender">Gender</Label>
+                      <Label htmlFor="date_of_birth" className="text-sm sm:text-base">
+                        Date of Birth
+                      </Label>
+                      {!isEditing && profileData.date_of_birth ? (
+                        <div className="mt-1 px-3 py-2 bg-gray-50 rounded-md text-sm sm:text-base text-gray-900">
+                          {new Date(profileData.date_of_birth).toLocaleDateString("en-US", {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          })}
+                        </div>
+                      ) : (
+                        <Input
+                          id="date_of_birth"
+                          type="date"
+                          value={profileData.date_of_birth || ""}
+                          onChange={(e) => setProfileData({ ...profileData, date_of_birth: e.target.value })}
+                          disabled={!isEditing}
+                          className="mt-1 text-sm sm:text-base"
+                        />
+                      )}
+                    </div>
+                    <div>
+                      <Label htmlFor="gender" className="text-sm sm:text-base">
+                        Gender
+                      </Label>
                       <Input
                         id="gender"
                         value={profileData.gender || ""}
                         onChange={(e) => setProfileData({ ...profileData, gender: e.target.value })}
                         disabled={!isEditing}
-                        className="mt-1"
+                        className="mt-1 text-sm sm:text-base"
                         placeholder="e.g., Male, Female, Other"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="phone">Phone</Label>
+                      <Label htmlFor="phone" className="text-sm sm:text-base">
+                        Phone
+                      </Label>
                       <Input
                         id="phone"
                         value={profileData.phone || ""}
                         onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
                         disabled={!isEditing}
-                        className="mt-1"
+                        className="mt-1 text-sm sm:text-base"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="emergency_contact">Emergency Contact</Label>
+                      <Label htmlFor="emergency_contact" className="text-sm sm:text-base">
+                        Emergency Contact
+                      </Label>
                       <Input
                         id="emergency_contact"
                         value={profileData.emergency_contact || ""}
                         onChange={(e) => setProfileData({ ...profileData, emergency_contact: e.target.value })}
                         disabled={!isEditing}
-                        className="mt-1"
+                        className="mt-1 text-sm sm:text-base"
                         placeholder="Name and phone number"
                       />
                     </div>
                   </div>
 
-                  {/* Location Information */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                     <div>
-                      <Label htmlFor="country">Country</Label>
+                      <Label htmlFor="country" className="text-sm sm:text-base">
+                        Country
+                      </Label>
                       <Input
                         id="country"
                         value={profileData.country || ""}
                         onChange={(e) => setProfileData({ ...profileData, country: e.target.value })}
                         disabled={!isEditing}
-                        className="mt-1"
+                        className="mt-1 text-sm sm:text-base"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="city">City</Label>
+                      <Label htmlFor="city" className="text-sm sm:text-base">
+                        City
+                      </Label>
                       <Input
                         id="city"
                         value={profileData.city || ""}
                         onChange={(e) => setProfileData({ ...profileData, city: e.target.value })}
                         disabled={!isEditing}
-                        className="mt-1"
+                        className="mt-1 text-sm sm:text-base"
                       />
                     </div>
                   </div>
 
-                  {/* Full Address Field */}
                   <div>
-                    <Label htmlFor="address">Full Address</Label>
+                    <Label htmlFor="address" className="text-sm sm:text-base">
+                      Full Address
+                    </Label>
                     <Textarea
                       id="address"
                       value={profileData.address || ""}
                       onChange={(e) => setProfileData({ ...profileData, address: e.target.value })}
                       disabled={!isEditing}
-                      className="mt-1"
+                      className="mt-1 text-sm sm:text-base"
                       placeholder="Complete residential address"
                     />
                   </div>
 
-                  {/* Professional Information */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                     <div>
-                      <Label htmlFor="occupation">Occupation</Label>
+                      <Label htmlFor="occupation" className="text-sm sm:text-base">
+                        Occupation
+                      </Label>
                       <Input
                         id="occupation"
                         value={profileData.occupation || ""}
                         onChange={(e) => setProfileData({ ...profileData, occupation: e.target.value })}
                         disabled={!isEditing}
-                        className="mt-1"
+                        className="mt-1 text-sm sm:text-base"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="education">Education</Label>
+                      <Label htmlFor="education" className="text-sm sm:text-base">
+                        Education
+                      </Label>
                       <Input
                         id="education"
                         value={profileData.education || ""}
                         onChange={(e) => setProfileData({ ...profileData, education: e.target.value })}
                         disabled={!isEditing}
-                        className="mt-1"
+                        className="mt-1 text-sm sm:text-base"
                       />
                     </div>
                   </div>
 
-                  {/* Political Experience and Languages */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                     <div>
-                      <Label htmlFor="political_experience">Political Experience</Label>
+                      <Label htmlFor="political_experience" className="text-sm sm:text-base">
+                        Political Experience
+                      </Label>
                       <Textarea
                         id="political_experience"
                         value={profileData.political_experience || ""}
                         onChange={(e) => setProfileData({ ...profileData, political_experience: e.target.value })}
                         disabled={!isEditing}
-                        className="mt-1"
+                        className="mt-1 text-sm sm:text-base"
                         placeholder="Previous political involvement, leadership roles, etc."
                       />
                     </div>
                     <div>
-                      <Label htmlFor="languages_spoken">Languages Spoken</Label>
+                      <Label htmlFor="languages_spoken" className="text-sm sm:text-base">
+                        Languages Spoken
+                      </Label>
                       <Input
                         id="languages_spoken"
                         value={profileData.languages_spoken || ""}
                         onChange={(e) => setProfileData({ ...profileData, languages_spoken: e.target.value })}
                         disabled={!isEditing}
-                        className="mt-1"
+                        className="mt-1 text-sm sm:text-base"
                         placeholder="e.g., English, French, Swahili"
                       />
                     </div>
                   </div>
 
-                  {/* Additional Information */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                     <div>
-                      <Label htmlFor="interests">Interests</Label>
+                      <Label htmlFor="interests" className="text-sm sm:text-base">
+                        Interests
+                      </Label>
                       <Input
                         id="interests"
                         value={profileData.interests || ""}
                         onChange={(e) => setProfileData({ ...profileData, interests: e.target.value })}
                         disabled={!isEditing}
-                        className="mt-1"
+                        className="mt-1 text-sm sm:text-base"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="social_media">Social Media</Label>
+                      <Label htmlFor="social_media" className="text-sm sm:text-base">
+                        Social Media
+                      </Label>
                       <Input
                         id="social_media"
                         value={profileData.social_media || ""}
                         onChange={(e) => setProfileData({ ...profileData, social_media: e.target.value })}
                         disabled={!isEditing}
-                        className="mt-1"
+                        className="mt-1 text-sm sm:text-base"
                         placeholder="Twitter, LinkedIn, etc."
                       />
                     </div>
                   </div>
 
                   {isEditing && (
-                    <div className="flex justify-end">
-                      <Button type="submit" className="bg-red-600 hover:bg-red-700">
+                    <div className="flex justify-end pt-2">
+                      <Button type="submit" className="bg-red-600 hover:bg-red-700 w-full sm:w-auto">
                         Save Changes
                       </Button>
                     </div>
@@ -577,199 +706,61 @@ export default function DashboardPage() {
           <TabsContent value="membership">
             <Card>
               <CardHeader>
-                <CardTitle>Membership Details</CardTitle>
-                <CardDescription>Your ACUP membership information</CardDescription>
+                <CardTitle className="text-lg sm:text-xl">Membership Card Details</CardTitle>
+                <CardDescription className="text-sm text-blue-700">
+                  Your ACUP membership card information
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   {membershipInfo ? (
                     <>
-                      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                      <div className="mb-6">
+                        <MembershipCard showActions={false} />
+                      </div>
+
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 sm:p-4 bg-gray-50 rounded-lg gap-2">
                         <div>
-                          <h3 className="font-medium text-gray-900">Membership Status</h3>
-                          <p className="text-sm text-gray-600">Current status of your membership</p>
+                          <h3 className="font-medium text-gray-900 text-sm sm:text-base">Membership Status</h3>
+                          <p className="text-xs sm:text-sm text-gray-600">Current status of your membership</p>
                         </div>
                         <Badge className={getMembershipStatusColor(membershipInfo.status)}>
                           {membershipInfo.status}
                         </Badge>
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="p-4 bg-gray-50 rounded-lg">
-                          <h4 className="font-medium text-gray-900">Membership Number</h4>
-                          <p className="text-sm text-gray-600">{membershipInfo.membership_number}</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                        <div className="p-3 sm:p-4 bg-gray-50 rounded-lg">
+                          <h4 className="font-medium text-gray-900 text-sm sm:text-base">Membership Number</h4>
+                          <p className="text-xs sm:text-sm text-gray-600 break-all">
+                            {membershipInfo.membership_number}
+                          </p>
                         </div>
-                        <div className="p-4 bg-gray-50 rounded-lg">
-                          <h4 className="font-medium text-gray-900">Application Date</h4>
-                          <p className="text-sm text-gray-600">
+                        <div className="p-3 sm:p-4 bg-gray-50 rounded-lg">
+                          <h4 className="font-medium text-gray-900 text-sm sm:text-base">Application Date</h4>
+                          <p className="text-xs sm:text-sm text-gray-600">
                             {new Date(membershipInfo.application_date).toLocaleDateString()}
                           </p>
                         </div>
                       </div>
 
                       {membershipInfo.status === "approved" && (
-                        <div className="p-4 bg-red-50 rounded-lg">
-                          <h3 className="font-medium text-red-900">Digital Membership Card</h3>
-                          <p className="text-sm text-red-700 mb-3">Your digital membership card is ready</p>
+                        <div className="p-3 sm:p-4 bg-red-50 rounded-lg">
+                          <h3 className="font-medium text-red-900 text-sm sm:text-base">Digital Membership Card</h3>
+                          <p className="text-xs sm:text-sm text-red-700 mb-3">Your digital membership card is ready</p>
                           <Link href="/dashboard/membership-card">
-                            <Button className="bg-red-600 hover:bg-red-700">View Membership Card</Button>
+                            <Button className="bg-red-600 hover:bg-red-700 w-full sm:w-auto">
+                              View Membership Card
+                            </Button>
                           </Link>
                         </div>
                       )}
                     </>
                   ) : (
-                    <div className="text-center py-8">
-                      <p className="text-gray-500 mb-4">You haven't applied for membership yet.</p>
+                    <div className="text-center py-6 sm:py-8">
+                      <p className="text-gray-500 mb-4 text-sm sm:text-base">You haven't applied for membership yet.</p>
                       <Link href="/membership">
-                        <Button className="bg-red-600 hover:bg-red-700">Apply for Membership</Button>
-                      </Link>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Registration Details Tab */}
-          <TabsContent value="registration">
-            <Card>
-              <CardHeader>
-                <CardTitle>Registration Details</CardTitle>
-                <CardDescription>Complete information about your ACUP membership registration</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  {membershipInfo ? (
-                    <>
-                      {/* Registration Overview */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-4">
-                          <div className="flex items-center space-x-3 p-4 bg-blue-50 rounded-lg">
-                            <Calendar className="h-5 w-5 text-blue-600" />
-                            <div>
-                              <h4 className="font-medium text-blue-900">Application Date</h4>
-                              <p className="text-sm text-blue-700">
-                                {new Date(membershipInfo.application_date).toLocaleDateString("en-US", {
-                                  year: "numeric",
-                                  month: "long",
-                                  day: "numeric",
-                                })}
-                              </p>
-                            </div>
-                          </div>
-
-                          {membershipInfo.approval_date && (
-                            <div className="flex items-center space-x-3 p-4 bg-green-50 rounded-lg">
-                              <Calendar className="h-5 w-5 text-green-600" />
-                              <div>
-                                <h4 className="font-medium text-green-900">Approval Date</h4>
-                                <p className="text-sm text-green-700">
-                                  {new Date(membershipInfo.approval_date).toLocaleDateString("en-US", {
-                                    year: "numeric",
-                                    month: "long",
-                                    day: "numeric",
-                                  })}
-                                </p>
-                              </div>
-                            </div>
-                          )}
-
-                          <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg">
-                            <User className="h-5 w-5 text-gray-600" />
-                            <div>
-                              <h4 className="font-medium text-gray-900">Membership Number</h4>
-                              <p className="text-sm text-gray-700 font-mono">{membershipInfo.membership_number}</p>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="space-y-4">
-                          <div className="flex items-center space-x-3 p-4 bg-red-50 rounded-lg">
-                            <MapPin className="h-5 w-5 text-red-600" />
-                            <div>
-                              <h4 className="font-medium text-red-900">Branch Assignment</h4>
-                              <p className="text-sm text-red-700">
-                                {membershipInfo.branch_assigned || profileData.country || "Pending Assignment"}
-                              </p>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center space-x-3 p-4 bg-yellow-50 rounded-lg">
-                            <Briefcase className="h-5 w-5 text-yellow-600" />
-                            <div>
-                              <h4 className="font-medium text-yellow-900">Membership Type</h4>
-                              <p className="text-sm text-yellow-700 capitalize">{membershipInfo.membership_type}</p>
-                            </div>
-                          </div>
-
-                          {membershipInfo.sponsor_name && (
-                            <div className="flex items-center space-x-3 p-4 bg-purple-50 rounded-lg">
-                              <User className="h-5 w-5 text-purple-600" />
-                              <div>
-                                <h4 className="font-medium text-purple-900">Sponsored By</h4>
-                                <p className="text-sm text-purple-700">{membershipInfo.sponsor_name}</p>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Payment Status */}
-                      <div className="border-t pt-6">
-                        <h3 className="text-lg font-medium text-gray-900 mb-4">Payment Information</h3>
-                        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                          <div>
-                            <h4 className="font-medium text-gray-900">Registration Fee</h4>
-                            <p className="text-sm text-gray-600">Membership registration payment status</p>
-                          </div>
-                          <Badge
-                            className={
-                              membershipInfo.registration_fee_paid
-                                ? "bg-green-100 text-green-800"
-                                : "bg-red-100 text-red-800"
-                            }
-                          >
-                            {membershipInfo.registration_fee_paid ? "Paid" : "Pending"}
-                          </Badge>
-                        </div>
-                      </div>
-
-                      {/* Contact Information Summary */}
-                      <div className="border-t pt-6">
-                        <h3 className="text-lg font-medium text-gray-900 mb-4">Contact Information on File</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="flex items-center space-x-3">
-                            <Mail className="h-4 w-4 text-gray-500" />
-                            <span className="text-sm text-gray-700">{profileData.email}</span>
-                          </div>
-                          {profileData.phone && (
-                            <div className="flex items-center space-x-3">
-                              <Phone className="h-4 w-4 text-gray-500" />
-                              <span className="text-sm text-gray-700">{profileData.phone}</span>
-                            </div>
-                          )}
-                          {profileData.country && (
-                            <div className="flex items-center space-x-3">
-                              <MapPin className="h-4 w-4 text-gray-500" />
-                              <span className="text-sm text-gray-700">
-                                {profileData.city}, {profileData.country}
-                              </span>
-                            </div>
-                          )}
-                          {profileData.occupation && (
-                            <div className="flex items-center space-x-3">
-                              <Briefcase className="h-4 w-4 text-gray-500" />
-                              <span className="text-sm text-gray-700">{profileData.occupation}</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </>
-                  ) : (
-                    <div className="text-center py-8">
-                      <p className="text-gray-500 mb-4">No registration information available.</p>
-                      <Link href="/membership">
-                        <Button className="bg-red-600 hover:bg-red-700">Apply for Membership</Button>
+                        <Button className="bg-red-600 hover:bg-red-700 w-full sm:w-auto">Apply for Membership</Button>
                       </Link>
                     </div>
                   )}
@@ -781,14 +772,67 @@ export default function DashboardPage() {
           <TabsContent value="events">
             <Card>
               <CardHeader>
-                <CardTitle>Upcoming Events</CardTitle>
-                <CardDescription>Events you can attend as an ACUP member</CardDescription>
+                <CardTitle className="text-lg sm:text-xl">Upcoming Events</CardTitle>
+                <CardDescription className="text-sm text-blue-700">
+                  Events you can attend as an ACUP member
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-center py-8">
-                  <p className="text-gray-500">No upcoming events at this time.</p>
-                  <p className="text-sm text-gray-400 mt-2">Check back later for new events and opportunities.</p>
-                </div>
+                {events.length > 0 ? (
+                  <div className="space-y-4">
+                    {events.map((event) => (
+                      <div
+                        key={event.id}
+                        className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                      >
+                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                          <div className="flex-1">
+                            <h3 className="font-semibold text-gray-900 text-base sm:text-lg">{event.title}</h3>
+                            <p className="text-sm text-gray-600 mt-1 line-clamp-2">{event.description}</p>
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mt-3 text-sm text-gray-500">
+                              <div className="flex items-center">
+                                <span className="mr-2">📍</span>
+                                <span>{event.location}</span>
+                              </div>
+                              <div className="flex items-center">
+                                <span className="mr-2">📅</span>
+                                <span>
+                                  {new Date(event.event_date).toLocaleDateString("en-US", {
+                                    year: "numeric",
+                                    month: "long",
+                                    day: "numeric",
+                                  })}
+                                </span>
+                              </div>
+                              <div className="flex items-center">
+                                <span className="mr-2">🕐</span>
+                                <span>
+                                  {new Date(event.event_date).toLocaleTimeString("en-US", {
+                                    hour: "numeric",
+                                    minute: "2-digit",
+                                    hour12: true,
+                                  })}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex sm:flex-col gap-2">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 whitespace-nowrap">
+                              {event.status}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-6 sm:py-8">
+                    <p className="text-gray-500 text-sm sm:text-base">No upcoming events at this time.</p>
+                    <p className="text-xs sm:text-sm text-gray-400 mt-2">
+                      Check back later for new events and opportunities.
+                    </p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

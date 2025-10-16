@@ -1,7 +1,13 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { neon } from "@neondatabase/serverless"
+import { DownloadIcon } from "lucide-react"
+
+export const dynamic = "force-dynamic"
+export const revalidate = 0
+
+const sql = neon(process.env.DATABASE_URL!)
 
 interface Ideology {
   id: number
@@ -11,47 +17,43 @@ interface Ideology {
   created_at: string
 }
 
-interface DownloadItem {
+interface IdeologyDownload {
   id: number
+  ideology_id?: number
   title: string
   description: string
   file_url: string
   file_name: string
-  file_size: string
   file_type: string
+  file_size: string
   category: string
-  download_count: number
-  created_at: string
+  status: string
 }
 
 async function getIdeologies(): Promise<Ideology[]> {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/ideologies`, {
-      cache: "no-store",
-    })
-
-    if (!response.ok) {
-      return []
-    }
-
-    return await response.json()
+    const ideologies = await sql`
+      SELECT id, title, content, status, created_at
+      FROM ideologies 
+      WHERE status = 'ACTIVE'
+      ORDER BY created_at DESC
+    `
+    return ideologies as Ideology[]
   } catch (error) {
     console.error("Error fetching ideologies:", error)
     return []
   }
 }
 
-async function getDownloads(): Promise<DownloadItem[]> {
+async function getDownloads(): Promise<IdeologyDownload[]> {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/downloads`, {
-      cache: "no-store",
-    })
-
-    if (!response.ok) {
-      return []
-    }
-
-    return await response.json()
+    const downloads = await sql`
+      SELECT id, ideology_id, title, description, file_url, file_name, file_type, file_size, category, status
+      FROM downloads 
+      WHERE status = 'published' AND ideology_id IS NOT NULL
+      ORDER BY created_at DESC
+    `
+    return downloads as IdeologyDownload[]
   } catch (error) {
     console.error("Error fetching downloads:", error)
     return []
@@ -62,17 +64,8 @@ export default async function IdeologyPage() {
   const adminIdeologies = await getIdeologies()
   const downloads = await getDownloads()
 
-  const getStatusColor = (status: string) => {
-    switch (status?.toLowerCase()) {
-      case "published":
-        return "bg-green-100 text-green-800"
-      case "draft":
-        return "bg-gray-100 text-gray-800"
-      case "featured":
-        return "bg-blue-100 text-blue-800"
-      default:
-        return "bg-gray-100 text-gray-800"
-    }
+  const getTitleColor = (title: string, index: number) => {
+    return index % 2 === 0 ? "bg-blue-600" : "bg-red-600"
   }
 
   const formatDate = (dateString: string) => {
@@ -83,9 +76,8 @@ export default async function IdeologyPage() {
     })
   }
 
-  const formatFileSize = (size: string) => {
-    if (!size) return "Unknown size"
-    return size.includes("MB") || size.includes("KB") ? size : `${size} KB`
+  const getIdeologyDownload = (ideologyId: number) => {
+    return downloads.find((download) => download.ideology_id === ideologyId)
   }
 
   return (
@@ -103,7 +95,7 @@ export default async function IdeologyPage() {
       <section className="py-16">
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
-            {adminIdeologies.length > 0 && (
+            {adminIdeologies.length > 0 ? (
               <div className="mb-20">
                 <div className="text-center mb-12">
                   <h2 className="text-4xl font-black text-gray-900 mb-4">Our Principles & Beliefs</h2>
@@ -113,246 +105,51 @@ export default async function IdeologyPage() {
                   </p>
                 </div>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {adminIdeologies.map((ideology) => (
-                    <Link key={ideology.id} href={`/ideology/${ideology.id}`}>
-                      <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-gray-200 h-full">
-                        <CardHeader className="pb-4">
-                          <div className="flex items-center justify-between mb-3">
-                            <Badge className={getStatusColor(ideology.status)}>{ideology.status || "Published"}</Badge>
-                            <div className="flex items-center text-gray-600 text-xs">
-                              <span>📅</span>
-                              <span className="ml-1">{formatDate(ideology.created_at)}</span>
-                            </div>
-                          </div>
-                          <CardTitle className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2">
-                            {ideology.title}
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className="flex-1 flex flex-col">
-                          <CardDescription className="text-sm text-gray-700 mb-4 line-clamp-4 leading-relaxed flex-1">
+                  {adminIdeologies.map((ideology, index) => {
+                    const ideologyDownload = getIdeologyDownload(ideology.id)
+
+                    return (
+                      <Card
+                        key={ideology.id}
+                        className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-gray-200 h-full overflow-hidden flex flex-col"
+                      >
+                        <div className={`${getTitleColor(ideology.title, index)} text-white px-6 py-4`}>
+                          <h3 className="text-xl font-bold">{ideology.title}</h3>
+                        </div>
+                        <CardContent className="pt-6 flex-1 flex flex-col">
+                          <CardDescription className="text-sm text-gray-700 leading-relaxed flex-1 mb-4">
                             {ideology.content}
                           </CardDescription>
-                          <div className="flex items-center text-blue-600 text-sm font-medium mt-auto">
-                            <span className="mr-2">📖</span>
-                            <span>Read Full Ideology</span>
-                          </div>
+
+                          {ideologyDownload && (
+                            <div className="mt-auto pt-4 border-t border-gray-200">
+                              <a
+                                href={ideologyDownload.file_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center justify-between gap-2 w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg transition-all duration-200 hover:shadow-lg group"
+                              >
+                                <div className="flex items-center gap-2">
+                                  <DownloadIcon className="w-4 h-4" />
+                                  <span className="font-semibold text-sm">Download Document</span>
+                                </div>
+                                <span className="text-xs opacity-90">
+                                  {(Number(ideologyDownload.file_size) / 1024).toFixed(0)} KB
+                                </span>
+                              </a>
+                            </div>
+                          )}
                         </CardContent>
                       </Card>
-                    </Link>
-                  ))}
+                    )
+                  })}
                 </div>
               </div>
-            )}
-
-            {downloads.length > 0 && (
-              <div className="mb-20">
-                <div className="text-center mb-12">
-                  <h2 className="text-4xl font-black text-gray-900 mb-4">Download Resources</h2>
-                  <p className="text-gray-700 text-lg max-w-3xl mx-auto leading-relaxed">
-                    Access our comprehensive policy documents, manifestos, and ideological frameworks
-                  </p>
-                </div>
-                <div className="grid md:grid-cols-2 gap-6">
-                  {downloads.map((download) => (
-                    <Card
-                      key={download.id}
-                      className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-gray-200"
-                    >
-                      <CardHeader className="pb-4">
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex items-center gap-2">
-                            <span className="text-blue-600 text-xl">📄</span>
-                            <Badge variant="outline" className="text-xs border-gray-300 text-gray-700">
-                              {download.file_type?.toUpperCase() || "PDF"}
-                            </Badge>
-                          </div>
-                          <div className="flex items-center text-gray-600 text-xs">
-                            <span>👁️</span>
-                            <span className="ml-1">{download.download_count} downloads</span>
-                          </div>
-                        </div>
-                        <CardTitle className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
-                          {download.title}
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <CardDescription className="text-sm text-gray-700 mb-4 leading-relaxed">
-                          {download.description}
-                        </CardDescription>
-                        <div className="flex items-center justify-between">
-                          <div className="text-xs text-gray-600">
-                            <span>{formatFileSize(download.file_size)}</span>
-                            <span className="mx-2">•</span>
-                            <span>{formatDate(download.created_at)}</span>
-                          </div>
-                          <Button size="sm" className="font-semibold bg-blue-600 hover:bg-blue-700" asChild>
-                            <a href={download.file_url} download={download.file_name}>
-                              <span className="mr-2">⬇️</span>
-                              Download
-                            </a>
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {downloads.length === 0 && (
-              <div className="mb-20">
-                <div className="text-center mb-12">
-                  <h2 className="text-4xl font-black text-gray-900 mb-4">Download Brochures</h2>
-                  <p className="text-gray-700 text-lg max-w-3xl mx-auto leading-relaxed">
-                    Access our comprehensive policy documents, manifestos, and ideological frameworks
-                  </p>
-                </div>
-                <div className="grid md:grid-cols-2 gap-6">
-                  <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-gray-200">
-                    <CardHeader className="pb-4">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          <span className="text-blue-600 text-xl">📄</span>
-                          <Badge variant="outline" className="text-xs border-gray-300 text-gray-700">
-                            PDF
-                          </Badge>
-                        </div>
-                        <div className="flex items-center text-gray-600 text-xs">
-                          <span>👁️</span>
-                          <span className="ml-1">2,847 downloads</span>
-                        </div>
-                      </div>
-                      <CardTitle className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
-                        ACUP Manifesto 2024
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <CardDescription className="text-sm text-gray-700 mb-4 leading-relaxed">
-                        Our comprehensive political manifesto outlining our vision for democratic transformation across
-                        Africa
-                      </CardDescription>
-                      <div className="flex items-center justify-between">
-                        <div className="text-xs text-gray-600">
-                          <span>2.4 MB</span>
-                          <span className="mx-2">•</span>
-                          <span>January 15, 2024</span>
-                        </div>
-                        <Button size="sm" className="font-semibold bg-blue-600 hover:bg-blue-700">
-                          <span className="mr-2">⬇️</span>
-                          Download
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-gray-200">
-                    <CardHeader className="pb-4">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          <span className="text-blue-600 text-xl">📄</span>
-                          <Badge variant="outline" className="text-xs border-gray-300 text-gray-700">
-                            PDF
-                          </Badge>
-                        </div>
-                        <div className="flex items-center text-gray-600 text-xs">
-                          <span>👁️</span>
-                          <span className="ml-1">1,923 downloads</span>
-                        </div>
-                      </div>
-                      <CardTitle className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
-                        Democratic Governance Framework
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <CardDescription className="text-sm text-gray-700 mb-4 leading-relaxed">
-                        Detailed framework for implementing transparent and accountable governance structures
-                      </CardDescription>
-                      <div className="flex items-center justify-between">
-                        <div className="text-xs text-gray-600">
-                          <span>1.8 MB</span>
-                          <span className="mx-2">•</span>
-                          <span>February 3, 2024</span>
-                        </div>
-                        <Button size="sm" className="font-semibold bg-blue-600 hover:bg-blue-700">
-                          <span className="mr-2">⬇️</span>
-                          Download
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-gray-200">
-                    <CardHeader className="pb-4">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          <span className="text-blue-600 text-xl">📄</span>
-                          <Badge variant="outline" className="text-xs border-gray-300 text-gray-700">
-                            PDF
-                          </Badge>
-                        </div>
-                        <div className="flex items-center text-gray-600 text-xs">
-                          <span>👁️</span>
-                          <span className="ml-1">1,456 downloads</span>
-                        </div>
-                      </div>
-                      <CardTitle className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
-                        Economic Empowerment Policy
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <CardDescription className="text-sm text-gray-700 mb-4 leading-relaxed">
-                        Strategic policies for sustainable economic development and inclusive growth across Africa
-                      </CardDescription>
-                      <div className="flex items-center justify-between">
-                        <div className="text-xs text-gray-600">
-                          <span>3.1 MB</span>
-                          <span className="mx-2">•</span>
-                          <span>March 12, 2024</span>
-                        </div>
-                        <Button size="sm" className="font-semibold bg-blue-600 hover:bg-blue-700">
-                          <span className="mr-2">⬇️</span>
-                          Download
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-gray-200">
-                    <CardHeader className="pb-4">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          <span className="text-blue-600 text-xl">📄</span>
-                          <Badge variant="outline" className="text-xs border-gray-300 text-gray-700">
-                            PDF
-                          </Badge>
-                        </div>
-                        <div className="flex items-center text-gray-600 text-xs">
-                          <span>👁️</span>
-                          <span className="ml-1">2,134 downloads</span>
-                        </div>
-                      </div>
-                      <CardTitle className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
-                        Pan-African Unity Charter
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <CardDescription className="text-sm text-gray-700 mb-4 leading-relaxed">
-                        Our vision for continental cooperation, cultural exchange, and unified African development
-                      </CardDescription>
-                      <div className="flex items-center justify-between">
-                        <div className="text-xs text-gray-600">
-                          <span>2.7 MB</span>
-                          <span className="mx-2">•</span>
-                          <span>April 8, 2024</span>
-                        </div>
-                        <Button size="sm" className="font-semibold bg-blue-600 hover:bg-blue-700">
-                          <span className="mr-2">⬇️</span>
-                          Download
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
+            ) : (
+              <div className="text-center py-12 mb-20">
+                <div className="text-6xl mb-4">📖</div>
+                <h3 className="text-2xl font-semibold text-gray-900 mb-2">No Ideologies Available</h3>
+                <p className="text-gray-600">Our ideological framework is being developed. Check back soon.</p>
               </div>
             )}
 
@@ -419,15 +216,6 @@ export default async function IdeologyPage() {
                       build sustainable societies that serve as models for democratic excellence and social progress
                       across the continent.
                     </p>
-                    <div className="pt-4">
-                      <Button
-                        variant="outline"
-                        className="font-semibold border-gray-300 text-gray-900 hover:bg-gray-50 bg-transparent"
-                      >
-                        <span className="mr-2">⚖️</span>
-                        Learn About Our Mission
-                      </Button>
-                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -490,13 +278,6 @@ export default async function IdeologyPage() {
                   policies
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <Button
-                    size="lg"
-                    variant="secondary"
-                    className="font-semibold bg-white text-gray-900 hover:bg-gray-100"
-                  >
-                    Explore All Ideologies
-                  </Button>
                   <Button
                     size="lg"
                     variant="outline"

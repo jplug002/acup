@@ -1,15 +1,16 @@
 "use client"
 
 import type React from "react"
-
+import { signIn } from "next-auth/react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import ACUPLogo from "@/components/ACUPLogo"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -17,6 +18,7 @@ export default function RegisterPage() {
     email: "",
     password: "",
     confirmPassword: "",
+    countryCode: "+1",
     phone: "",
     country: "",
   })
@@ -36,6 +38,8 @@ export default function RegisterPage() {
     }
 
     try {
+      const fullPhoneNumber = formData.phone ? `${formData.countryCode}${formData.phone}` : ""
+
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: {
@@ -45,7 +49,7 @@ export default function RegisterPage() {
           name: formData.name,
           email: formData.email,
           password: formData.password,
-          phone: formData.phone,
+          phone: fullPhoneNumber,
           country: formData.country,
         }),
       })
@@ -56,7 +60,17 @@ export default function RegisterPage() {
         throw new Error(data.error || "Registration failed")
       }
 
-      router.push("/auth/login?message=Registration successful! Please log in.")
+      const loginResult = await signIn("credentials", {
+        email: formData.email,
+        password: formData.password,
+        redirect: false,
+      })
+
+      if (loginResult?.error) {
+        router.push("/auth/login?message=Registration successful! Please log in.")
+      } else {
+        router.push("/dashboard?welcome=true")
+      }
     } catch (error) {
       setError(error instanceof Error ? error.message : "Registration failed")
     } finally {
@@ -71,13 +85,38 @@ export default function RegisterPage() {
     })
   }
 
+  const countryCodes = [
+    { code: "+1", country: "US/Canada" },
+    { code: "+44", country: "UK" },
+    { code: "+234", country: "Nigeria" },
+    { code: "+254", country: "Kenya" },
+    { code: "+27", country: "South Africa" },
+    { code: "+233", country: "Ghana" },
+    { code: "+255", country: "Tanzania" },
+    { code: "+256", country: "Uganda" },
+    { code: "+237", country: "Cameroon" },
+    { code: "+225", country: "Ivory Coast" },
+    { code: "+251", country: "Ethiopia" },
+    { code: "+20", country: "Egypt" },
+    { code: "+212", country: "Morocco" },
+    { code: "+213", country: "Algeria" },
+    { code: "+216", country: "Tunisia" },
+    { code: "+221", country: "Senegal" },
+    { code: "+260", country: "Zambia" },
+    { code: "+263", country: "Zimbabwe" },
+    { code: "+265", country: "Malawi" },
+    { code: "+267", country: "Botswana" },
+  ]
+
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <ACUPLogo />
-          <CardTitle className="text-2xl font-bold text-gray-900">Create Your Account</CardTitle>
-          <CardDescription>Join ACUP and become part of Africa's future</CardDescription>
+          <div className="flex justify-center mb-4">
+            <Image src="/acup-logo.jpg" alt="ACUP Logo" width={100} height={100} className="object-contain" />
+          </div>
+          <CardTitle className="text-2xl font-bold text-blue-900">Create Your Account</CardTitle>
+          <CardDescription className="text-blue-700">Join ACUP and become part of Africa's future</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -113,14 +152,33 @@ export default function RegisterPage() {
 
             <div>
               <Label htmlFor="phone">Phone Number</Label>
-              <Input
-                id="phone"
-                name="phone"
-                type="tel"
-                value={formData.phone}
-                onChange={handleChange}
-                className="mt-1"
-              />
+              <div className="flex gap-2 mt-1">
+                <Select
+                  value={formData.countryCode}
+                  onValueChange={(value) => setFormData({ ...formData, countryCode: value })}
+                >
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue placeholder="Code" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {countryCodes.map((item) => (
+                      <SelectItem key={item.code} value={item.code}>
+                        {item.code} ({item.country})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Input
+                  id="phone"
+                  name="phone"
+                  type="tel"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  placeholder="123456789"
+                  className="flex-1"
+                />
+              </div>
+              <p className="text-xs text-gray-500 mt-1">Select your country code and enter your phone number</p>
             </div>
 
             <div>
@@ -167,9 +225,9 @@ export default function RegisterPage() {
           </form>
 
           <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-blue-700">
               Already have an account?{" "}
-              <Link href="/auth/login" className="text-blue-600 hover:text-blue-500 font-medium">
+              <Link href="/auth/login" className="text-blue-600 hover:text-blue-500 font-medium underline">
                 Sign in
               </Link>
             </p>

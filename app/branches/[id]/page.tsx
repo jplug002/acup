@@ -17,7 +17,7 @@ interface Branch {
 
 async function getBranch(id: string): Promise<Branch | null> {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/branches`, {
+    const response = await fetch("/api/branches", {
       cache: "no-store",
     })
 

@@ -1,4 +1,38 @@
+"use client"
+
+import { useState, useEffect } from "react"
+
+interface LeadershipProfile {
+  id: number
+  name: string
+  role: string
+  title: string
+  bio: string
+  photo_url: string
+}
+
 export default function LeadershipPage() {
+  const [leadership, setLeadership] = useState<LeadershipProfile[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchLeadership()
+  }, [])
+
+  const fetchLeadership = async () => {
+    try {
+      const response = await fetch("/api/admin/leadership")
+      if (response.ok) {
+        const data = await response.json()
+        setLeadership(data)
+      }
+    } catch (error) {
+      console.error("Error fetching leadership:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <main className="min-h-screen bg-white">
       {/* Hero Section */}
@@ -17,50 +51,42 @@ export default function LeadershipPage() {
           <div className="max-w-6xl mx-auto">
             <h2 className="text-3xl font-bold text-blue-900 text-center mb-12">Executive Leadership</h2>
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
-              {/* Leader Card 1 */}
-              <div className="bg-white border-2 border-red-500 rounded-lg shadow-lg overflow-hidden">
-                <div className="h-64 bg-gray-200 flex items-center justify-center">
-                  <span className="text-6xl">👤</span>
-                </div>
-                <div className="p-6">
-                  <h3 className="text-xl font-bold text-blue-600 mb-2">Party President</h3>
-                  <p className="text-red-500 font-semibold mb-3">Chief Executive Officer</p>
-                  <p className="text-gray-700 text-sm">
-                    Leading the vision for African continental unity through democratic governance and progressive
-                    policies.
-                  </p>
-                </div>
+            {loading ? (
+              <div className="text-center py-12">
+                <p className="text-gray-600">Loading leadership team...</p>
               </div>
-
-              {/* Leader Card 2 */}
-              <div className="bg-white border-2 border-red-500 rounded-lg shadow-lg overflow-hidden">
-                <div className="h-64 bg-gray-200 flex items-center justify-center">
-                  <span className="text-6xl">👤</span>
-                </div>
-                <div className="p-6">
-                  <h3 className="text-xl font-bold text-blue-600 mb-2">Vice President</h3>
-                  <p className="text-red-500 font-semibold mb-3">Deputy Leader</p>
-                  <p className="text-gray-700 text-sm">
-                    Supporting strategic initiatives and coordinating regional development programs across Africa.
-                  </p>
-                </div>
+            ) : leadership.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-gray-600">No leadership profiles available yet.</p>
               </div>
-
-              {/* Leader Card 3 */}
-              <div className="bg-white border-2 border-red-500 rounded-lg shadow-lg overflow-hidden">
-                <div className="h-64 bg-gray-200 flex items-center justify-center">
-                  <span className="text-6xl">👤</span>
-                </div>
-                <div className="p-6">
-                  <h3 className="text-xl font-bold text-blue-600 mb-2">Secretary General</h3>
-                  <p className="text-red-500 font-semibold mb-3">Operations Director</p>
-                  <p className="text-gray-700 text-sm">
-                    Managing party operations and ensuring effective communication across all continental branches.
-                  </p>
-                </div>
+            ) : (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+                {leadership.map((leader) => (
+                  <div
+                    key={leader.id}
+                    className="bg-white border-2 border-red-500 rounded-lg shadow-lg overflow-hidden"
+                  >
+                    <div className="h-64 bg-gray-200 flex items-center justify-center overflow-hidden">
+                      {leader.photo_url ? (
+                        <img
+                          src={leader.photo_url || "/placeholder.svg"}
+                          alt={leader.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-6xl">👤</span>
+                      )}
+                    </div>
+                    <div className="p-6">
+                      <h3 className="text-xl font-bold text-blue-600 mb-2">{leader.name}</h3>
+                      <p className="text-red-500 font-semibold mb-3">{leader.role}</p>
+                      {leader.title && <p className="text-gray-600 font-medium mb-2">{leader.title}</p>}
+                      {leader.bio && <p className="text-gray-700 text-sm">{leader.bio}</p>}
+                    </div>
+                  </div>
+                ))}
               </div>
-            </div>
+            )}
 
             {/* Leadership Principles */}
             <div className="bg-red-500 text-white rounded-lg p-8 mb-16">

@@ -2,8 +2,12 @@ import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { CountryFlag } from "@/components/CountryFlag"
+import { neon } from "@neondatabase/serverless"
+
+export const dynamic = "force-dynamic"
+export const revalidate = 0
+
+const sql = neon(process.env.DATABASE_URL!)
 
 interface Branch {
   id: number
@@ -15,41 +19,79 @@ interface Branch {
   created_at: string
 }
 
+interface ContactInfo {
+  email?: string
+  phone?: string
+  description?: string
+}
+
 async function getBranches(): Promise<Branch[]> {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/branches`, {
-      cache: "no-store",
-    })
-
-    if (!response.ok) {
+    if (!process.env.DATABASE_URL) {
+      console.error("DATABASE_URL is not defined")
       return []
     }
 
-    return await response.json()
+    const branches = await sql`
+      SELECT id, name, location, country, contact_info, status, created_at
+      FROM branches 
+      WHERE status = 'ACTIVE'
+      ORDER BY name ASC
+    `
+
+    console.log(`[Branches] Fetched ${branches.length} branches`)
+    return branches as Branch[]
   } catch (error) {
-    console.error("Error fetching branches:", error)
+    console.error("[Branches] Error fetching branches:", error)
     return []
   }
 }
 
+function parseContactInfo(contactInfoStr: string | null | undefined): ContactInfo {
+  if (!contactInfoStr) {
+    return {}
+  }
+
+  try {
+    // Handle case where contact_info might already be an object
+    if (typeof contactInfoStr === "object") {
+      return contactInfoStr as ContactInfo
+    }
+
+    const parsed = JSON.parse(contactInfoStr)
+    return parsed || {}
+  } catch (error) {
+    console.error("[Branches] Error parsing contact info:", error, "Raw value:", contactInfoStr)
+    return {}
+  }
+}
+
 export default async function BranchesPage() {
-  const adminBranches = await getBranches()
+  let adminBranches: Branch[] = []
+
+  try {
+    adminBranches = await getBranches()
+  } catch (error) {
+    console.error("[Branches] Fatal error loading branches:", error)
+    // Page will render with empty branches array
+  }
 
   const getStatusColor = (status: string) => {
     switch (status?.toLowerCase()) {
       case "active":
-        return "bg-green-100 text-green-800"
+        return "bg-emerald-100 text-emerald-700 border-emerald-200"
       case "establishing":
-        return "bg-blue-100 text-blue-800"
+        return "bg-blue-100 text-blue-700 border-blue-200"
       case "inactive":
-        return "bg-gray-100 text-gray-800"
+        return "bg-gray-100 text-gray-700 border-gray-200"
       default:
-        return "bg-blue-100 text-blue-800"
+        return "bg-blue-100 text-blue-700 border-blue-200"
     }
   }
 
-  const getCountryFlag = (country: string) => {
-    return <CountryFlag country={country} size={32} className="mx-auto" />
+  const getBranchColor = (index: number) => {
+    // Alternate between blue and red based on index
+    return index % 2 === 0 ? "bg-blue-600" : "bg-red-600"
   }
 
   return (
@@ -75,7 +117,7 @@ export default async function BranchesPage() {
               </p>
             </div>
 
-            {adminBranches.length > 0 && (
+            {adminBranches.length > 0 ? (
               <div className="mb-20">
                 <div className="text-center mb-12">
                   <h3 className="text-3xl font-bold text-gray-900 mb-4">Active Branches</h3>
@@ -84,35 +126,74 @@ export default async function BranchesPage() {
                   </p>
                 </div>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {adminBranches.map((branch) => (
-                    <Link key={branch.id} href={`/branches/${branch.id}`}>
-                      <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-gray-200">
-                        <CardHeader className="pb-4">
-                          <div className="flex items-center justify-between mb-3">
-                            <Badge className={getStatusColor(branch.status)}>{branch.status || "Active"}</Badge>
-                            {getCountryFlag(branch.country)}
-                          </div>
-                          <CardTitle className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
-                            {branch.name}
-                          </CardTitle>
-                          <CardDescription className="text-sm text-gray-600">{branch.country}</CardDescription>
-                        </CardHeader>
-                        <CardContent>
+                  {adminBranches.map((branch, index) => {
+                    const contactInfo = parseContactInfo(branch.contact_info)
+
+                    return (
+                      <Card
+                        key={branch.id}
+                        className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-gray-200 overflow-hidden"
+                      >
+                        <div className={`${getBranchColor(index)} text-white py-4 px-6`}>
+                          <h3 className="text-xl font-bold">{branch.name}</h3>
+                        </div>
+
+                        <CardContent className="pt-6">
                           <div className="space-y-3">
-                            <div className="flex items-center text-sm text-gray-600">
-                              <span className="mr-2 text-blue-600">📍</span>
-                              <span>{branch.location}</span>
-                            </div>
-                            <div className="flex items-start text-sm text-gray-600">
-                              <span className="mr-2 text-blue-600 mt-0.5">📞</span>
-                              <span className="break-all">{branch.contact_info}</span>
-                            </div>
+                            {/* Location */}
+                            {branch.location && (
+                              <div className="flex items-start text-sm text-gray-600">
+                                <span className="mr-2 text-blue-600">📍</span>
+                                <span>{branch.location}</span>
+                              </div>
+                            )}
+
+                            {/* Email */}
+                            {contactInfo.email && (
+                              <div className="flex items-start text-sm text-gray-600">
+                                <span className="mr-2 text-blue-600">📧</span>
+                                <a
+                                  href={`mailto:${contactInfo.email}`}
+                                  className="text-sm text-gray-600 hover:text-blue-600 transition-colors break-all"
+                                >
+                                  {contactInfo.email}
+                                </a>
+                              </div>
+                            )}
+
+                            {/* Phone */}
+                            {contactInfo.phone && (
+                              <div className="flex items-start text-sm text-gray-600">
+                                <span className="mr-2 text-blue-600">📞</span>
+                                <a
+                                  href={`tel:${contactInfo.phone}`}
+                                  className="text-sm text-gray-600 hover:text-blue-600 transition-colors"
+                                >
+                                  {contactInfo.phone}
+                                </a>
+                              </div>
+                            )}
+
+                            {/* Description */}
+                            {contactInfo.description && (
+                              <div className="pt-2 border-t border-gray-200">
+                                <p className="text-sm text-gray-600 italic leading-relaxed">
+                                  {contactInfo.description}
+                                </p>
+                              </div>
+                            )}
                           </div>
                         </CardContent>
                       </Card>
-                    </Link>
-                  ))}
+                    )
+                  })}
                 </div>
+              </div>
+            ) : (
+              <div className="text-center py-12 mb-20">
+                <div className="text-6xl mb-4">🌍</div>
+                <h3 className="text-2xl font-semibold text-gray-900 mb-2">No Branches Available</h3>
+                <p className="text-gray-600">We are expanding across Africa. Check back soon for branch locations.</p>
               </div>
             )}
 
@@ -152,68 +233,6 @@ export default async function BranchesPage() {
                       </div>
                     </div>
                   ))}
-                </div>
-              </CardContent>
-            </Card>
-            
-            {/* Our Branches Across Africa section */}
-            <Card className="border border-gray-200">
-              <CardHeader className="pb-6">
-                <CardTitle className="text-3xl font-bold text-gray-900 flex items-center gap-4">
-                  <span className="text-4xl">🌍</span>
-                  Our Branches Across Africa
-                </CardTitle>
-                <CardDescription className="text-base text-gray-600">
-                  Democratic foundations connecting communities across the African continent
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  <Card className="text-center hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border border-gray-100">
-                    <CardContent className="pt-6">
-                      <div className="flex justify-center mb-3">
-                        <CountryFlag country="Ghana" size={48} />
-                      </div>
-                      <CardTitle className="text-lg font-bold text-gray-900">Ghana</CardTitle>
-                      <CardDescription className="text-sm text-gray-600">Accra Branch</CardDescription>
-                    </CardContent>
-                  </Card>
-                  <Card className="text-center hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border border-gray-100">
-                    <CardContent className="pt-6">
-                      <div className="flex justify-center mb-3">
-                        <CountryFlag country="Nigeria" size={48} />
-                      </div>
-                      <CardTitle className="text-lg font-bold text-gray-900">Nigeria</CardTitle>
-                      <CardDescription className="text-sm text-gray-600">Lagos Branch</CardDescription>
-                    </CardContent>
-                  </Card>
-                  <Card className="text-center hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border border-gray-100">
-                    <CardContent className="pt-6">
-                      <div className="flex justify-center mb-3">
-                        <CountryFlag country="South Africa" size={48} />
-                      </div>
-                      <CardTitle className="text-lg font-bold text-gray-900">South Africa</CardTitle>
-                      <CardDescription className="text-sm text-gray-600">Cape Town Branch</CardDescription>
-                    </CardContent>
-                  </Card>
-                  <Card className="text-center hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border border-gray-100">
-                    <CardContent className="pt-6">
-                      <div className="flex justify-center mb-3">
-                        <CountryFlag country="Kenya" size={48} />
-                      </div>
-                      <CardTitle className="text-lg font-bold text-gray-900">Kenya</CardTitle>
-                      <CardDescription className="text-sm text-gray-600">Nairobi Branch</CardDescription>
-                    </CardContent>
-                  </Card>
-                  <Card className="text-center hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border border-gray-100">
-                    <CardContent className="pt-6">
-                      <div className="flex justify-center mb-3">
-                        <CountryFlag country="Côte d'Ivoire" size={48} />
-                      </div>
-                      <CardTitle className="text-lg font-bold text-gray-900">Côte d'Ivoire</CardTitle>
-                      <CardDescription className="text-sm text-gray-600">Abidjan Branch</CardDescription>
-                    </CardContent>
-                  </Card>
                 </div>
               </CardContent>
             </Card>

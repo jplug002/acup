@@ -272,7 +272,29 @@ export const ideologyQueries = {
         )
         RETURNING *
       `
-      return result[0]
+
+      const ideology = result[0]
+
+      await sql`
+        INSERT INTO downloads (
+          title, description, file_url, file_name, file_type, 
+          category, ideology_id, status, created_at, updated_at
+        )
+        VALUES (
+          ${ideologyData.title}, 
+          ${ideologyData.description},
+          ${`/downloads/${ideology.id}-${ideologyData.title.toLowerCase().replace(/\s+/g, "-")}.pdf`},
+          ${`${ideologyData.title.toLowerCase().replace(/\s+/g, "-")}.pdf`},
+          'PDF',
+          ${ideologyData.category || "ideology"},
+          ${ideology.id},
+          'published',
+          NOW(),
+          NOW()
+        )
+      `
+
+      return ideology
     } catch (error) {
       throw new DatabaseError("Failed to create ideology", error)
     }
@@ -310,6 +332,22 @@ export const ideologyQueries = {
         WHERE id = $${values.length}
         RETURNING *
       `
+
+      if (updates.title || updates.description) {
+        const ideology = result[0]
+        await sql`
+          UPDATE downloads
+          SET 
+            title = ${updates.title || ideology.title},
+            description = ${updates.description || ideology.description},
+            file_url = ${updates.title ? `/downloads/${ideology.id}-${updates.title.toLowerCase().replace(/\s+/g, "-")}.pdf` : sql`file_url`},
+            file_name = ${updates.title ? `${updates.title.toLowerCase().replace(/\s+/g, "-")}.pdf` : sql`file_name`},
+            category = ${updates.category || sql`category`},
+            updated_at = NOW()
+          WHERE ideology_id = ${id}
+        `
+      }
+
       return result.length > 0 ? result[0] : null
     } catch (error) {
       throw new DatabaseError("Failed to update ideology", error)
@@ -318,6 +356,7 @@ export const ideologyQueries = {
 
   async delete(id: string) {
     try {
+      await sql`DELETE FROM downloads WHERE ideology_id = ${id}`
       await sql`DELETE FROM ideologies WHERE id = ${id}`
       return true
     } catch (error) {
@@ -578,6 +617,49 @@ export const membershipQueries = {
       return result.length > 0 ? result[0] : null
     } catch (error) {
       throw new DatabaseError("Failed to update membership status", error)
+    }
+  },
+}
+
+export const downloadQueries = {
+  async getAll() {
+    try {
+      const result = await sql`
+        SELECT d.*, i.title as ideology_title
+        FROM downloads d
+        LEFT JOIN ideologies i ON d.ideology_id = i.id
+        WHERE d.status = 'published'
+        ORDER BY d.created_at DESC
+      `
+      return result
+    } catch (error) {
+      throw new DatabaseError("Failed to fetch downloads", error)
+    }
+  },
+
+  async getByIdeologyId(ideologyId: string) {
+    try {
+      const result = await sql`
+        SELECT * FROM downloads 
+        WHERE ideology_id = ${ideologyId} AND status = 'published'
+        ORDER BY created_at DESC
+      `
+      return result
+    } catch (error) {
+      throw new DatabaseError("Failed to fetch downloads for ideology", error)
+    }
+  },
+
+  async incrementDownloadCount(id: number) {
+    try {
+      await sql`
+        UPDATE downloads 
+        SET download_count = download_count + 1
+        WHERE id = ${id}
+      `
+      return true
+    } catch (error) {
+      throw new DatabaseError("Failed to increment download count", error)
     }
   },
 }

@@ -19,39 +19,28 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
   }
 }
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const { id } = params
-    const body = await request.json()
-    const {
-      title,
-      description,
-      event_date,
-      end_date,
-      location,
-      event_type,
-      max_attendees,
-      registration_required,
-      status,
-    } = body
+    const { title, description, event_date, location, status } = await request.json()
 
     const result = await sql`
       UPDATE events SET
-        title = ${title},
-        description = ${description},
-        event_date = ${event_date},
-        end_date = ${end_date},
-        location = ${location},
-        event_type = ${event_type},
-        max_attendees = ${max_attendees},
-        registration_required = ${registration_required},
-        status = ${status || "active"},
+        title = COALESCE(${title}, title),
+        description = COALESCE(${description}, description),
+        event_date = COALESCE(${event_date}, event_date),
+        location = COALESCE(${location}, location),
+        status = COALESCE(${status}, status),
         updated_at = NOW()
       WHERE id = ${id}
       RETURNING *
     `
 
-    return NextResponse.json(result[0])
+    if (result.length === 0) {
+      return NextResponse.json({ error: "Event not found" }, { status: 404 })
+    }
+
+    return NextResponse.json({ success: true, event: result[0] })
   } catch (error) {
     console.error("Error updating event:", error)
     return NextResponse.json({ error: "Failed to update event" }, { status: 500 })

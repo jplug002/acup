@@ -8,7 +8,7 @@ export async function GET() {
     const events = await sql`
       SELECT id, title, description, location, event_date, status, created_at, updated_at
       FROM events 
-      WHERE status IN ('ACTIVE', 'UPCOMING') AND event_date >= CURRENT_DATE
+      WHERE status IN ('ACTIVE', 'UPCOMING')
       ORDER BY event_date ASC
     `
 

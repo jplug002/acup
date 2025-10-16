@@ -6,11 +6,11 @@ import { useState } from "react"
 import { signIn } from "next-auth/react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import ACUPLogo from "@/components/ACUPLogo"
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
@@ -38,7 +38,7 @@ export default function LoginPage() {
       if (result?.error) {
         setError("You don't have an account with us. Register now.")
       } else {
-        router.push("/dashboard")
+        router.push("/dashboard?welcome=true")
       }
     } catch (error) {
       setError("Login failed. Please try again.")
@@ -58,9 +58,11 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <ACUPLogo />
-          <CardTitle className="text-2xl font-bold text-gray-900">Welcome Back</CardTitle>
-          <CardDescription>Sign in to your ACUP account</CardDescription>
+          <div className="flex justify-center mb-4">
+            <Image src="/acup-logo.jpg" alt="ACUP Logo" width={100} height={100} className="object-contain" />
+          </div>
+          <CardTitle className="text-2xl font-bold text-blue-900">Welcome Back</CardTitle>
+          <CardDescription className="text-blue-700">Sign in to your ACUP account</CardDescription>
         </CardHeader>
         <CardContent>
           {message && (
@@ -97,7 +99,15 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <Label htmlFor="password">Password</Label>
+              <div className="flex items-center justify-between mb-1">
+                <Label htmlFor="password">Password</Label>
+                <Link
+                  href="/auth/forgot-password"
+                  className="text-sm text-blue-600 hover:text-blue-500 hover:underline"
+                >
+                  Forgot password?
+                </Link>
+              </div>
               <Input
                 id="password"
                 name="password"
@@ -115,9 +125,9 @@ export default function LoginPage() {
           </form>
 
           <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-blue-700">
               Don't have an account?{" "}
-              <Link href="/auth/register" className="text-blue-600 hover:text-blue-500 font-medium">
+              <Link href="/auth/register" className="text-blue-600 hover:text-blue-500 font-medium underline">
                 Create one
               </Link>
             </p>

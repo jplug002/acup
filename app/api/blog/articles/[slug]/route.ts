@@ -7,39 +7,24 @@ export async function GET(request: NextRequest, { params }: { params: { slug: st
   try {
     const { slug } = params
 
-    // Get article with categories
-    const articleQuery = `
+    const articles = await sql`
       SELECT 
-        ba.id,
-        ba.title,
-        ba.slug,
-        ba.content,
-        ba.excerpt,
-        ba.featured_image,
-        ba.published_at,
-        ba.views_count,
-        ba.likes_count,
-        u.first_name || ' ' || u.last_name as author_name,
-        COALESCE(
-          JSON_AGG(
-            JSON_BUILD_OBJECT(
-              'id', bc.id,
-              'name', bc.name,
-              'slug', bc.slug,
-              'color', bc.color
-            )
-          ) FILTER (WHERE bc.id IS NOT NULL), 
-          '[]'
-        ) as categories
-      FROM blog_articles ba
-      LEFT JOIN users u ON ba.author_id = u.id
-      LEFT JOIN article_categories ac ON ba.id = ac.article_id
-      LEFT JOIN blog_categories bc ON ac.category_id = bc.id
-      WHERE ba.slug = $1 AND ba.status = 'published'
-      GROUP BY ba.id, u.first_name, u.last_name
+        a.id,
+        a.title,
+        a.slug,
+        a.content,
+        a.excerpt,
+        a.featured_image,
+        a.published_at,
+        a.views_count,
+        a.likes_count,
+        a.category,
+        a.tags,
+        COALESCE(u.first_name || ' ' || u.last_name, 'ACUP Admin') as author_name
+      FROM articles a
+      LEFT JOIN users u ON a.author_id = u.id
+      WHERE a.slug = ${slug} AND a.status = 'published'
     `
-
-    const articles = await sql(articleQuery, [slug])
 
     if (articles.length === 0) {
       return NextResponse.json({ error: "Article not found" }, { status: 404 })
@@ -47,12 +32,42 @@ export async function GET(request: NextRequest, { params }: { params: { slug: st
 
     const article = articles[0]
 
-    // Increment view count
-    await sql("UPDATE blog_articles SET views_count = views_count + 1 WHERE id = $1", [article.id])
+    await sql`UPDATE articles SET views_count = views_count + 1 WHERE id = ${article.id}`
 
-    return NextResponse.json({ article })
+    const categoryColors: Record<string, string> = {
+      Politics: "#3b82f6",
+      "Pan-Africanism": "#10b981",
+      Democracy: "#8b5cf6",
+      News: "#ef4444",
+      Analysis: "#f59e0b",
+      Opinion: "#ec4899",
+    }
+
+    const categories = article.category
+      ? [
+          {
+            id: 1,
+            name: article.category,
+            slug: article.category.toLowerCase().replace(/\s+/g, "-"),
+            color: categoryColors[article.category] || "#6b7280",
+          },
+        ]
+      : []
+
+    return NextResponse.json({
+      article: {
+        ...article,
+        categories,
+      },
+    })
   } catch (error) {
-    console.error("Error fetching article:", error)
-    return NextResponse.json({ error: "Failed to fetch article" }, { status: 500 })
+    console.error("[v0] Error fetching article:", error)
+    return NextResponse.json(
+      {
+        error: "Failed to fetch article",
+        details: error instanceof Error ? error.message : String(error),
+      },
+      { status: 500 },
+    )
   }
 }

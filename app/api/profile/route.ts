@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import { neon } from "@neondatabase/serverless"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
+import { generateMembershipNumber } from "@/lib/membership"
 
 const sql = neon(process.env.DATABASE_URL!)
 
@@ -29,7 +30,23 @@ export async function GET() {
       return NextResponse.json({ error: "User not found" }, { status: 404 })
     }
 
-    return NextResponse.json({ profile: profile[0] })
+    const userProfile = profile[0]
+
+    if (!userProfile.membership_number || userProfile.membership_number.startsWith("ACUP-")) {
+      const newMembershipNumber = generateMembershipNumber(userProfile.id)
+
+      // Update the membership number in the database
+      await sql`
+        UPDATE user_profiles 
+        SET membership_number = ${newMembershipNumber}, updated_at = CURRENT_TIMESTAMP
+        WHERE user_id = ${session.user.id}
+      `
+
+      // Update the profile object to return the new membership number
+      userProfile.membership_number = newMembershipNumber
+    }
+
+    return NextResponse.json({ profile: userProfile })
   } catch (error) {
     console.error("Error fetching profile:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
@@ -46,12 +63,29 @@ export async function POST(request: NextRequest) {
 
     const data = await request.json()
 
+    const userData = await sql`
+      SELECT id, first_name, created_at FROM users WHERE id = ${session.user.id}
+    `
+
+    if (userData.length === 0) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 })
+    }
+
+    const user = userData[0]
+
     // Check if profile exists
     const existingProfile = await sql`
-      SELECT id FROM user_profiles WHERE user_id = ${session.user.id}
+      SELECT id, membership_number FROM user_profiles WHERE user_id = ${session.user.id}
     `
 
     if (existingProfile.length > 0) {
+      let membershipNumber = existingProfile[0].membership_number
+
+      const isOldFormat = membershipNumber && membershipNumber.startsWith("ACUP-")
+      if (!membershipNumber || isOldFormat) {
+        membershipNumber = generateMembershipNumber(user.id)
+      }
+
       // Update existing profile
       const updatedProfile = await sql`
         UPDATE user_profiles SET
@@ -82,6 +116,7 @@ export async function POST(request: NextRequest) {
           preferred_communication = ${data.preferred_communication || null},
           newsletter_subscription = ${data.newsletter_subscription !== undefined ? data.newsletter_subscription : true},
           privacy_settings = ${JSON.stringify(data.privacy_settings || {})},
+          membership_number = ${membershipNumber || null},
           updated_at = CURRENT_TIMESTAMP
         WHERE user_id = ${session.user.id}
         RETURNING *
@@ -89,6 +124,8 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json({ profile: updatedProfile[0] })
     } else {
+      const membershipNumber = generateMembershipNumber(user.id)
+
       // Create new profile
       const newProfile = await sql`
         INSERT INTO user_profiles (
@@ -96,7 +133,7 @@ export async function POST(request: NextRequest) {
           postal_code, occupation, employer, education_level, political_experience, languages_spoken,
           interests, skills, emergency_contact_name, emergency_contact_phone, emergency_contact_relationship,
           sponsor_name, branch_preference, volunteer_interests, social_media_links, preferred_communication,
-          newsletter_subscription, privacy_settings
+          newsletter_subscription, privacy_settings, membership_number
         ) VALUES (
           ${session.user.id}, ${data.bio || null}, ${data.profile_picture || null}, ${data.date_of_birth || null},
           ${data.gender || null}, ${data.phone || null}, ${data.address || null}, ${data.city || null},
@@ -108,7 +145,7 @@ export async function POST(request: NextRequest) {
           ${data.branch_preference || null}, ${data.volunteer_interests || "{}"}, 
           ${JSON.stringify(data.social_media_links || {})}, ${data.preferred_communication || null},
           ${data.newsletter_subscription !== undefined ? data.newsletter_subscription : true},
-          ${JSON.stringify(data.privacy_settings || {})}
+          ${JSON.stringify(data.privacy_settings || {})}, ${membershipNumber}
         )
         RETURNING *
       `

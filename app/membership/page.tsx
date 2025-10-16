@@ -53,10 +53,6 @@ export default function MembershipPage() {
                 Already a member?{" "}
                 <Link href="/auth/login" className="text-red-600 hover:underline font-medium">
                   Sign In
-                </Link>{" "}
-                or{" "}
-                <Link href="/membership-card" className="text-red-600 hover:underline font-medium">
-                  Get your membership card
                 </Link>
               </p>
             </div>
