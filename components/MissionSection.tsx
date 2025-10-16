@@ -78,7 +78,7 @@ const MissionSection = () => {
               <div className="md:w-1/3 flex-shrink-0 flex items-center justify-center">
                 <div className="relative w-full h-[300px] md:h-[400px] rounded-lg overflow-hidden border border-gray-200 shadow-md">
                   <Image 
-                    src="/african-political-leader-portrait.jpg" 
+                    src="/IMG-20251009-WA0018.jpg" 
                     alt="African Leadership Mission" 
                     fill
                     style={{ objectFit: 'cover' }}
