@@ -164,7 +164,7 @@ export default async function EventsPage() {
                 <Button
                   variant="outline"
                   className="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition-colors bg-transparent"
-                ><Link href="auth/register">
+                ><Link href="register">
                   <span className="mr-2">📅</span>
                   Join Acup Today
                   </Link>
