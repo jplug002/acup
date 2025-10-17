@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   description: "Building Africa's Future Together",
   generator: "v0.app",
   icons: {
-    icon: "/favicon.ico",
+    icon: "/acup-logo.jpg",
     shortcut: "/acup-logo.jpg",
     apple: "/acup-logo.jpg",
   },

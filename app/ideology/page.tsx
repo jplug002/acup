@@ -19,6 +19,7 @@ interface Ideology {
 
 interface IdeologyDownload {
   id: number
+  ideology_id?: number
   title: string
   description: string
   file_url: string
@@ -47,8 +48,9 @@ async function getIdeologies(): Promise<Ideology[]> {
 async function getDownloads(): Promise<IdeologyDownload[]> {
   try {
     const downloads = await sql`
-      SELECT * FROM downloads 
-      WHERE status = 'published' 
+      SELECT id, ideology_id, title, description, file_url, file_name, file_type, file_size, category, status
+      FROM downloads 
+      WHERE status = 'published' AND ideology_id IS NOT NULL
       ORDER BY created_at DESC
     `
     return downloads as IdeologyDownload[]
@@ -74,12 +76,8 @@ export default async function IdeologyPage() {
     })
   }
 
-  const getIdeologyDownload = (ideologyTitle: string) => {
-    return downloads.find(
-      (download) =>
-        download.title.toLowerCase().includes(ideologyTitle.toLowerCase()) ||
-        download.description?.toLowerCase().includes(ideologyTitle.toLowerCase()),
-    )
+  const getIdeologyDownload = (ideologyId: number) => {
+    return downloads.find((download) => download.ideology_id === ideologyId)
   }
 
   return (
@@ -108,7 +106,7 @@ export default async function IdeologyPage() {
                 </div>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                   {adminIdeologies.map((ideology, index) => {
-                    const ideologyDownload = getIdeologyDownload(ideology.title)
+                    const ideologyDownload = getIdeologyDownload(ideology.id)
 
                     return (
                       <Card
@@ -127,14 +125,17 @@ export default async function IdeologyPage() {
                             <div className="mt-auto pt-4 border-t border-gray-200">
                               <a
                                 href={ideologyDownload.file_url}
-                                download={ideologyDownload.file_name}
+                                target="_blank"
+                                rel="noopener noreferrer"
                                 className="flex items-center justify-between gap-2 w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg transition-all duration-200 hover:shadow-lg group"
                               >
                                 <div className="flex items-center gap-2">
                                   <DownloadIcon className="w-4 h-4" />
                                   <span className="font-semibold text-sm">Download Document</span>
                                 </div>
-                                <span className="text-xs opacity-90">{ideologyDownload.file_size}</span>
+                                <span className="text-xs opacity-90">
+                                  {(Number(ideologyDownload.file_size) / 1024).toFixed(0)} KB
+                                </span>
                               </a>
                             </div>
                           )}
