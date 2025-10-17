@@ -1,11 +1,12 @@
 import Image from "next/image"
 
 const CountryCarousel = () => {
+  // Updated with all four unique new images
   const countries = [
-    { name: "Ghana", image: "/ghana.jpg" },
-    { name: "South Africa", image: "/south africa.jpg" },
-    { name: "Guinea", image: "/guinea.jpg" },
-    { name: "Côte d'Ivoire", image: "/cotedevoir.jpg" },
+    { name: "Ghana", image: "/IMG-20251017-WA0000.jpg" },
+    { name: "South Africa", image: "/IMG-20251017-WA0001.jpg" },
+    { name: "Guinea", image: "/IMG-20251017-WA0002.jpg" },
+    { name: "Côte d'Ivoire", image: "/IMG-20251017-WA0003.jpg" },
   ]
 
   return (
