@@ -54,7 +54,7 @@ const VisionSection = () => {
               <div className="md:w-1/3 flex-shrink-0 flex items-center justify-center">
                 <div className="relative w-full h-[300px] md:h-[400px] rounded-lg overflow-hidden border border-gray-200 shadow-md">
                   <Image 
-                    src="/IMG-20251009-WA0020(2).jpg" 
+                    src="/IMG-20251009-WA0020(2) copy.jpg" 
                     alt="Vision of African Unity" 
                     fill
                     style={{ objectFit: 'cover' }}
