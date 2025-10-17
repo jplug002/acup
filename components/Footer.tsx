@@ -29,7 +29,7 @@ const Footer = () => {
         </div>
 
         <div className="border-t border-blue-400 pt-4 mt-6 text-center">
-          <span>© 2024 Africa Continental Union Party</span>
+          <span>© 2024 Africa Continental Unity Party</span>
         </div>
       </div>
     </footer>
