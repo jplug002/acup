@@ -23,14 +23,11 @@ const CountryCarousel = () => {
             >
               <div className="relative aspect-[3/2]">
                 <Image
-                  src={country.image || "/placeholder.svg"}
-                  alt={`ACUP in ${country.name}`}
+                  src={country.image}
+                  alt="ACUP Event Photo"
                   fill
                   className="object-cover"
                 />
-              </div>
-              <div className="p-4">
-                <h3 className="text-lg font-semibold text-center text-gray-800">{country.name}</h3>
               </div>
             </div>
           ))}
