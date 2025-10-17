@@ -3,53 +3,6 @@ import { neon } from "@neondatabase/serverless"
 
 const sql = neon(process.env.DATABASE_URL!)
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
-  try {
-    const { id } = params
-
-    console.log("[v0] Fetching article details for ID:", id)
-
-    const result = await sql`
-      SELECT 
-        a.id,
-        a.title,
-        a.slug,
-        a.content,
-        a.excerpt,
-        a.category,
-        a.tags,
-        a.featured_image,
-        a.status,
-        a.published_at,
-        a.created_at,
-        a.updated_at,
-        a.views_count,
-        a.likes_count,
-        a.author_id,
-        COALESCE(u.first_name || ' ' || u.last_name, 'ACUP Admin') as author_name
-      FROM articles a
-      LEFT JOIN users u ON a.author_id = u.id
-      WHERE a.id = ${id}
-    `
-
-    if (result.length === 0) {
-      return NextResponse.json({ error: "Article not found" }, { status: 404 })
-    }
-
-    console.log("[v0] Article found:", result[0].title)
-    return NextResponse.json({ article: result[0] })
-  } catch (error) {
-    console.error("[v0] Error fetching article:", error)
-    return NextResponse.json(
-      {
-        error: "Failed to fetch article",
-        details: error instanceof Error ? error.message : String(error),
-      },
-      { status: 500 },
-    )
-  }
-}
-
 export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const { id } = params
@@ -123,30 +76,28 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 
     console.log("[v0] Updating article:", { id, title, status })
 
-    if (!title || !content) {
-      return NextResponse.json({ error: "Title and content are required" }, { status: 400 })
-    }
-
-    // Generate slug from title
+    // Generate slug from title if title is being updated
     const slug = title
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "")
-      .substring(0, 100)
+      ? title
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-|-$/g, "")
+          .substring(0, 100)
+      : undefined
 
     const publishedAt = status === "published" ? new Date().toISOString() : null
 
     const result = await sql`
       UPDATE articles SET
-        title = ${title},
-        content = ${content},
-        excerpt = ${excerpt || null},
-        category = ${category || null},
-        tags = ${tags || []},
-        featured_image = ${featured_image || null},
-        status = ${status || "draft"},
-        slug = ${slug},
-        published_at = ${publishedAt},
+        title = COALESCE(${title}, title),
+        content = COALESCE(${content}, content),
+        excerpt = COALESCE(${excerpt}, excerpt),
+        category = COALESCE(${category}, category),
+        tags = COALESCE(${tags}, tags),
+        featured_image = COALESCE(${featured_image}, featured_image),
+        status = COALESCE(${status}, status),
+        slug = COALESCE(${slug}, slug),
+        published_at = COALESCE(${publishedAt}, published_at),
         updated_at = NOW()
       WHERE id = ${id}
       RETURNING *

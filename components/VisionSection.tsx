@@ -1,6 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Eye, History, Globe } from "lucide-react"
-import Image from "next/image"
 
 const VisionSection = () => {
   return (
@@ -15,52 +14,35 @@ const VisionSection = () => {
           </div>
           
           <CardContent className="p-6">
-            <div className="flex flex-col md:flex-row gap-8">
-              <div className="flex-1">
-                <div className="mb-8 bg-blue-50 p-6 rounded-lg border border-blue-100">
-                  <CardDescription className="text-xl font-medium text-blue-800 italic leading-relaxed">
-                    "To establish an African global power-base, through a continental government built on a new leadership
-                    inspired by our common interest." A leadership built on the idea of Pan-Africanism, trained for, and by
-                    Africans, and subsidized by Africans.
-                  </CardDescription>
-                </div>
-                
-                <div className="space-y-6">
-                  <div className="flex items-start gap-4">
-                    <History size={24} className="text-blue-600 mt-1 flex-shrink-0" />
-                    <p className="text-base md:text-lg leading-relaxed text-gray-700">
-                      This Pan-African vision of continental governance system is inspired by historical events that have shaped
-                      the face of our continent. In fact, the current African geography and its internal institutions were created
-                      by Europeans who had no other vision except, to conquer and exploit African resources. Consequently, the
-                      African vision should not be built on the foundation of the European vision, it should be aiming to
-                      establish a new foundation on which the future will be based, and that is our aim.
-                    </p>
-                  </div>
-                  
-                  <div className="flex items-start gap-4">
-                    <Globe size={24} className="text-blue-600 mt-1 flex-shrink-0" />
-                    <p className="text-base md:text-lg leading-relaxed text-gray-700">
-                      Especially, after a half century of the so-called African independence we have tried to protect and defend
-                      the foundation established by the oppressors for our destruction, and the result is, we have turned
-                      ourselves into tools of self-destruction. However, it is never too late to do things right, it is never too
-                      late to lay a new foundation of unity, Ubuntu and prosperity. Finally, it is never too late to be in charge
-                      again.
-                    </p>
-                  </div>
-                </div>
+            <div className="mb-8 bg-blue-50 p-6 rounded-lg border border-blue-100">
+              <CardDescription className="text-xl font-medium text-blue-800 italic leading-relaxed">
+                "To establish an African global power-base, through a continental government built on a new leadership
+                inspired by our common interest." A leadership built on the idea of Pan-Africanism, trained for, and by
+                Africans, and subsidized by Africans.
+              </CardDescription>
+            </div>
+            
+            <div className="space-y-6">
+              <div className="flex items-start gap-4">
+                <History size={24} className="text-blue-600 mt-1 flex-shrink-0" />
+                <p className="text-base md:text-lg leading-relaxed text-gray-700">
+                  This Pan-African vision of continental governance system is inspired by historical events that have shaped
+                  the face of our continent. In fact, the current African geography and its internal institutions were created
+                  by Europeans who had no other vision except, to conquer and exploit African resources. Consequently, the
+                  African vision should not be built on the foundation of the European vision, it should be aiming to
+                  establish a new foundation on which the future will be based, and that is our aim.
+                </p>
               </div>
               
-              {/* Image container on the right side */}
-              <div className="md:w-1/3 flex-shrink-0 flex items-center justify-center">
-                <div className="relative w-full h-[300px] md:h-[400px] rounded-lg overflow-hidden border border-gray-200 shadow-md">
-                  <Image 
-                    src="/IMG-20251009-WA0020(2).jpg" 
-                    alt="Vision of African Unity" 
-                    fill
-                    style={{ objectFit: 'cover' }}
-                    className="hover:scale-105 transition-transform duration-500"
-                  />
-                </div>
+              <div className="flex items-start gap-4">
+                <Globe size={24} className="text-blue-600 mt-1 flex-shrink-0" />
+                <p className="text-base md:text-lg leading-relaxed text-gray-700">
+                  Especially, after a half century of the so-called African independence we have tried to protect and defend
+                  the foundation established by the oppressors for our destruction, and the result is, we have turned
+                  ourselves into tools of self-destruction. However, it is never too late to do things right, it is never too
+                  late to lay a new foundation of unity, Ubuntu and prosperity. Finally, it is never too late to be in charge
+                  again.
+                </p>
               </div>
             </div>
           </CardContent>

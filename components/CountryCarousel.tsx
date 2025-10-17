@@ -1,12 +1,11 @@
 import Image from "next/image"
 
 const CountryCarousel = () => {
-  // Using the new images but maintaining the original grid layout
   const countries = [
-    { name: "Ghana", image: "/IMG-20251009-WA0018.jpg" },
-    { name: "South Africa", image: "/IMG-20251009-WA0020(2) copy.jpg" },
-    { name: "Guinea", image: "/IMG-20251009-WA0018.jpg" },
-    { name: "Côte d'Ivoire", image: "/IMG-20251009-WA0020(2) copy.jpg" },
+    { name: "Ghana", image: "/ghana.jpg" },
+    { name: "South Africa", image: "/south africa.jpg" },
+    { name: "Guinea", image: "/guinea.jpg" },
+    { name: "Côte d'Ivoire", image: "/cotedevoir.jpg" },
   ]
 
   return (
@@ -23,11 +22,14 @@ const CountryCarousel = () => {
             >
               <div className="relative aspect-[3/2]">
                 <Image
-                  src={country.image}
-                  alt="ACUP Event Photo"
+                  src={country.image || "/placeholder.svg"}
+                  alt={`ACUP in ${country.name}`}
                   fill
                   className="object-cover"
                 />
+              </div>
+              <div className="p-4">
+                <h3 className="text-lg font-semibold text-center text-gray-800">{country.name}</h3>
               </div>
             </div>
           ))}
