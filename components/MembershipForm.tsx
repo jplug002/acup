@@ -155,7 +155,7 @@ const MembershipForm = () => {
                 onChange={handleChange}
                 required
                 disabled={isSubmitting}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent placeholder-gray-500"
               />
             </div>
 
@@ -171,7 +171,7 @@ const MembershipForm = () => {
                 onChange={handleChange}
                 required
                 disabled={isSubmitting}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent placeholder-gray-500"
               />
             </div>
 
@@ -187,7 +187,7 @@ const MembershipForm = () => {
                 onChange={handleChange}
                 required
                 disabled={isSubmitting}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent placeholder-gray-500"
               />
             </div>
 
@@ -202,7 +202,7 @@ const MembershipForm = () => {
                 onChange={handleChange}
                 required
                 disabled={isSubmitting}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent placeholder-gray-500"
               >
                 <option value="">Select Gender</option>
                 <option value="male">Male</option>
@@ -230,7 +230,7 @@ const MembershipForm = () => {
                 onChange={handleChange}
                 required
                 disabled={isSubmitting}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent placeholder-gray-500"
               />
             </div>
 
@@ -246,7 +246,7 @@ const MembershipForm = () => {
                 onChange={handleChange}
                 required
                 disabled={isSubmitting}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent placeholder-gray-500"
               />
             </div>
 
@@ -261,7 +261,7 @@ const MembershipForm = () => {
                 value={formData.postalCode}
                 onChange={handleChange}
                 disabled={isSubmitting}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent placeholder-gray-500"
               />
             </div>
 
@@ -277,7 +277,7 @@ const MembershipForm = () => {
                 onChange={handleChange}
                 required
                 disabled={isSubmitting}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent placeholder-gray-500"
               />
             </div>
 
@@ -293,7 +293,7 @@ const MembershipForm = () => {
                 onChange={handleChange}
                 required
                 disabled={isSubmitting}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent placeholder-gray-500"
               />
             </div>
           </div>
@@ -315,7 +315,7 @@ const MembershipForm = () => {
                 onChange={handleChange}
                 required
                 disabled={isSubmitting}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent placeholder-gray-500"
               />
             </div>
 
@@ -330,7 +330,7 @@ const MembershipForm = () => {
                 onChange={handleChange}
                 required
                 disabled={isSubmitting}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent placeholder-gray-500"
               >
                 <option value="">Select Education Level</option>
                 <option value="high-school">High School</option>
@@ -354,7 +354,7 @@ const MembershipForm = () => {
                 rows={3}
                 disabled={isSubmitting}
                 placeholder="Describe your professional background and work experience..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent resize-vertical"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent placeholder-gray-500 resize-vertical"
               />
             </div>
 
@@ -370,7 +370,7 @@ const MembershipForm = () => {
                 onChange={handleChange}
                 disabled={isSubmitting}
                 placeholder="e.g., Leadership, Communication, Project Management"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent placeholder-gray-500"
               />
             </div>
 
@@ -386,7 +386,7 @@ const MembershipForm = () => {
                 onChange={handleChange}
                 disabled={isSubmitting}
                 placeholder="e.g., English, French, Swahili, Arabic"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent placeholder-gray-500"
               />
             </div>
           </div>
@@ -408,7 +408,7 @@ const MembershipForm = () => {
                 onChange={handleChange}
                 required
                 disabled={isSubmitting}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent placeholder-gray-500"
               />
             </div>
 
@@ -424,7 +424,7 @@ const MembershipForm = () => {
                 onChange={handleChange}
                 required
                 disabled={isSubmitting}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent placeholder-gray-500"
               />
             </div>
           </div>
@@ -446,7 +446,7 @@ const MembershipForm = () => {
                 rows={3}
                 disabled={isSubmitting}
                 placeholder="Describe any political involvement, campaigns, or civic engagement..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent resize-vertical"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent placeholder-gray-500 resize-vertical"
               />
             </div>
 
@@ -462,7 +462,7 @@ const MembershipForm = () => {
                 rows={3}
                 disabled={isSubmitting}
                 placeholder="Describe leadership positions you've held in organizations, communities, or workplaces..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent resize-vertical"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent placeholder-gray-500 resize-vertical"
               />
             </div>
 
@@ -478,7 +478,7 @@ const MembershipForm = () => {
                 rows={3}
                 disabled={isSubmitting}
                 placeholder="Describe your involvement in community organizations, volunteer work, or social causes..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent resize-vertical"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent placeholder-gray-500 resize-vertical"
               />
             </div>
           </div>
@@ -501,7 +501,7 @@ const MembershipForm = () => {
                 rows={4}
                 disabled={isSubmitting}
                 placeholder="Tell us why you want to join ACUP and how you plan to contribute to the Pan-African movement..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent resize-vertical"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent placeholder-gray-500 resize-vertical"
               />
             </div>
 
@@ -517,7 +517,7 @@ const MembershipForm = () => {
                 rows={3}
                 disabled={isSubmitting}
                 placeholder="What do you hope to achieve or gain from your membership with ACUP?"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent resize-vertical"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent placeholder-gray-500 resize-vertical"
               />
             </div>
 

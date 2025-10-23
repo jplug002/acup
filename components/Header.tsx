@@ -42,6 +42,15 @@ const Header = () => {
 
         {/* Desktop Auth Buttons */}
         <div className="hidden md:flex space-x-3">
+          <Link href="/donate">
+            <Button
+              variant="secondary"
+              size="sm"
+              className="bg-blue-600 text-white hover:bg-blue-700"
+            >
+              Donate
+            </Button>
+          </Link>
           {session ? (
             <Button
               onClick={() => signOut({ callbackUrl: "/" })}
@@ -167,6 +176,15 @@ const Header = () => {
               </Link>
             </li>
 
+            <li>
+              <Link
+                href="/donate"
+                onClick={() => setIsMenuOpen(false)}
+                className="block py-2 hover:text-gray-200 transition-colors font-bold text-blue-400"
+              >
+                Donate
+              </Link>
+            </li>
             {session ? (
               <>
                 <li>
