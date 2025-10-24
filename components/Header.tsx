@@ -14,9 +14,9 @@ const Header = () => {
   return (
     <header className="bg-red-500 text-white shadow-md relative">
       <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-        {/* Logo */}
-        <div className="flex items-center space-x-2">
-          <Link href="/">
+        {/* Logo and Party Name */}
+        <div className="flex items-center space-x-3">
+          <Link href="/" className="flex items-center space-x-3">
             <Image
               src="/acup-logo.jpg"
               alt="ACUP Logo"
@@ -25,6 +25,10 @@ const Header = () => {
               style={{ height: "40px", width: "auto" }}
               className="object-contain cursor-pointer"
             />
+            <div className="hidden sm:block">
+              <h1 className="font-bold text-lg leading-tight">ACUP</h1>
+              <p className="text-xs text-white/90 leading-tight">African Continental Unity Party</p>
+            </div>
           </Link>
         </div>
 
@@ -111,7 +115,11 @@ const Header = () => {
       {/* Mobile Navigation */}
       {isMenuOpen && (
         <nav className="absolute top-full left-0 w-full bg-red-500 md:hidden z-50 shadow-lg">
-          <ul className="flex flex-col space-y-3 p-4 border-t border-red-400">
+          <div className="p-4 border-b border-red-400">
+            <h1 className="font-bold text-lg">ACUP</h1>
+            <p className="text-sm text-white/90">African Continental Unity Party</p>
+          </div>
+          <ul className="flex flex-col space-y-3 p-4">
             <li>
               <Link
                 href="/"
