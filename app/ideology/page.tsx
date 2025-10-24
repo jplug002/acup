@@ -283,7 +283,7 @@ export default async function IdeologyPage() {
                     variant="outline"
                     className="border-white text-white hover:bg-white hover:text-gray-900 font-semibold bg-transparent"
                   >
-                    <Link href="/register">Join ACUP Today</Link>
+                    <Link href="/auth/register">Join ACUP Today</Link>
                   </Button>
                 </div>
               </CardContent>
