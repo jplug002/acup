@@ -213,7 +213,7 @@ export default async function BranchesPage() {
                   {[
                     { name: "Ghana", image: "/ghana.jpg" },
                     { name: "South Africa", image: "/south africa.jpg" },
-                    { name: "Kenya", image: "/kenya.jpg" },
+                    { name: "Kenya", image: "/guinea.jpg" },
                     { name: "Côte d'Ivoire", image: "/cotedevoir.jpg" },
                   ].map((country, index) => (
                     <div
