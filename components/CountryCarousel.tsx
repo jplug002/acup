@@ -15,7 +15,12 @@ const CountryCarousel = () => {
     // You can add more countries here as needed
   ]
 
-  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true })
+  const [emblaRef, emblaApi] = useEmblaCarousel({ 
+    loop: true,
+    dragFree: true,
+    containScroll: "trimSnaps",
+    align: "center"
+  })
   const [prevBtnEnabled, setPrevBtnEnabled] = useState(false)
   const [nextBtnEnabled, setNextBtnEnabled] = useState(false)
   const [selectedIndex, setSelectedIndex] = useState(0)
@@ -30,16 +35,33 @@ const CountryCarousel = () => {
     setSelectedIndex(emblaApi.selectedScrollSnap())
   }, [emblaApi])
 
+  // Auto-play functionality
   useEffect(() => {
     if (!emblaApi) return
+    
+    // Set up auto-play
+    const autoplayInterval = setInterval(() => {
+      if (emblaApi.canScrollNext()) {
+        emblaApi.scrollNext()
+      } else {
+        emblaApi.scrollTo(0) // Loop back to the first slide
+      }
+    }, 4000) // Change slide every 4 seconds
+    
+    // Event listeners for navigation
     onSelect()
     emblaApi.on("select", onSelect)
     emblaApi.on("reInit", onSelect)
+    
+    // Clean up interval on component unmount
+    return () => {
+      clearInterval(autoplayInterval)
+    }
   }, [emblaApi, onSelect])
 
   return (
-    <section className="py-16 px-4 bg-white">
-      <div className="max-w-6xl mx-auto">
+    <section className="py-8 bg-white">
+      <div className="max-w-full mx-auto">
         
         <div className="relative">
           {/* Carousel container */}
@@ -48,21 +70,18 @@ const CountryCarousel = () => {
               {countries.map((country, index) => (
                 <div 
                   key={index} 
-                  className="flex-[0_0_100%] min-w-0 sm:flex-[0_0_80%] md:flex-[0_0_50%] pl-4"
+                  className="flex-[0_0_100%] min-w-0 sm:flex-[0_0_90%] md:flex-[0_0_70%] pl-2"
                 >
-                  <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow h-full mx-2">
-                    <div className="relative aspect-[16/9]">
+                  <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow h-full mx-1">
+                    <div className="relative aspect-[21/9]">
                       <Image
                         src={country.image}
                         alt={`ACUP in ${country.name}`}
                         fill
                         className="object-cover"
-                        sizes="(max-width: 640px) 100vw, (max-width: 768px) 80vw, 50vw"
+                        sizes="(max-width: 640px) 100vw, (max-width: 768px) 90vw, 70vw"
                         priority
                       />
-                    </div>
-                    <div className="p-4">
-                      <h3 className="text-lg font-semibold text-center text-gray-800">{country.name}</h3>
                     </div>
                   </div>
                 </div>
@@ -72,19 +91,19 @@ const CountryCarousel = () => {
           
           {/* Navigation buttons */}
           <button 
-            className="absolute left-0 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-md z-10 -ml-3"
+            className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-3 shadow-lg z-10"
             onClick={scrollPrev}
             disabled={!prevBtnEnabled}
           >
-            <ChevronLeft className="h-6 w-6 text-gray-800" />
+            <ChevronLeft className="h-7 w-7 text-gray-800" />
           </button>
           
           <button 
-            className="absolute right-0 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-md z-10 -mr-3"
+            className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-3 shadow-lg z-10"
             onClick={scrollNext}
             disabled={!nextBtnEnabled}
           >
-            <ChevronRight className="h-6 w-6 text-gray-800" />
+            <ChevronRight className="h-7 w-7 text-gray-800" />
           </button>
           
           {/* Dots indicator */}
