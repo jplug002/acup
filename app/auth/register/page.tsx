@@ -31,6 +31,21 @@ export default function RegisterPage() {
     setIsLoading(true)
     setError("")
 
+    // ✅ EMAIL VALIDATION
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/ // Basic email regex
+    if (!emailPattern.test(formData.email)) {
+      setIsLoading(false)
+      setError("Please enter a valid email address (e.g., name@gmail.com).")
+      return
+    }
+
+    // ✅ OPTIONAL: Restrict to Gmail addresses only
+    // if (!formData.email.endsWith("@gmail.com")) {
+    //   setIsLoading(false)
+    //   setError("Only Gmail addresses are allowed. Please use a valid Gmail address.")
+    //   return
+    // }
+
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match")
       setIsLoading(false)

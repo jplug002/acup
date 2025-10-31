@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { signIn } from "next-auth/react"
 import { useRouter, useSearchParams } from "next/navigation"
@@ -27,6 +26,21 @@ export default function LoginPage() {
     e.preventDefault()
     setIsLoading(true)
     setError("")
+
+    // ✅ EMAIL VALIDATION
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/ // basic email regex
+    if (!emailPattern.test(formData.email)) {
+      setIsLoading(false)
+      setError("Please enter a valid email address (e.g., name@gmail.com).")
+      return
+    }
+
+    // ✅ OPTIONAL: Restrict only Gmail users
+    // if (!formData.email.endsWith("@gmail.com")) {
+    //   setIsLoading(false)
+    //   setError("Only Gmail addresses are allowed. Please use a valid Gmail address.")
+    //   return
+    // }
 
     try {
       const result = await signIn("credentials", {
